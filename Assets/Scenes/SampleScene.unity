@@ -660,6 +660,7 @@ MonoBehaviour:
   - {fileID: 6251159111481128476, guid: aa18dc0e16e06034280155d3bcba447a, type: 3}
   - {fileID: 8418642580960513542, guid: 1db6538dbc075b34ba921c1a8bde1918, type: 3}
   - {fileID: 8418642580960513542, guid: 0ed734fc127a82444afabf1a229d5f5b, type: 3}
+  - {fileID: 2814884194661736319, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
   spawnPoint: {fileID: 1961845822}
   label: {fileID: 947858413}
 --- !u!4 &826117508

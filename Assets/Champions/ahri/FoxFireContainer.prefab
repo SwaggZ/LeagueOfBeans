@@ -49,3 +49,5 @@ MonoBehaviour:
   orbitDistance: 3
   rotationSpeed: 100
   containerLifetime: 5
+  targetTag: Enemy
+  detectionDistance: 10
