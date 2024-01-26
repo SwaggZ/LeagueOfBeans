@@ -1,0 +1,4 @@
+repository "ArenaLegends@avivdth@cloud"
+  path "/"
+    br "/main"
+    co "/main"
