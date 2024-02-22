@@ -123,6 +123,7 @@ GameObject:
   - component: {fileID: 8276152416902223000}
   - component: {fileID: 5269298411701574288}
   - component: {fileID: 7609046019399900405}
+  - component: {fileID: -6203211925299670847}
   m_Layer: 7
   m_Name: Galio
   m_TagString: Player
@@ -145,6 +146,7 @@ Transform:
   m_Children:
   - {fileID: 7259917680284703027}
   - {fileID: 40418327004780384}
+  - {fileID: 5819794841774601525}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!33 &6404263897561935633
@@ -293,6 +295,25 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-6203211925299670847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34097c5ef686c8b41aced0c3613514c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetObject: {fileID: 2814884194661736319}
+  prefab1: {fileID: 8054310789168773533, guid: b340a905eb2fc384b880a9d862947e91, type: 3}
+  prefab2: {fileID: 8054310789168773533, guid: b340a905eb2fc384b880a9d862947e91, type: 3}
+  slowMovementPrefab: {fileID: 5490414703967154580, guid: e8861193293d01b4c8241fbeeee6b722, type: 3}
+  widthScaleFactor: 4.5
+  lengthScaleFactor: 2.5
+  QSpeed: 0.1
 --- !u!1 &4889469300711654489
 GameObject:
   m_ObjectHideFlags: 0
@@ -319,6 +340,37 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2807495425542992829}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7344961615896727287
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5819794841774601525}
+  m_Layer: 7
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5819794841774601525
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7344961615896727287}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 9.83}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -882,6 +882,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 262603178}
     m_Modifications:
+    - target: {fileID: -6203211925299670847, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -6203211925299670847, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
+      propertyPath: blastSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -6203211925299670847, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
+      propertyPath: blastDistance
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 176393114111406686, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
       propertyPath: m_IsActive
       value: 0
