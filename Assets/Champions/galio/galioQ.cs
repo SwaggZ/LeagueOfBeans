@@ -2,25 +2,34 @@ using UnityEngine;
 
 public class galioQ : MonoBehaviour
 {
-    public GameObject targetObject;
-    public GameObject prefab1; // Prefab for the first object
-    public GameObject prefab2; // Prefab for the second object
+    public GameObject targetObject; // Assuming this is the player
+    public GameObject prefab1;
+    public GameObject prefab2;
+    public GameObject prefab3;
     public float widthScaleFactor = 1f;
-    public float lengthScaleFactor = 1f; // New variable to control scale on Z axis
+    public float lengthScaleFactor = 1f;
     public float QSpeed = 1.5f;
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0)) // Check for left mouse button click
+        if (Input.GetMouseButtonDown(0))
         {
-            // Instantiate the first object and set it to move along the first path
-        GameObject obj1 = Instantiate(prefab1, transform.position, Quaternion.identity);
-        obj1.GetComponent<qMovement>().InitializeMovement(this, true);
+            Vector3 playerPosition = targetObject.transform.position; // Capture player's position at the moment of instantiation
 
-        // Instantiate the second object and set it to move along the second path
-        GameObject obj2 = Instantiate(prefab2, transform.position, Quaternion.identity);
-        obj2.GetComponent<qMovement>().InitializeMovement(this, false);
+            // Instantiate prefabs directly at the player's current position
+            GameObject obj1 = Instantiate(prefab1, playerPosition, Quaternion.identity);
+            obj1.GetComponent<qMovement>().InitializeMovement(this, true, false, playerPosition);
+
+            GameObject obj2 = Instantiate(prefab2, playerPosition, Quaternion.identity);
+            obj2.GetComponent<qMovement>().InitializeMovement(this, false, false, playerPosition);
         }
+    }
+
+    public void InstantiateThirdPrefab(Vector3 playerPosition)
+    {
+        // Instantiate the third prefab also at the player's position but with a certain offset if needed
+        GameObject obj3 = Instantiate(prefab3, playerPosition + new Vector3(0, 0, 6.324f * lengthScaleFactor), Quaternion.identity);
+        obj3.GetComponent<qMovement>().InitializeMovementForThirdPath(this, 6.324f, 7f, playerPosition);
     }
 
     private void OnDrawGizmos()
@@ -64,5 +73,10 @@ public class galioQ : MonoBehaviour
             }
             prevPoint2 = currentPoint2;
         }
+
+        // Draw the new straight line segment for x = 0, 6.324 <= z <= 8
+        Vector3 startPoint = transform.TransformPoint(new Vector3(0, 0, 6.324f * lengthScaleFactor));
+        Vector3 endPoint = transform.TransformPoint(new Vector3(0, 0, 7f * lengthScaleFactor));
+        Gizmos.DrawLine(startPoint, endPoint);
     }
 }
