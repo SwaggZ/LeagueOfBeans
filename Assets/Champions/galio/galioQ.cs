@@ -1,82 +1,150 @@
+using System.Collections;
 using UnityEngine;
 
 public class galioQ : MonoBehaviour
 {
-    public GameObject targetObject; // Assuming this is the player
-    public GameObject prefab1;
-    public GameObject prefab2;
-    public GameObject prefab3;
-    public float widthScaleFactor = 1f;
-    public float lengthScaleFactor = 1f;
-    public float QSpeed = 1.5f;
+    public float startZ = 0f;
+    public float endZ = 10.954f; // Adjusted for the new function range
+    public float extendedEndZ = 13f; // Adjusted for the flat section
+    public float step = 0.1f; // How much z increases each step
+    public GameObject cam;
 
-    private void Update()
+    public GameObject prefabForOriginalPath; // Assign in inspector
+    public float speedForOriginalPath = 5f; // Speed for moving along the original path
+
+    public GameObject prefabForFlatPath; // Assign in inspector
+    public float speedForFlatPath = 3f; // Speed for moving along the flat path
+
+    private bool drawGizmo = false;
+    private Vector3[] gizmoPoints;
+    private Vector3[] gizmoPointsInverse;
+    private Vector3[] gizmoPointsFlat; // Points for the flat section
+
+    void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Vector3 playerPosition = targetObject.transform.position; // Capture player's position at the moment of instantiation
+            CreateGizmoPoints();
+            CreateGizmoPointsInverse();
+            CreateGizmoPointsFlat();
+            drawGizmo = true;
 
-            // Instantiate prefabs directly at the player's current position
-            GameObject obj1 = Instantiate(prefab1, playerPosition, Quaternion.identity);
-            obj1.GetComponent<qMovement>().InitializeMovement(this, true, false, playerPosition);
-
-            GameObject obj2 = Instantiate(prefab2, playerPosition, Quaternion.identity);
-            obj2.GetComponent<qMovement>().InitializeMovement(this, false, false, playerPosition);
+            StartPrefabMovement();
         }
     }
 
-    public void InstantiateThirdPrefab(Vector3 playerPosition)
+    void StartPrefabMovement()
     {
-        // Instantiate the third prefab also at the player's position but with a certain offset if needed
-        GameObject obj3 = Instantiate(prefab3, playerPosition + new Vector3(0, 0, 6.324f * lengthScaleFactor), Quaternion.identity);
-        obj3.GetComponent<qMovement>().InitializeMovementForThirdPath(this, 6.324f, 7f, playerPosition);
+        // Instantiate and start moving prefabs along the original paths
+        GameObject prefabInstance1 = Instantiate(prefabForOriginalPath, gizmoPoints[0], Quaternion.identity);
+        StartCoroutine(MovePrefabAlongPath(prefabInstance1, gizmoPoints, speedForOriginalPath, false));
+
+        GameObject prefabInstance2 = Instantiate(prefabForOriginalPath, gizmoPointsInverse[0], Quaternion.identity);
+        StartCoroutine(MovePrefabAlongPath(prefabInstance2, gizmoPointsInverse, speedForOriginalPath, false));
     }
 
-    private void OnDrawGizmos()
+    IEnumerator MovePrefabAlongPath(GameObject prefab, Vector3[] path, float speed, bool isFlatPath)
     {
-        if (targetObject == null)
-            return;
-
-        float stepSize = 0.1f;
-        float startX = Mathf.Max(0f, 3.162f - 5f); // Adjusted to start from 0 if the initial value is less than 0
-        float endX = Mathf.Min(6.324f, 3.162f + 5f); // Adjusted to end at 6.324 if the final value is greater than 6.324
-
-        Vector3 prevPoint = targetObject.transform.position;
-        for (float z = startX; z <= endX; z += stepSize)
+        foreach (Vector3 point in path)
         {
-            float x = 0.1f * Mathf.Pow(z - 3.162f, 2) - 1f;
-            Vector3 currentPoint = new Vector3(x * widthScaleFactor, 0, z * lengthScaleFactor); // Scale the point on Z axis
-            currentPoint = transform.TransformPoint(currentPoint); // Transform local to global space
-            if (x != startX)
+            while (prefab.transform.position != point)
             {
-                Gizmos.DrawLine(prevPoint, currentPoint);
+                prefab.transform.position = Vector3.MoveTowards(prefab.transform.position, point, speed * Time.deltaTime);
+                yield return null;
             }
-            prevPoint = currentPoint;
         }
 
-        if (targetObject == null)
-            return;
-
-        float stepSize2 = 0.1f;
-        float startX2 = Mathf.Max(0f, 3.162f - 5f); // Adjusted to start from 0 if the initial value is less than 0
-        float endX2 = Mathf.Min(6.324f, 3.162f + 5f); // Adjusted to end at 6.324 if the final value is greater than 6.324
-
-        Vector3 prevPoint2 = targetObject.transform.position;
-        for (float z2 = startX2; z2 <= endX2; z2 += stepSize2)
+        if (!isFlatPath)
         {
-            float x2 = -(0.1f * Mathf.Pow(z2 - 3.162f, 2) - 1f);
-            Vector3 currentPoint2 = new Vector3(x2 * widthScaleFactor, 0, z2 * lengthScaleFactor); // Scale the point on Z axis
-            currentPoint2 = transform.TransformPoint(currentPoint2); // Transform local to global space
-            if (x2 != startX2)
-            {
-                Gizmos.DrawLine(prevPoint2, currentPoint2);
-            }
-            prevPoint2 = currentPoint2;
-        }
+            Destroy(prefab); // Destroy the original prefab once it reaches the end
 
-        // Draw the new straight line segment for x = 0, 6.324 <= z <= 8
-        Vector3 startPoint = transform.TransformPoint(new Vector3(0, 0, 6.324f * lengthScaleFactor));
-        Vector3 endPoint = transform.TransformPoint(new Vector3(0, 0, 7f * lengthScaleFactor));
-        Gizmos.DrawLine(startPoint, endPoint);
+            if (path == gizmoPoints || path == gizmoPointsInverse)
+            {
+                // Instantiate and move prefab along the flat path
+                GameObject flatPathPrefab = Instantiate(prefabForFlatPath, path[path.Length - 1], Quaternion.identity);
+                StartCoroutine(MovePrefabAlongPath(flatPathPrefab, gizmoPointsFlat, speedForFlatPath, true));
+            }
+        }
+        else
+        {
+            // Destroy the flat path prefab once it reaches the end
+            Destroy(prefab);
+        }
+    }
+
+    void CreateGizmoPoints()
+    {
+        int pointsCount = Mathf.CeilToInt((endZ - startZ) / step) + 1;
+        gizmoPoints = new Vector3[pointsCount];
+
+        Vector3 playerPosition = transform.position;
+        Quaternion lookRotation = Quaternion.Euler(cam.transform.eulerAngles.x, transform.eulerAngles.y, 0);
+
+        for (int i = 0; i < pointsCount; i++)
+        {
+            float z = (startZ + (step * i));
+            float x = (0.1f * Mathf.Pow(z - 5.477f, 2) - 3);
+            Vector3 point = new Vector3(x, 0, z);
+            point = lookRotation * point;
+            gizmoPoints[i] = playerPosition + point;
+        }
+    }
+
+    void CreateGizmoPointsInverse()
+    {
+        int pointsCount = Mathf.CeilToInt((endZ - startZ) / step) + 1;
+        gizmoPointsInverse = new Vector3[pointsCount];
+
+        Vector3 playerPosition = transform.position;
+        Quaternion lookRotation = Quaternion.Euler(cam.transform.eulerAngles.x, transform.eulerAngles.y, 0);
+
+        for (int i = 0; i < pointsCount; i++)
+        {
+            float z = (startZ + (step * i));
+            float x = -(0.1f * Mathf.Pow(z - 5.477f, 2) - 3);
+            Vector3 point = new Vector3(x, 0, z);
+            point = lookRotation * point;
+            gizmoPointsInverse[i] = playerPosition + point;
+        }
+    }
+
+    void CreateGizmoPointsFlat()
+    {
+        int pointsCount = Mathf.CeilToInt((extendedEndZ - endZ) / step) + 1;
+        gizmoPointsFlat = new Vector3[pointsCount];
+
+        Vector3 playerPosition = transform.position;
+        Quaternion lookRotation = Quaternion.Euler(cam.transform.eulerAngles.x, transform.eulerAngles.y, 0);
+
+        for (int i = 0; i < pointsCount; i++)
+        {
+            float z = (endZ + (step * i));
+            float x = 0; // x remains constant, applying scale to z
+            Vector3 point = new Vector3(x, 0, z);
+            point = lookRotation * point;
+            gizmoPointsFlat[i] = playerPosition + point;
+        }
+    }
+
+    void OnDrawGizmos()
+    {
+        if (drawGizmo)
+        {
+            DrawGizmoLines(gizmoPoints, Color.red);
+            DrawGizmoLines(gizmoPointsInverse, Color.blue);
+            DrawGizmoLines(gizmoPointsFlat, Color.green);
+        }
+    }
+
+    void DrawGizmoLines(Vector3[] points, Color color)
+    {
+        if (points != null)
+        {
+            Gizmos.color = color;
+            for (int i = 0; i < points.Length - 1; i++)
+            {
+                Gizmos.DrawLine(points[i], points[i + 1]);
+            }
+        }
     }
 }

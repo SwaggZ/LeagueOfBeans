@@ -307,13 +307,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34097c5ef686c8b41aced0c3613514c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 2814884194661736319}
-  prefab1: {fileID: 1201613928302839629, guid: 05fa6262cdcdaf44396beff852a2d057, type: 3}
-  prefab2: {fileID: 1201613928302839629, guid: 05fa6262cdcdaf44396beff852a2d057, type: 3}
-  prefab3: {fileID: 1201613928302839629, guid: fe6ecd23dd849e94fa70968cfd78c002, type: 3}
-  widthScaleFactor: 4.5
-  lengthScaleFactor: 2.5
-  QSpeed: 0.1
+  startZ: 0
+  endZ: 10.954
+  extendedEndZ: 13
+  step: 0.1
+  cam: {fileID: 176393114111406686}
+  prefabForOriginalPath: {fileID: 1201613928302839629, guid: 05fa6262cdcdaf44396beff852a2d057, type: 3}
+  speedForOriginalPath: 5
+  prefabForFlatPath: {fileID: 1201613928302839629, guid: fe6ecd23dd849e94fa70968cfd78c002, type: 3}
+  speedForFlatPath: 3
 --- !u!1 &4889469300711654489
 GameObject:
   m_ObjectHideFlags: 0
