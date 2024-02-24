@@ -1,5 +1,18 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8871401361542225324
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 7
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
@@ -22,17 +35,31 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - Dissolve_: 0.862
-    - NoisePower_: 1
-    - NoiseScale_: 20
+    - Dissolve_: 0.8
+    - NoisePower_: 1.6
+    - NoiseScale_: 21.72
     - TwirlAmount_: 7.9
     - _BUILTIN_QueueControl: 0
     - _BUILTIN_QueueOffset: 0
+    - _QueueControl: 0
+    - _QueueOffset: 0
     m_Colors:
-    - Color_: {r: 1782.8878, g: 1344.002, b: 92.710144, a: 0.14117648}
+    - Color_: {r: 191.74904, g: 97.83509, b: 0, a: 0.14117648}
     - NoiseSpeed_: {r: 0, g: 0.5, b: 0, a: 0}
     - TwirlCenter_: {r: 0.5, g: -0.5, b: 0, a: 0}
     - TwirlSpeed_: {r: 0, g: 0.6, b: 0, a: 0}

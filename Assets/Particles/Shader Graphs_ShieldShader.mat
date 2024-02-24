@@ -27,19 +27,33 @@ Material:
         m_Texture: {fileID: 2800000, guid: 0a30c7ff530b6ff42a580ecb00684de0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _BUILTIN_QueueControl: 0
     - _BUILTIN_QueueOffset: 0
-    - _FresnelPower: 1.59
-    - _SphereHardness: 0.5
+    - _FresnelPower: 0.59
+    - _QueueControl: 0
+    - _QueueOffset: 0
+    - _SphereHardness: 0.887
     - _SphereMask: 0
     - _SphereRadius: 0.5
     - _VertexFrequency: 1
     m_Colors:
-    - _BackColor: {r: 0.008318906, g: 0.017184893, b: 0.13240923, a: 1}
-    - _FresnelColor: {r: 271.1741, g: 19.785532, b: 0, a: 1}
-    - _FrontColor: {r: 1.4406126, g: 3.9023643, b: 8.47419, a: 1}
+    - _BackColor: {r: 0.025218206, g: 0.05209485, b: 0.40138972, a: 1}
+    - _FresnelColor: {r: 3.4415905, g: 0.25110695, b: 0, a: 1}
+    - _FrontColor: {r: 0.6720695, g: 1.8205172, b: 3.953349, a: 1}
     - _SphereCenter: {r: 0, g: 0, b: 0, a: 0}
     - _VertexAmount: {r: 0.1, g: 0.1, b: 0.1, a: 0}
   m_BuildTextureStacks: []
@@ -56,3 +70,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 0
+--- !u!114 &9005256477852081231
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 7

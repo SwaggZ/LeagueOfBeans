@@ -309,13 +309,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startZ: 0
   endZ: 10.954
-  extendedEndZ: 13
+  extendedEndZ: 15
   step: 0.1
   cam: {fileID: 176393114111406686}
   prefabForOriginalPath: {fileID: 1201613928302839629, guid: 05fa6262cdcdaf44396beff852a2d057, type: 3}
-  speedForOriginalPath: 5
+  speedForOriginalPath: 12
   prefabForFlatPath: {fileID: 1201613928302839629, guid: fe6ecd23dd849e94fa70968cfd78c002, type: 3}
-  speedForFlatPath: 3
+  speedForFlatPath: 1
 --- !u!1 &4889469300711654489
 GameObject:
   m_ObjectHideFlags: 0
