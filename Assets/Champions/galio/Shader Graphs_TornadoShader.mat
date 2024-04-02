@@ -50,10 +50,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - Dissolve_: 0.8
-    - NoisePower_: 1.6
-    - NoiseScale_: 21.72
-    - TwirlAmount_: 7.9
+    - Dissolve_: 0.7
+    - NoisePower_: 2.45
+    - NoiseScale_: 23.31
+    - TwirlAmount_: 15.2
     - _BUILTIN_QueueControl: 0
     - _BUILTIN_QueueOffset: 0
     - _QueueControl: 0
