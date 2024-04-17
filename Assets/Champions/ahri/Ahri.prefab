@@ -1049,7 +1049,7 @@ MonoBehaviour:
   controller: {fileID: 9111825530374082852}
   speed: 12
   runSpeed: 16
-  gravity: -9.81
+  gravity: -23
   groundCheck: {fileID: 7282299119758028238}
   groundDistance: 0.4
   groundMask:
