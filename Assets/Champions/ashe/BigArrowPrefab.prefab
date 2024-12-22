@@ -292,7 +292,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 30
-  AutoTime: 5
+  AutoTime: 10
+  damage: 200
+  homingRange: 10
+  curveIntensity: 2
+  isCurving: 0
+  isUlt: 1
+  ultRadius: 20
+  maxUltDamage: 100
 --- !u!1 &4895175971423808214
 GameObject:
   m_ObjectHideFlags: 0

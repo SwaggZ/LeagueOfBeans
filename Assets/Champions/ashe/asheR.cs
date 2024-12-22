@@ -4,13 +4,27 @@ using UnityEngine;
 
 public class asheR : MonoBehaviour
 {
-    public GameObject autoAttack;
-    public GameObject cam;
+    public GameObject ultimateProjectile; // Prefab for the ultimate ability projectile
+    public GameObject cam; // Reference to the camera for aiming
+    public float cooldownTime = 15f; // Cooldown duration in seconds
+
+    private bool isOnCooldown = false; // Tracks whether the ability is on cooldown
+    private float cooldownTimer = 0f; // Tracks remaining cooldown time
 
     void Update()
     {
-        // Check for input or trigger to activate the ability
-        if (Input.GetKeyDown(KeyCode.Alpha2))
+        // Handle cooldown logic
+        if (isOnCooldown)
+        {
+            cooldownTimer -= Time.deltaTime;
+            if (cooldownTimer <= 0f)
+            {
+                isOnCooldown = false; // Cooldown complete
+            }
+        }
+
+        // Check for input to activate the ability
+        if (Input.GetKeyDown(KeyCode.Alpha2) && !isOnCooldown)
         {
             ActivateAbility();
         }
@@ -21,7 +35,11 @@ public class asheR : MonoBehaviour
         Vector3 currentPosition = transform.position;
         Quaternion currentRotation = cam.transform.rotation;
 
-        // Instantiate a new GameObject using the same position and rotation
-        GameObject newObject = Instantiate(autoAttack, currentPosition, currentRotation);
+        // Instantiate the ultimate projectile using the same position and rotation
+        Instantiate(ultimateProjectile, currentPosition, currentRotation);
+
+        // Start cooldown
+        isOnCooldown = true;
+        cooldownTimer = cooldownTime;
     }
 }

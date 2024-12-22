@@ -772,6 +772,7 @@ GameObject:
   - component: {fileID: 7184699729405827023}
   - component: {fileID: 4589855055423176711}
   - component: {fileID: -2434015613543476413}
+  - component: {fileID: 4671978812722306614}
   m_Layer: 7
   m_Name: Caitlyn
   m_TagString: Player
@@ -1004,3 +1005,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoAttack: {fileID: 8974796004527618272, guid: cb5bae26a1ae5fc4e9e8c907a6f5e6bf, type: 3}
   cam: {fileID: 5625395854533514887}
+--- !u!114 &4671978812722306614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8418642580960513542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2bb15b24d40eab449ed0467b0b324e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 250

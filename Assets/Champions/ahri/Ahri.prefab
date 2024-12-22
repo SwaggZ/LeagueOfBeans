@@ -907,6 +907,7 @@ GameObject:
   - component: {fileID: 5474330212988748665}
   - component: {fileID: 6608820326737795256}
   - component: {fileID: 8733146239103398831}
+  - component: {fileID: 4497602494273469683}
   m_Layer: 7
   m_Name: Ahri
   m_TagString: Player
@@ -1126,6 +1127,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoAttack: {fileID: 8276199556552395054, guid: 6fa63a4565263b248a90d7fb40c17f23, type: 3}
   cam: {fileID: 2010307734942041191}
+  cooldownTime: 0.2
 --- !u!114 &8733146239103398831
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1140,6 +1142,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Eheart: {fileID: 5685185423388428015, guid: 15b6b6e030cb08c47bbadb375448cfa8, type: 3}
   cam: {fileID: 2010307734942041191}
+  cooldownTime: 3
+--- !u!114 &4497602494273469683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6251159111481128476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2bb15b24d40eab449ed0467b0b324e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 250
 --- !u!1 &6878871091161275283
 GameObject:
   m_ObjectHideFlags: 0

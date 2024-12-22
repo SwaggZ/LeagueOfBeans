@@ -24,10 +24,7 @@ public class FoxFireContainer : MonoBehaviour
         transform.position = player.position;
         Invoke("DestroyContainer", containerLifetime);
 
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            SummonFoxFires();
-        }
+        SummonFoxFires();
     }
 
     void Update()
@@ -57,6 +54,7 @@ public class FoxFireContainer : MonoBehaviour
             foxFires.Add(foxFire);
             FoxFireMovement foxFireMovement = foxFire.GetComponent<FoxFireMovement>();
             foxFireMovement.SetRotationSpeed(rotationSpeed);
+            foxFireMovement.SetDamage(20f); // Set damage value for each fox fire
         }
     }
 
@@ -79,10 +77,10 @@ public class FoxFireContainer : MonoBehaviour
             if (collider.CompareTag(targetTag))
             {
                 // The object with the specified tag is within the detection distance
-                // Add your custom logic here, for example:
                 Debug.Log("Target object detected: " + collider.gameObject.name);
                 DetachAllFoxFires();
                 DestroyContainer();
+                break;
             }
         }
     }
@@ -91,7 +89,6 @@ public class FoxFireContainer : MonoBehaviour
     {
         foreach (GameObject foxFire in foxFires)
         {
-            // Check if the foxFire is not null and has a parent before detaching
             if (foxFire != null && foxFire.transform.parent != null)
             {
                 foxFire.transform.SetParent(null); // Detach from the parent

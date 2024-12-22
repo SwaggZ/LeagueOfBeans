@@ -291,8 +291,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c120cc75c584a644c8f54ae66f102ffa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 60
+  speed: 90
   AutoTime: 5
+  damage: 20
+  homingRange: 10
+  curveIntensity: 1.5
+  isCurving: 1
+  isUlt: 0
+  ultRadius: 5
+  maxUltDamage: 50
 --- !u!1 &4895175971423808214
 GameObject:
   m_ObjectHideFlags: 0

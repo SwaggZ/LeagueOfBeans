@@ -121,6 +121,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   speed: 20
+  BackSpeed: 60
+  maxDistance: 30
+  damage: 50
+  damageCooldown: 0.4
 --- !u!1001 &7026433387221468129
 PrefabInstance:
   m_ObjectHideFlags: 0

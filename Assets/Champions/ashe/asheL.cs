@@ -4,13 +4,27 @@ using UnityEngine;
 
 public class asheL : MonoBehaviour
 {
-    public GameObject autoAttack;
-    public GameObject cam;
+    public GameObject autoAttack; // Prefab for the arrow
+    public GameObject cam; // Reference to the camera for aiming
+    public float cooldownTime = 1f; // Cooldown duration in seconds
+
+    private bool isOnCooldown = false; // Tracks whether the ability is on cooldown
+    private float cooldownTimer = 0f; // Tracks remaining cooldown time
 
     void Update()
     {
-        // Check for input or trigger to activate the ability
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        // Handle cooldown logic
+        if (isOnCooldown)
+        {
+            cooldownTimer -= Time.deltaTime;
+            if (cooldownTimer <= 0f)
+            {
+                isOnCooldown = false; // Cooldown complete
+            }
+        }
+
+        // Check for input to activate the ability
+        if (Input.GetKeyDown(KeyCode.Mouse0) && !isOnCooldown)
         {
             ActivateAbility();
         }
@@ -22,6 +36,10 @@ public class asheL : MonoBehaviour
         Quaternion currentRotation = cam.transform.rotation;
 
         // Instantiate a new GameObject using the same position and rotation
-        GameObject newObject = Instantiate(autoAttack, currentPosition, currentRotation);
+        Instantiate(autoAttack, currentPosition, currentRotation);
+
+        // Start cooldown
+        isOnCooldown = true;
+        cooldownTimer = cooldownTime;
     }
 }

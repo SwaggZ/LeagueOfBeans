@@ -4,13 +4,28 @@ using UnityEngine;
 
 public class ahriL : MonoBehaviour
 {
-    public GameObject autoAttack;
-    public GameObject cam;
+    public GameObject autoAttack; // Prefab for the auto attack projectile
+    public GameObject cam; // Reference to the camera for determining attack direction
+    public float cooldownTime = 0.6f; // Cooldown duration in seconds, set for a basic attack speed similar to Overwatch
+
+    private bool isOnCooldown = false; // Tracks whether the ability is on cooldown
+    private float cooldownTimer = 0f; // Tracks remaining cooldown time
 
     void Update()
     {
-        // Check for input or trigger to activate the ability
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        // Handle cooldown logic
+        if (isOnCooldown)
+        {
+            cooldownTimer -= Time.deltaTime; // Decrease timer as time passes
+
+            if (cooldownTimer <= 0f)
+            {
+                isOnCooldown = false; // Cooldown complete
+            }
+        }
+
+        // Check if Mouse0 is held and not on cooldown
+        if (Input.GetKey(KeyCode.Mouse0) && !isOnCooldown)
         {
             ActivateAbility();
         }
@@ -18,10 +33,15 @@ public class ahriL : MonoBehaviour
 
     void ActivateAbility()
     {
+        // Capture current position and rotation for spawning the auto attack
         Vector3 currentPosition = transform.position;
         Quaternion currentRotation = cam.transform.rotation;
 
-        // Instantiate a new GameObject using the same position and rotation
+        // Instantiate the auto attack projectile at the current position and rotation
         GameObject newObject = Instantiate(autoAttack, currentPosition, currentRotation);
+
+        // Start cooldown timer
+        isOnCooldown = true;
+        cooldownTimer = cooldownTime; // Reset the timer to the full cooldown duration
     }
 }

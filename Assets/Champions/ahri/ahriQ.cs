@@ -5,15 +5,27 @@ using UnityEngine;
 public class ahriQ : MonoBehaviour
 {
     public Transform orbPrefab;
+    public float cooldownTime = 5f; // Cooldown duration in seconds
 
     private Transform orbInstance;
     private Vector3 initialPosition;
-    private Vector3 targetPosition;
+    private bool isOnCooldown = false;
+    private float cooldownTimer = 0f;
 
     void Update()
     {
-        // Check for input or trigger to activate the ability
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        // Handle cooldown logic
+        if (isOnCooldown)
+        {
+            cooldownTimer -= Time.deltaTime;
+            if (cooldownTimer <= 0f)
+            {
+                isOnCooldown = false; // Cooldown complete
+            }
+        }
+
+        // Check for input to activate the ability
+        if (Input.GetKeyDown(KeyCode.Alpha1) && !isOnCooldown)
         {
             ActivateAbility();
         }
@@ -21,10 +33,14 @@ public class ahriQ : MonoBehaviour
 
     void ActivateAbility()
     {
-        // Set initial and target positions
+        // Set initial position
         initialPosition = transform.position;
 
         // Spawn the orb
         orbInstance = Instantiate(orbPrefab, initialPosition, Quaternion.identity);
+
+        // Start cooldown
+        isOnCooldown = true;
+        cooldownTimer = cooldownTime;
     }
 }

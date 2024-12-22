@@ -5,15 +5,16 @@ using UnityEngine;
 public class FoxFireMovement : MonoBehaviour
 {
     private float rotationSpeed = 50f;
-
     float speed = 30f;
+    public float damage = 20f; // Damage dealt by the fox fire
 
     public string targetTag = "Enemy";
 
     void Update()
     {
         GoToEnemy();
-        Destroy();
+        DestroyIfNoTarget();
+        DestroyFoxFire();
     }
 
     public void SetRotationSpeed(float speed)
@@ -21,11 +22,32 @@ public class FoxFireMovement : MonoBehaviour
         rotationSpeed = speed;
     }
 
+    public void SetDamage(float dmg)
+    {
+        damage = dmg;
+    }
+
     void GoToEnemy()
     {
         if (transform.parent == null)
         {
-            transform.position = Vector3.MoveTowards(transform.position, FindClosestObject().transform.position, speed * Time.deltaTime);
+            GameObject closestEnemy = FindClosestObject();
+            if (closestEnemy != null)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, closestEnemy.transform.position, speed * Time.deltaTime);
+
+                // Apply damage when close enough
+                if (Vector3.Distance(transform.position, closestEnemy.transform.position) < 0.1f)
+                {
+                    HealthSystem healthSystem = closestEnemy.GetComponent<HealthSystem>();
+                    if (healthSystem != null)
+                    {
+                        healthSystem.TakeDamage(damage);
+                        Debug.Log($"Fox fire dealt {damage} damage to {closestEnemy.name}.");
+                    }
+                    Destroy(gameObject); // Destroy fox fire after dealing damage
+                }
+            }
         }
     }
 
@@ -35,7 +57,6 @@ public class FoxFireMovement : MonoBehaviour
 
         if (objectsWithTag.Length == 0)
         {
-            // No objects with the specified tag found
             return null;
         }
 
@@ -58,10 +79,20 @@ public class FoxFireMovement : MonoBehaviour
         return closestObject;
     }
 
-    void Destroy()
+    void DestroyIfNoTarget()
+    {
+        GameObject closestEnemy = FindClosestObject();
+        if (closestEnemy == null)
+        {
+            Debug.Log("No target available. Destroying fox fire.");
+            Destroy(gameObject);
+        }
+    }
+
+    void DestroyFoxFire()
     {
         GameObject closestObj = FindClosestObject();
-        if(transform.position == closestObj.transform.position)
+        if (closestObj != null && transform.position == closestObj.transform.position)
         {
             Destroy(gameObject);
         }

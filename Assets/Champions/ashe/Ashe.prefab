@@ -699,6 +699,7 @@ GameObject:
   - component: {fileID: 1162495939931656337}
   - component: {fileID: 2538133081877370738}
   - component: {fileID: 1331289638270143030}
+  - component: {fileID: -559045548646516655}
   m_Layer: 7
   m_Name: Ashe
   m_TagString: Player
@@ -885,6 +886,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoAttack: {fileID: 3993984760855137560, guid: d3b665c16080b79488159e985ffb91f1, type: 3}
   cam: {fileID: 5625395854533514887}
+  cooldownTime: 0.2
 --- !u!114 &1162495939931656337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -899,6 +901,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoAttack: {fileID: 3993984760855137560, guid: d3b665c16080b79488159e985ffb91f1, type: 3}
   cam: {fileID: 5625395854533514887}
+  cooldownTime: 3
+  numberOfArrows: 10
+  spreadDiameter: 2
 --- !u!114 &2538133081877370738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -913,6 +918,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoAttack: {fileID: 3993984760855137560, guid: d3b665c16080b79488159e985ffb91f1, type: 3}
   cam: {fileID: 5625395854533514887}
+  cooldownTime: 5
+  numberOfArrows: 20
+  totalArcAngle: 80
 --- !u!114 &1331289638270143030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -925,5 +933,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff239a3936590634baf50a902225fd35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  autoAttack: {fileID: 3993984760855137560, guid: f582028c32000a14d888c7647cc43469, type: 3}
+  ultimateProjectile: {fileID: 3993984760855137560, guid: f582028c32000a14d888c7647cc43469, type: 3}
   cam: {fileID: 5625395854533514887}
+  cooldownTime: 10
+--- !u!114 &-559045548646516655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8418642580960513542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2bb15b24d40eab449ed0467b0b324e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 250
