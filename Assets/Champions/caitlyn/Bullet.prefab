@@ -152,5 +152,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65f2bb99d847ef848abb3789327ce01f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 70
+  speed: 300
   AutoTime: 5
+  damage: 50
+  isPlane: 0
+  knockbackDistance: 5
+  knockbackSpeed: 20
+  stunDuration: 2
+  piercing: 2

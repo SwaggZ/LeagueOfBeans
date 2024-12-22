@@ -1,45 +1,71 @@
 using UnityEngine;
 
-public class ThrowableCollisionHandler : MonoBehaviour
+public class TrapBehavior : MonoBehaviour
 {
-    public GameObject trapPrefab;
-    public float detectionDistance = 1.0f;
-    public float AutoTime = 10f;
+    public float AutoTime = 30f; // Time before the trap self-destructs
+    private float damage = 50f; // Damage dealt by the trap
+    public float detectionRadius = 1.5f; // Radius to detect enemies
+    public float stunDuration = 2f; // Duration of the stun effect
 
     void Start()
     {
-        Invoke("Destroy", AutoTime);
+        // Schedule destruction if not triggered
+        Invoke("DestroySelf", AutoTime);
     }
 
-    void Update()
+    public void SetDamage(float damageValue)
     {
-        // Check for collisions using OverlapSphere
-        CheckForCollision();
+        damage = damageValue;
     }
 
-    void CheckForCollision()
+    void FixedUpdate()
     {
-        // Create an OverlapSphere centered at the throwable GameObject's position
-        Collider[] colliders = Physics.OverlapSphere(transform.position, detectionDistance);
+        CheckForEnemies();
+    }
 
-        // Check each collider detected in the sphere
+    void CheckForEnemies()
+    {
+        // Use OverlapSphere to detect enemies in range
+        Collider[] colliders = Physics.OverlapSphere(transform.position, detectionRadius);
+
         foreach (Collider collider in colliders)
         {
-            // Check if the collider belongs to an object on the "ground" layer
-            if (collider.gameObject.layer == LayerMask.NameToLayer("Ground"))
+            // Check if the detected object has the "Enemy" tag
+            if (collider.CompareTag("Enemy"))
             {
-                // Instantiate the bear trap at the throwable GameObject's position
-                Instantiate(trapPrefab, transform.position, Quaternion.identity);
+                // Apply damage if the object has a HealthSystem
+                HealthSystem health = collider.GetComponent<HealthSystem>();
+                if (health != null)
+                {
+                    health.TakeDamage(damage);
+                    Debug.Log($"{collider.gameObject.name} took {damage} damage from the trap!");
+                }
 
-                // Destroy the throwable GameObject
+                // Apply stun if the object has a CharacterControl component
+                CharacterControl enemyController = collider.GetComponent<CharacterControl>();
+                if (enemyController != null)
+                {
+                    enemyController.Stun(stunDuration);
+                    Debug.Log($"{collider.gameObject.name} is stunned for {stunDuration} seconds!");
+                }
+
+                // Destroy the trap after applying effects
                 Destroy(gameObject);
-                break; // Exit the loop if a collision is detected
+                break; // Exit loop after triggering the trap
             }
         }
     }
 
-    void Destroy()
+    void DestroySelf()
     {
+        Debug.Log($"Trap {gameObject.name} destroyed after {AutoTime} seconds.");
         Destroy(gameObject);
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        // Draw the detection radius in the scene view for debugging
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, detectionRadius);
     }
 }

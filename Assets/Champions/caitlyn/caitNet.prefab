@@ -574,5 +574,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65f2bb99d847ef848abb3789327ce01f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 50
   AutoTime: 1
+  damage: 40
+  isPlane: 1
+  knockbackDistance: 0
+  knockbackSpeed: 0
+  stunDuration: 3

@@ -131,6 +131,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 262603178}
     m_Modifications:
+    - target: {fileID: -8231096899828119848, guid: 0ed734fc127a82444afabf1a229d5f5b, type: 3}
+      propertyPath: gravity
+      value: -23
+      objectReference: {fileID: 0}
+    - target: {fileID: -8231096899828119848, guid: 0ed734fc127a82444afabf1a229d5f5b, type: 3}
+      propertyPath: isCaitlyn
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8231096899828119848, guid: 0ed734fc127a82444afabf1a229d5f5b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8231096899828119848, guid: 0ed734fc127a82444afabf1a229d5f5b, type: 3}
+      propertyPath: jumpHeight
+      value: 1.5
+      objectReference: {fileID: 0}
     - target: {fileID: -5800573051255237835, guid: 0ed734fc127a82444afabf1a229d5f5b, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -724,16 +740,10 @@ MonoBehaviour:
     damage to enemies in quick succession. (40)
   - Fires a large arrow that deals heavy damage upon impact and creates an area effect
     that deals decreasing damage based on distance. (50)
-  AhriNames:
-  - 
-  - 
-  - 
-  - 
-  AsheNames:
-  - 
-  - 
-  - 
-  - 
+  CaitlynDesc: []
+  AhriNames: []
+  AsheNames: []
+  CaitlynNames: []
   ahriLBaseDamage: 5
   ahriQBaseDamage: 20
   ahriWBaseDamage: 40
@@ -745,6 +755,11 @@ MonoBehaviour:
   asheEArrowCount: 20
   asheRBaseDamage: 200
   asheRAoeDamage: 50
+  caitlynLBaseDamage: 50
+  caitlynRBaseDamage: 20
+  caitlynQBaseDamage: 50
+  caitlynEBaseDamage: 40
+  piercing: 2
 --- !u!1 &268063718
 GameObject:
   m_ObjectHideFlags: 0
@@ -892,7 +907,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.0010418725}
+  m_AnchoredPosition: {x: 0, y: 0.000022857948}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &447577777
@@ -1935,7 +1950,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 606834768}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.9999637
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2678,6 +2693,14 @@ PrefabInstance:
     - target: {fileID: 2814884194661736319, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5269298411701574288, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
+      propertyPath: dashTime
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5269298411701574288, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
+      propertyPath: dashSpeed
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 5269298411701574288, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
       propertyPath: m_Enabled

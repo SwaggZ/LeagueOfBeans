@@ -766,7 +766,7 @@ GameObject:
   - component: {fileID: 5360263005831339572}
   - component: {fileID: 7910377072531328806}
   - component: {fileID: 503103581676471263}
-  - component: {fileID: 2574801878011388515}
+  - component: {fileID: -8231096899828119848}
   - component: {fileID: 2059535883183623119}
   - component: {fileID: -5800573051255237835}
   - component: {fileID: 7184699729405827023}
@@ -894,7 +894,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &2574801878011388515
+--- !u!114 &-8231096899828119848
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -903,23 +903,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 8418642580960513542}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1b406e43bb74f804e8f3525fd45cd98b, type: 3}
+  m_Script: {fileID: 11500000, guid: 132d3ccde5d79ec4c85f6c44efca0783, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 2059535883183623119}
   speed: 12
-  runSpeed: 16
-  gravity: -23
+  runSpeed: 18
+  gravity: -9.81
   groundCheck: {fileID: 704730074072657824}
   groundDistance: 0.4
   groundMask:
     serializedVersion: 2
     m_Bits: 65
-  jumpHeight: 1.5
+  jumpHeight: 3
   playerCam: {fileID: 2685533559906960159}
   canDash: 1
-  dashTime: 0.1
-  dashSpeed: -60
+  dashTime: 0.5
+  dashSpeed: 30
+  isCaitlyn: 1
+  caitDashTime: 0.1
+  caitDashSpeed: -60
 --- !u!143 &2059535883183623119
 CharacterController:
   m_ObjectHideFlags: 0
@@ -958,11 +961,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0361b6620b365d4dbab556c652b6f97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  throwForce: 10
-  maxUpwardsModifier: 2
-  throwable: {fileID: 3160130157434880791, guid: ed71c06063dfdee43b771daade1813d1, type: 3}
+  throwablePrefab: {fileID: 3160130157434880791, guid: ed71c06063dfdee43b771daade1813d1, type: 3}
   cam: {fileID: 5625395854533514887}
-  AutoTime: 10
+  baseThrowForce: 10
+  maxThrowForce: 70
+  cooldownTime: 3
 --- !u!114 &7184699729405827023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -977,6 +980,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoAttack: {fileID: 6091600936105968078, guid: 5e75fe697a9ce01448245f803355ddd8, type: 3}
   cam: {fileID: 5625395854533514887}
+  cooldownTime: 1
 --- !u!114 &4589855055423176711
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -991,6 +995,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoAttack: {fileID: 7027930886508640938, guid: 99ee4574187ee854795b276e5f030ad2, type: 3}
   cam: {fileID: 5625395854533514887}
+  cooldownTime: 1
 --- !u!114 &-2434015613543476413
 MonoBehaviour:
   m_ObjectHideFlags: 0

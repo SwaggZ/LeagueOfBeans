@@ -4,50 +4,91 @@ using UnityEngine;
 
 public class caitlynW : MonoBehaviour
 {
-    public float throwForce = 10f;
-    public float maxUpwardsModifier = 2f;
-    public GameObject throwable;
-    public GameObject cam;
-    public float AutoTime = 10f;
+    public GameObject throwablePrefab; // The throwable object prefab
+    public GameObject cam; // The camera for aiming
+    public float baseThrowForce = 10f; // Base throw force
+    public float maxThrowForce = 50f; // Maximum throw force
+    public float cooldownTime = 3f; // Cooldown duration in seconds
+
+    private bool isOnCooldown = false; // Tracks cooldown state
+    private bool isCharging = false; // Tracks if the throw is being charged
+    private float chargeStartTime; // Time when the charge started
+    private int throwLevel; // Current throw level
+    private int maxThrowLevel; // Maximum throw level (based on maxThrowForce)
+
+    void Start()
+    {
+        // Calculate the maximum throw level based on maxThrowForce
+        maxThrowLevel = Mathf.FloorToInt(maxThrowForce / 10f);
+    }
 
     void Update()
     {
-        // Check for input or trigger to activate the ability
+        // Handle cooldown logic
+        if (isOnCooldown)
+        {
+            return; // Skip ability if on cooldown
+        }
+
+        // Check for input to charge the throw
         if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            StartCharging();
+        }
+
+        // Check for input release to throw
+        if (Input.GetKeyUp(KeyCode.Alpha1) && isCharging)
         {
             Throw();
         }
+
+        // Update throw level while charging
+        if (isCharging)
+        {
+            UpdateThrowLevel();
+        }
+    }
+
+    void StartCharging()
+    {
+        isCharging = true;
+        chargeStartTime = Time.time; // Record the time when charging starts
+        throwLevel = 1; // Start at the base throw level
+    }
+
+    void UpdateThrowLevel()
+    {
+        float elapsedTime = Time.time - chargeStartTime; // Calculate the charge duration
+        throwLevel = Mathf.Clamp(Mathf.FloorToInt(elapsedTime) + 1, 1, maxThrowLevel); // Update throw level
+        Debug.Log("Throw " + throwLevel);
     }
 
     void Throw()
     {
+        isCharging = false;
+        isOnCooldown = true; // Start cooldown
+        Invoke(nameof(ResetCooldown), cooldownTime);
+
+        // Calculate the throw force based on the throw level
+        float throwForce = baseThrowForce + (throwLevel - 1) * 10f;
+
+        // Get the current position and rotation for the throwable
         Vector3 currentPosition = transform.position;
         Quaternion currentRotation = cam.transform.rotation;
-        // Instantiate the GameObject
-        GameObject grenade = Instantiate(throwable, currentPosition, currentRotation);
 
-        // Get the Rigidbody component
-        Rigidbody rb = grenade.GetComponent<Rigidbody>();
-
+        // Instantiate the throwable and add force to it
+        GameObject throwable = Instantiate(throwablePrefab, currentPosition, currentRotation);
+        Rigidbody rb = throwable.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            // Calculate the upwardsModifier based on the camera's pitch
-            float pitch = cam.transform.eulerAngles.x;
-            float normalizedPitch = Mathf.Clamp01(pitch / 90f); // Normalize pitch between 0 and 1
-            float currentUpwardsModifier = Mathf.Lerp(1f, maxUpwardsModifier, normalizedPitch);
-
-            // Apply the throw force
-            rb.AddForce(Vector3.up * currentUpwardsModifier, ForceMode.Impulse);
             rb.AddForce(cam.transform.forward * throwForce, ForceMode.Impulse);
         }
-        else
-        {
-            Debug.LogError("Rigidbody component not found on the instantiated GameObject.");
-        }
+
+        Debug.Log($"Throwable thrown with force: {throwForce} (Level: {throwLevel})");
     }
 
-    void Destroy()
+    void ResetCooldown()
     {
-        Destroy(gameObject);
+        isOnCooldown = false;
     }
 }

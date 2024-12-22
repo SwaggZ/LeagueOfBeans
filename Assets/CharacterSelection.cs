@@ -20,9 +20,11 @@ public class CharacterSelection : MonoBehaviour
 
     public string[] AhriDesc;
     public string[] AsheDesc;
+    public string[] CaitlynDesc;
 
     public string[] AhriNames;
     public string[] AsheNames;
+    public string[] CaitlynNames;
 
     // Variables for dynamic values
     public int ahriLBaseDamage = 5;
@@ -38,6 +40,11 @@ public class CharacterSelection : MonoBehaviour
     public int asheRBaseDamage = 200;
     public int asheRAoeDamage = 50;
 
+    public int caitlynLBaseDamage = 50;
+    public int caitlynRBaseDamage = 20;
+    public int caitlynQBaseDamage = 50;
+    public int caitlynEBaseDamage = 40;
+    public int piercing = 2;
 
     private void Start() {
         AhriNames = new string[] {
@@ -46,12 +53,21 @@ public class CharacterSelection : MonoBehaviour
             $"Flickering Flames",
             $"Twin Echo"
         };
+
         AsheNames = new string[] {
             $"Frost Arrow",
             $"Rapid Barrage",
             $"Hailstorm Arrows",
             $"Glacial Strike"
         };
+        
+        CaitlynNames = new string[] {
+            $"Precision Shot",
+            $"Sniper's Mark",
+            $"Explosive Trap",
+            $"Net Escape"
+        };
+
 
         // Generate descriptions dynamically
         AhriDesc = new string[] {
@@ -66,6 +82,13 @@ public class CharacterSelection : MonoBehaviour
             $"Rapidly fires multiple arrows with a slight spread over a short time, dealing damage to enemies in quick succession. ({asheEArrowCount}*{asheEArrowDamage})",
             $"Fires a spread of arrows in a cone-shaped pattern. Each arrow deals damage to enemies in its path. ({asheQArrowCount}*{asheQArrowDamage})",
             $"Fires a large arrow that deals heavy damage upon impact and creates an area effect that deals decreasing damage based on distance. ({asheRBaseDamage}; {asheRAoeDamage} AOE)"
+        };
+
+        CaitlynDesc = new string[] {
+            $"Fires a precise bullet forward, dealing significant damage to enemies in its path. The bullet can pierce through up to {piercing} enemy targets ({caitlynLBaseDamage}).",
+            $"Marks an enemy with a stun and a knockback effect. The shot deals minor damage but focuses on controlling the enemy ({caitlynRBaseDamage}).",
+            $"Places a trap that stuns and traps enemies upon activation. The trap is immovable and lasts for a limited duration ({caitlynQBaseDamage}).",
+            $"Fires a net as a projectile that deals solid damage, stuns the first enemy it hits, and pushes Caitlyn backward for repositioning ({caitlynEBaseDamage})."
         };
 
         label.text = characters[selectedCharacter].name;
@@ -137,6 +160,14 @@ public class CharacterSelection : MonoBehaviour
         selectedCharacter = 2;
         characters[selectedCharacter].SetActive(true);
         label.text = characters[selectedCharacter].name;
+        LClick.text = CaitlynDesc[0];
+        LClickName.text = CaitlynNames[0];
+        RClick.text =  CaitlynDesc[1];
+        RClickName.text = CaitlynNames[1];
+        OneClick.text = CaitlynDesc[2];
+        OneClickName.text = CaitlynNames[2];
+        TwoClick.text = CaitlynDesc[3];
+        TwoClickName.text = CaitlynNames[3];
     }
 
     public void Galio()

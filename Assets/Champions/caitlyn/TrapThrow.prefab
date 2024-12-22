@@ -147,5 +147,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trapPrefab: {fileID: 2422531219419302652, guid: 8edb7f5ea0ea11d40949bace1b990055, type: 3}
-  detectionDistance: 0.15
+  detectionRadius: 0.5
   AutoTime: 30
+  damage: 50

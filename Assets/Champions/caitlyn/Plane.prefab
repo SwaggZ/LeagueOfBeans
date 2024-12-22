@@ -261,6 +261,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 20
   AutoTime: 2
+  damage: 20
+  isPlane: 1
+  knockbackDistance: 5
+  knockbackSpeed: 20
+  stunDuration: 2
 --- !u!1 &7338177410735625418
 GameObject:
   m_ObjectHideFlags: 0
