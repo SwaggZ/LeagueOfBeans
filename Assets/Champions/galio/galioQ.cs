@@ -15,6 +15,9 @@ public class galioQ : MonoBehaviour
     public GameObject prefabForFlatPath; // Assign in inspector
     public float speedForFlatPath = 3f; // Speed for moving along the flat path
 
+    public float cooldownDuration = 5f; // Cooldown duration in seconds
+    private bool isOnCooldown = false; // Flag to track cooldown state
+
     private bool drawGizmo = false;
     private Vector3[] gizmoPoints;
     private Vector3[] gizmoPointsInverse;
@@ -22,15 +25,33 @@ public class galioQ : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !isOnCooldown)
         {
-            CreateGizmoPoints();
-            CreateGizmoPointsInverse();
-            CreateGizmoPointsFlat();
-            drawGizmo = true;
-
-            StartPrefabMovement();
+            ActivateAbility();
         }
+    }
+
+    void ActivateAbility()
+    {
+        // Trigger the ability logic
+        CreateGizmoPoints();
+        CreateGizmoPointsInverse();
+        CreateGizmoPointsFlat();
+        drawGizmo = true;
+
+        StartPrefabMovement();
+
+        // Start the cooldown
+        StartCoroutine(StartCooldown());
+    }
+
+    IEnumerator StartCooldown()
+    {
+        isOnCooldown = true;
+        Debug.Log("Ability activated. Cooldown started.");
+        yield return new WaitForSeconds(cooldownDuration);
+        isOnCooldown = false;
+        Debug.Log("Cooldown complete. Ability ready.");
     }
 
     void StartPrefabMovement()

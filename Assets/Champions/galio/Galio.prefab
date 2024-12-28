@@ -124,6 +124,7 @@ GameObject:
   - component: {fileID: 5269298411701574288}
   - component: {fileID: 7609046019399900405}
   - component: {fileID: -6203211925299670847}
+  - component: {fileID: -5193020860452717292}
   m_Layer: 7
   m_Name: Galio
   m_TagString: Player
@@ -316,6 +317,20 @@ MonoBehaviour:
   speedForOriginalPath: 12
   prefabForFlatPath: {fileID: 1201613928302839629, guid: fe6ecd23dd849e94fa70968cfd78c002, type: 3}
   speedForFlatPath: 1
+  cooldownDuration: 5
+--- !u!114 &-5193020860452717292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2bb15b24d40eab449ed0467b0b324e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 1000
 --- !u!1 &4889469300711654489
 GameObject:
   m_ObjectHideFlags: 0

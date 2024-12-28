@@ -1100,6 +1100,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   orbPrefab: {fileID: 6775456692027582818, guid: ce7cc84a68f9c5c4ca1a8e1ff6aca2fa, type: 3}
+  cooldownTime: 5
 --- !u!114 &5474330212988748665
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1113,6 +1114,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   foxFireContainerPrefab: {fileID: 1939071198710108582, guid: 999804a63f8d8454298337ece938383c, type: 3}
+  cooldownTime: 5
 --- !u!114 &6608820326737795256
 MonoBehaviour:
   m_ObjectHideFlags: 0
