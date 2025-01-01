@@ -125,6 +125,7 @@ GameObject:
   - component: {fileID: 7609046019399900405}
   - component: {fileID: -6203211925299670847}
   - component: {fileID: -5193020860452717292}
+  - component: {fileID: -2130775903960787594}
   m_Layer: 7
   m_Name: Galio
   m_TagString: Player
@@ -331,6 +332,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 1000
+--- !u!114 &-2130775903960787594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 542eac2de05b7e7408fa0b93164a3d7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tornadoPrefab: {fileID: 6509364808142524017, guid: c23fef05a09bff044bd707b4c04840d5, type: 3}
+  growDuration: 0.75
+  pullDuration: 1.5
+  pullSpeed: 1.5
+  pullRadius: 7.75
+  healthBoost: 250
+  healthBoostDuration: 3
+  damage: 30
+  abilityCooldown: 5
+  desiredTornadoScale: {x: 0.5, y: 0.3, z: 0.5}
 --- !u!1 &4889469300711654489
 GameObject:
   m_ObjectHideFlags: 0
