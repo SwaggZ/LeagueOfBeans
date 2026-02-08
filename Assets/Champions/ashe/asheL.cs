@@ -41,5 +41,10 @@ public class asheL : MonoBehaviour
         // Start cooldown
         isOnCooldown = true;
         cooldownTimer = cooldownTime;
+        // Push cooldown to HUD (LeftClick)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.LeftClick, cooldownTime);
+        }
     }
 }

@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5476123947075311175}
   m_Layer: 0
   m_Name: Cylinder
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -62,7 +62,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: bf556155ffc16e948b9b9072309c2f14, type: 2}
+  - {fileID: 2100000, guid: bc3a834fc28b4264681475c3158fc22d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -470,7 +470,7 @@ GameObject:
   - component: {fileID: 2309064118777660322}
   m_Layer: 0
   m_Name: Sphere
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -518,7 +518,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4102952f129784e45955560e73e445b4, type: 2}
+  - {fileID: 2100000, guid: 1c0be5abe183fe04babe62b18bd15237, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -773,6 +773,8 @@ GameObject:
   - component: {fileID: 4589855055423176711}
   - component: {fileID: -2434015613543476413}
   - component: {fileID: 4671978812722306614}
+  - component: {fileID: 5867418729456219771}
+  - component: {fileID: 2784043928779077020}
   m_Layer: 7
   m_Name: Caitlyn
   m_TagString: Player
@@ -828,7 +830,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1d6331ffa654381458aff0df6f1e9718, type: 2}
+  - {fileID: 2100000, guid: 49b1c8b3e419ecb439e15abe4f1cc952, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -910,6 +912,7 @@ MonoBehaviour:
   speed: 12
   runSpeed: 18
   gravity: -9.81
+  gravityEnabled: 1
   groundCheck: {fileID: 704730074072657824}
   groundDistance: 0.4
   groundMask:
@@ -920,9 +923,15 @@ MonoBehaviour:
   canDash: 1
   dashTime: 0.5
   dashSpeed: 30
-  isCaitlyn: 1
-  caitDashTime: 0.1
-  caitDashSpeed: -60
+  dashKnockup: 0
+  dashKnockupForce: 5
+  dashDamage: 0
+  dashDamageAmount: 0
+  dashHitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  dashHitRadius: 1
+  dashTargetTag: Enemy
 --- !u!143 &2059535883183623119
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1010,6 +1019,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoAttack: {fileID: 8974796004527618272, guid: cb5bae26a1ae5fc4e9e8c907a6f5e6bf, type: 3}
   cam: {fileID: 5625395854533514887}
+  pushBackDistance: 5
+  pushBackSpeed: 20
+  cooldownTime: 3
 --- !u!114 &4671978812722306614
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1023,3 +1035,65 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 250
+  currentHealth: 0
+  damagePopupOffsetY: 1.25
+--- !u!114 &5867418729456219771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8418642580960513542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8552f1b57c07c004495fe23a0f2a7a09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healthSystem: {fileID: 0}
+  verticalOffset: 1.25
+  barWidth: 1.6
+  barHeight: 0.18
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.6}
+  fillColor: {r: 0.2, g: 1, b: 0.2, a: 0.95}
+  hideWhenFull: 1
+  billboardToCamera: 1
+--- !u!114 &2784043928779077020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8418642580960513542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a16337ff10428e4439efe8f9721840aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  anchorPos: {x: 0.5, y: 0}
+  anchoredOffset: {x: 0, y: 32}
+  slotSize: 200
+  spacing: 8
+  slotBorderColor: {r: 1, g: 1, b: 1, a: 0.9}
+  missingIconColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  missingIconText: NO IMG
+  cooldownMaskColor: {r: 0, g: 0, b: 0, a: 0.6}
+  keyLabelColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
+  timerTextColor: {r: 1, g: 1, b: 1, a: 0.95}
+  defaultAbilities:
+  - key: 0
+    icon: {fileID: 21300000, guid: 3726df97e7542ee4bbdfefe9e9bcf200, type: 3}
+    present: 1
+  - key: 1
+    icon: {fileID: 21300000, guid: 112ef078db00b6041a68b1ea28018c2d, type: 3}
+    present: 1
+  - key: 2
+    icon: {fileID: 21300000, guid: c8a0c33c332ed4c4e85cb4c81a6e6d5b, type: 3}
+    present: 1
+  - key: 3
+    icon: {fileID: 21300000, guid: a8edfe9ff9ec82c4c91f923a9cce075c, type: 3}
+    present: 1
+  defaultDash:
+    key: 0
+    icon: {fileID: 0}
+    present: 0
+  forceStayOnThisObject: 1

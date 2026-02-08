@@ -25,6 +25,12 @@ public class caitlynL : MonoBehaviour
         isOnCooldown = true;
         StartCoroutine(CooldownRoutine());
 
+        // Push cooldown to HUD (LeftClick)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.LeftClick, cooldownTime);
+        }
+
         // Get the current position and rotation of the player
         Vector3 currentPosition = transform.position;
         Quaternion currentRotation = cam.transform.rotation;

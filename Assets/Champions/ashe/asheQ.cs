@@ -52,6 +52,11 @@ public class asheQ : MonoBehaviour
     {
         isOnCooldown = true; // Start cooldown
         cooldownTimer = cooldownTime; // Set cooldown timer
+        // Push cooldown to HUD (RightClick)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.RightClick, cooldownTime);
+        }
 
         for (int i = 0; i < numberOfArrows; i++) // Use the modular number of arrows
         {

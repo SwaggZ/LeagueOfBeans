@@ -13,6 +13,7 @@ public class HeartMovement : MonoBehaviour
     private GameObject player; // Reference to the player
     private GameObject targetEnemy; // Reference to the enemy being pulled
     private float pullElapsedTime = 0f; // Tracks pull effect time
+    private bool impacted = false; // Whether the projectile has impacted/expired
 
     void Start()
     {
@@ -24,46 +25,49 @@ public class HeartMovement : MonoBehaviour
             Debug.LogError("Player object with tag 'Player' not found in the scene.");
         }
 
-        // Schedule the projectile to destroy its child objects after a set time
-        Invoke("DestroyChildObjects", AutoTime);
+        // Schedule auto-expire
+        Invoke(nameof(ImpactTimeout), AutoTime);
     }
 
     void Update()
     {
-        // Move the projectile forward
-        transform.Translate(Vector3.forward * speed * Time.deltaTime);
-
-        // Perform a raycast to detect collisions manually
-        Ray ray = new Ray(transform.position, transform.forward);
-        RaycastHit hit;
-
-        // Check for collision in front of the projectile
-        if (Physics.Raycast(ray, out hit, speed * Time.deltaTime))
+        if (!impacted)
         {
-            Debug.Log($"Heart collided with: {hit.collider.gameObject.name}, Tag: {hit.collider.gameObject.tag}");
+            // Move the projectile forward until we impact/expire
+            transform.Translate(Vector3.forward * speed * Time.deltaTime);
 
-            // Check if the object hit has a HealthSystem component
-            HealthSystem healthSystem = hit.collider.gameObject.GetComponent<HealthSystem>();
-            if (healthSystem != null)
+            // Perform a raycast to detect collisions manually
+            Ray ray = new Ray(transform.position, transform.forward);
+            RaycastHit hit;
+
+            // Check for collision in front of the projectile
+            if (Physics.Raycast(ray, out hit, speed * Time.deltaTime))
             {
-                Debug.Log("Heart hit an object with HealthSystem. Applying damage.");
-                healthSystem.TakeDamage(damage); // Apply damage to the object
+                Debug.Log($"Heart collided with: {hit.collider.gameObject.name}, Tag: {hit.collider.gameObject.tag}");
 
-                // Check if the object is an enemy
-                if (hit.collider.gameObject.CompareTag("Enemy"))
+                // Check if the object hit has a HealthSystem component
+                HealthSystem healthSystem = hit.collider.gameObject.GetComponent<HealthSystem>();
+                if (healthSystem != null)
                 {
-                    Debug.Log("Heart hit an enemy. Starting pull effect.");
-                    targetEnemy = hit.collider.gameObject; // Set the enemy as the target for pulling
-                    pullElapsedTime = 0f; // Reset pull timer
+                    Debug.Log("Heart hit an object with HealthSystem. Applying damage.");
+                    healthSystem.TakeDamage(damage); // Apply damage to the object
+
+                    // Check if the object is an enemy
+                    if (hit.collider.gameObject.CompareTag("Enemy"))
+                    {
+                        Debug.Log("Heart hit an enemy. Starting pull effect.");
+                        targetEnemy = hit.collider.gameObject; // Set the enemy as the target for pulling
+                        pullElapsedTime = 0f; // Reset pull timer
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Object hit is not tagged as 'Enemy'.");
+                    }
                 }
-                else
-                {
-                    Debug.LogWarning("Object hit is not tagged as 'Enemy'.");
-                }
+
+                // On collision we impact immediately (stop movement & visuals)
+                ImpactNow();
             }
-
-            // Destroy only the child objects on collision
-            DestroyChildObjects();
         }
 
         // Handle pulling the enemy if a target is set
@@ -87,16 +91,29 @@ public class HeartMovement : MonoBehaviour
             {
                 Debug.Log("Pull effect completed.");
                 targetEnemy = null;
+                // After pull completes, remove projectile completely
+                Destroy(gameObject);
             }
         }
     }
 
-    void DestroyChildObjects()
+    // Called by timeout to end the projectile gracefully
+    void ImpactTimeout()
     {
+        ImpactNow();
+        // If we timed out without an enemy, just destroy entirely
+        if (targetEnemy == null) Destroy(gameObject);
+    }
+
+    // Stop visuals and further movement/raycasting
+    void ImpactNow()
+    {
+        if (impacted) return;
+        impacted = true;
         foreach (Transform child in transform)
         {
-            Destroy(child.gameObject);
+            if (child != null) Destroy(child.gameObject);
         }
-        Debug.Log("Child objects of heart destroyed.");
+        Debug.Log("Heart impacted: visuals removed and movement stopped.");
     }
 }

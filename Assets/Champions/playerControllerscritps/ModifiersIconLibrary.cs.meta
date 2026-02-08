@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 4b79ad44e9ac63b4bbc3b66e341fa253
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - damageReduction: {fileID: 21300000, guid: cd004810f0d9a614aa5f1ebc6bb32236, type: 3}
+  - burn: {fileID: 21300000, guid: 0f91d19157fa313468ef6842de51ada9, type: 3}
+  - poison: {fileID: 21300000, guid: 9258fc4726072a24fa1de3cf958172ae, type: 3}
+  - shield: {fileID: 21300000, guid: 2f59af998bd920a42bddbc3ed85bd9e9, type: 3}
+  - haste: {fileID: 21300000, guid: 03fc1642bfc77784aa7b24a6bc211729, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

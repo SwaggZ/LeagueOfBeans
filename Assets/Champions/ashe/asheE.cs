@@ -26,7 +26,7 @@ public class asheE : MonoBehaviour
         }
 
         // Check for input to activate the ability
-        if (Input.GetKeyDown(KeyCode.Alpha1) && !isOnCooldown)
+        if (Input.GetKeyDown(KeyCode.Q) && !isOnCooldown)
         {
             ActivateAbility();
         }
@@ -61,5 +61,10 @@ public class asheE : MonoBehaviour
         // Start cooldown
         isOnCooldown = true;
         cooldownTimer = cooldownTime;
+        // Push cooldown to HUD (key 1)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.One, cooldownTime);
+        }
     }
 }

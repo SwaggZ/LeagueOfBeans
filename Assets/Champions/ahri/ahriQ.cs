@@ -25,7 +25,7 @@ public class ahriQ : MonoBehaviour
         }
 
         // Check for input to activate the ability
-        if (Input.GetKeyDown(KeyCode.Alpha1) && !isOnCooldown)
+        if (Input.GetKeyDown(KeyCode.Q) && !isOnCooldown)
         {
             ActivateAbility();
         }
@@ -34,13 +34,26 @@ public class ahriQ : MonoBehaviour
     void ActivateAbility()
     {
         // Set initial position
-        initialPosition = transform.position;
+        Vector3 spawnOffset = Camera.main != null ? Camera.main.transform.forward * 1.0f : transform.forward * 1.0f;
+        initialPosition = transform.position + spawnOffset;
 
         // Spawn the orb
         orbInstance = Instantiate(orbPrefab, initialPosition, Quaternion.identity);
 
+        // ahriQ.cs
+        OrbMovement orbMove = orbInstance.GetComponent<OrbMovement>();
+        if (orbMove != null)
+        {
+            orbMove.Init(transform); // Ahri becomes the owner
+        }
+
         // Start cooldown
         isOnCooldown = true;
         cooldownTimer = cooldownTime;
+        // Push cooldown to HUD (key 1)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.One, cooldownTime);
+        }
     }
 }

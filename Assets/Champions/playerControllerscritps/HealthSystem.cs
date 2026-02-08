@@ -1,12 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+ 
 
 public class HealthSystem : MonoBehaviour
 {
     public float maxHealth = 100f; // Maximum health of the object
-    private float currentHealth; // Current health of the object
+    [SerializeField]
+    private float currentHealth; // Current health of the object (serialized so inspector updates at runtime)
     private Renderer objectRenderer; // Renderer for changing color based on health
+    [Header("UI / Popups")]
+    [Tooltip("Vertical world-space offset for floating damage numbers above this object.")]
+    public float damagePopupOffsetY = 1.25f;
 
     void Start()
     {
@@ -28,9 +33,26 @@ public class HealthSystem : MonoBehaviour
     // Method to take damage
     public void TakeDamage(float damage)
     {
-        currentHealth -= damage; // Reduce health by the damage amount
+        // Apply incoming damage modifiers from attached components
+        float multiplier = 1f;
+        var behaviours = GetComponents<MonoBehaviour>();
+        foreach (var b in behaviours)
+        {
+            if (b is IIncomingDamageModifier mod)
+            {
+                float m = Mathf.Clamp(mod.GetIncomingDamageMultiplier(), 0f, 10f);
+                multiplier *= m;
+            }
+        }
 
-        Debug.Log($"{gameObject.name} took {damage} damage. Current health: {currentHealth}");
+        float appliedDamage = damage * multiplier;
+        currentHealth -= appliedDamage; // Reduce health by the modified damage amount
+
+        Debug.Log($"{gameObject.name} took {appliedDamage} damage (x{multiplier:0.00}). Current health: {currentHealth}");
+
+        // Spawn floating damage text slightly above the object
+        Vector3 popupPos = transform.position + Vector3.up * damagePopupOffsetY;
+        DamagePopupSpawner.Spawn(popupPos, appliedDamage);
 
         UpdateColor(); // Update color based on health
 
@@ -41,6 +63,12 @@ public class HealthSystem : MonoBehaviour
         }
     }
 
+    // Overload to accept int damage (useful when callers send integer values via SendMessage)
+    public void TakeDamage(int damage)
+    {
+        TakeDamage((float)damage);
+    }
+
     // Method to heal the object
     public void Heal(float amount)
     {
@@ -48,6 +76,9 @@ public class HealthSystem : MonoBehaviour
         currentHealth = Mathf.Min(currentHealth, maxHealth); // Ensure health does not exceed max health
 
         Debug.Log($"{gameObject.name} healed {amount} health. Current health: {currentHealth}");
+
+        // Optional: show a green heal popup (comment out if not desired)
+        // DamagePopupSpawner.Spawn(transform.position + Vector3.up * damagePopupOffsetY, $"+{Mathf.RoundToInt(amount)}", new Color(0.4f, 1f, 0.4f), false);
 
         UpdateColor(); // Update color based on health
     }

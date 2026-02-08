@@ -27,7 +27,7 @@ public class caitlynE : MonoBehaviour
     void Update()
     {
         // Check for input and ensure the ability is not on cooldown
-        if (Input.GetKeyDown(KeyCode.Alpha2) && !isOnCooldown)
+        if (Input.GetKeyDown(KeyCode.E) && !isOnCooldown)
         {
             ActivateAbility();
         }
@@ -38,6 +38,12 @@ public class caitlynE : MonoBehaviour
         // Start cooldown
         isOnCooldown = true;
         Invoke(nameof(ResetCooldown), cooldownTime);
+
+        // Push cooldown to HUD (key 2)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.Two, cooldownTime);
+        }
 
         // Spawn the projectile
         Vector3 currentPosition = transform.position;

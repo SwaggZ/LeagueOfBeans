@@ -24,7 +24,7 @@ public class asheR : MonoBehaviour
         }
 
         // Check for input to activate the ability
-        if (Input.GetKeyDown(KeyCode.Alpha2) && !isOnCooldown)
+        if (Input.GetKeyDown(KeyCode.E) && !isOnCooldown)
         {
             ActivateAbility();
         }
@@ -41,5 +41,10 @@ public class asheR : MonoBehaviour
         // Start cooldown
         isOnCooldown = true;
         cooldownTimer = cooldownTime;
+        // Push cooldown to HUD (key 2)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.Two, cooldownTime);
+        }
     }
 }

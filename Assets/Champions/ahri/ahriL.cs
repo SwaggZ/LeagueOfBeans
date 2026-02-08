@@ -43,5 +43,10 @@ public class ahriL : MonoBehaviour
         // Start cooldown timer
         isOnCooldown = true;
         cooldownTimer = cooldownTime; // Reset the timer to the full cooldown duration
+        // Push cooldown to HUD (LeftClick)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.LeftClick, cooldownTime);
+        }
     }
 }

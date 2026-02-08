@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class galioW : MonoBehaviour
+public class galioW : MonoBehaviour, IIncomingDamageModifier
 {
     public GameObject tornadoPrefab; // Assign the tornado prefab in the inspector
     public float growDuration = 0.75f; // Time for the tornado to grow to full size
@@ -23,6 +23,8 @@ public class galioW : MonoBehaviour
 
     private CharacterControl characterControl; // Reference to Galio's movement system
     private HealthSystem healthSystem; // Reference to Galio's health system
+    private bool wActive = false; // Whether W is currently active (pressed and held)
+    private float originalSpeed = 0f; // Speed before slowing
 
     void Start()
     {
@@ -42,15 +44,18 @@ public class galioW : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1) && !isOnCooldown)
+        var r = GetComponent<galioR>();
+        bool ultActive = r != null && r.IsUltActive();
+
+        if (Input.GetKeyDown(KeyCode.Q) && !isOnCooldown && !wActive && !ultActive)
         {
-            Debug.Log("Alpha1 key pressed. Activating ability...");
+            Debug.Log("Q key pressed. Activating ability...");
             ActivateAbility();
         }
 
-        if (Input.GetKeyUp(KeyCode.Alpha1))
+        if (Input.GetKeyUp(KeyCode.Q) && wActive)
         {
-            Debug.Log("Alpha1 key released. Ending ability...");
+            Debug.Log("Q key released. Ending ability...");
             EndAbility();
         }
 
@@ -72,10 +77,17 @@ public class galioW : MonoBehaviour
 
     void ActivateAbility()
     {
+        if (wActive) return; // already active
+        if (isOnCooldown) return; // cannot activate during cooldown
+
         // Slow Galio
         if (characterControl != null)
         {
-            characterControl.speed *= 0.5f;
+            if (!wActive)
+            {
+                originalSpeed = characterControl.speed;
+            }
+            characterControl.speed = originalSpeed * 0.5f;
             Debug.Log("Galio's speed slowed.");
         }
 
@@ -86,11 +98,18 @@ public class galioW : MonoBehaviour
             currentTornado.transform.localScale = Vector3.zero; // Start at scale 0
             isGrowing = true;
             Debug.Log("Tornado instantiated and growth started.");
+            if (ModifiersUIManager.Instance != null)
+            {
+                Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.damageReduction : null;
+                ModifiersUIManager.Instance.AddOrUpdate("GalioDR30", icon, "30%", -1f, 0);
+            }
         }
         else
         {
             Debug.LogError("Failed to instantiate tornado prefab!");
         }
+
+        wActive = true;
     }
 
     void GrowTornado()
@@ -128,7 +147,7 @@ public class galioW : MonoBehaviour
         // Reset Galio's speed
         if (characterControl != null)
         {
-            characterControl.speed /= 0.5f; // Restore original speed
+            characterControl.speed = originalSpeed; // Restore original speed exactly
             Debug.Log("Galio's speed restored.");
         }
 
@@ -151,6 +170,28 @@ public class galioW : MonoBehaviour
 
         // Start cooldown
         StartCoroutine(StartCooldown());
+        // Update UI cooldown indicator for key 1
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.One, abilityCooldown);
+        }
+
+        if (ModifiersUIManager.Instance != null)
+        {
+            ModifiersUIManager.Instance.Remove("GalioDR30");
+        }
+
+        wActive = false;
+    }
+
+    private void OnDisable()
+    {
+        // Safety: if disabled while active, restore speed
+        if (wActive && characterControl != null)
+        {
+            characterControl.speed = originalSpeed;
+        }
+        wActive = false;
     }
 
     void ApplyDamage()
@@ -209,6 +250,12 @@ public class galioW : MonoBehaviour
         yield return new WaitForSeconds(abilityCooldown);
         isOnCooldown = false;
         Debug.Log("Ability ready.");
+    }
+
+    // While W (tornado/attract) is active, reduce damage by 30%
+    public float GetIncomingDamageMultiplier()
+    {
+        return wActive ? 0.7f : 1f;
     }
 
     void OnDrawGizmosSelected()

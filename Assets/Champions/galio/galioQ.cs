@@ -15,7 +15,7 @@ public class galioQ : MonoBehaviour
     public GameObject prefabForFlatPath; // Assign in inspector
     public float speedForFlatPath = 3f; // Speed for moving along the flat path
 
-    public float cooldownDuration = 5f; // Cooldown duration in seconds
+    public float abilityCooldown = 5f; // Cooldown duration in seconds
     private bool isOnCooldown = false; // Flag to track cooldown state
 
     private bool drawGizmo = false;
@@ -25,7 +25,9 @@ public class galioQ : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && !isOnCooldown)
+        var r = GetComponent<galioR>();
+        bool ultActive = r != null && r.IsUltActive();
+        if (Input.GetMouseButtonDown(0) && !isOnCooldown && !ultActive)
         {
             ActivateAbility();
         }
@@ -42,6 +44,10 @@ public class galioQ : MonoBehaviour
         StartPrefabMovement();
 
         // Start the cooldown
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.LeftClick, abilityCooldown);
+        }
         StartCoroutine(StartCooldown());
     }
 
@@ -49,7 +55,7 @@ public class galioQ : MonoBehaviour
     {
         isOnCooldown = true;
         Debug.Log("Ability activated. Cooldown started.");
-        yield return new WaitForSeconds(cooldownDuration);
+        yield return new WaitForSeconds(abilityCooldown);
         isOnCooldown = false;
         Debug.Log("Cooldown complete. Ability ready.");
     }

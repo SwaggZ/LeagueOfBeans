@@ -126,6 +126,10 @@ GameObject:
   - component: {fileID: -6203211925299670847}
   - component: {fileID: -5193020860452717292}
   - component: {fileID: -2130775903960787594}
+  - component: {fileID: 3567713899098364021}
+  - component: {fileID: 69405687590020218}
+  - component: {fileID: 8997370681590712589}
+  - component: {fileID: 8906237517448752376}
   m_Layer: 7
   m_Name: Galio
   m_TagString: Player
@@ -179,7 +183,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 273615da4aaff5e40b80398447414bf7, type: 2}
+  - {fileID: 2100000, guid: a0837649a5973c14981ab0c542913347, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -261,6 +265,7 @@ MonoBehaviour:
   speed: 12
   runSpeed: 16
   gravity: -23
+  gravityEnabled: 1
   groundCheck: {fileID: 40418327004780384}
   groundDistance: 0.4
   groundMask:
@@ -271,6 +276,15 @@ MonoBehaviour:
   canDash: 1
   dashTime: 1
   dashSpeed: 40
+  dashKnockup: 1
+  dashKnockupForce: 15
+  dashDamage: 1
+  dashDamageAmount: 15
+  dashHitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  dashHitRadius: 1
+  dashTargetTag: Enemy
 --- !u!143 &7609046019399900405
 CharacterController:
   m_ObjectHideFlags: 0
@@ -318,7 +332,7 @@ MonoBehaviour:
   speedForOriginalPath: 12
   prefabForFlatPath: {fileID: 1201613928302839629, guid: fe6ecd23dd849e94fa70968cfd78c002, type: 3}
   speedForFlatPath: 1
-  cooldownDuration: 5
+  abilityCooldown: 5
 --- !u!114 &-5193020860452717292
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -332,6 +346,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 1000
+  currentHealth: 0
+  damagePopupOffsetY: 1.25
 --- !u!114 &-2130775903960787594
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -354,6 +370,105 @@ MonoBehaviour:
   damage: 30
   abilityCooldown: 5
   desiredTornadoScale: {x: 0.5, y: 0.3, z: 0.5}
+--- !u!114 &3567713899098364021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eba3e1646c742134bb7d8b0663fcffe3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHeight: 10
+  liftDuration: 0.5
+  aimDuration: 3
+  impactRadius: 8
+  knockupForce: 20
+  knockupDuration: 0.15
+  enemyTag: Enemy
+  abilityCooldown: 12
+--- !u!114 &69405687590020218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8552f1b57c07c004495fe23a0f2a7a09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healthSystem: {fileID: 0}
+  verticalOffset: 1.25
+  barWidth: 1.6
+  barHeight: 0.18
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.6}
+  fillColor: {r: 0.2, g: 1, b: 0.2, a: 0.95}
+  hideWhenFull: 1
+  billboardToCamera: 1
+--- !u!114 &8997370681590712589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a16337ff10428e4439efe8f9721840aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  anchorPos: {x: 0.5, y: 0}
+  anchoredOffset: {x: 0, y: 32}
+  slotSize: 200
+  spacing: 8
+  slotBorderColor: {r: 1, g: 1, b: 1, a: 0.9}
+  missingIconColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  missingIconText: NO IMG
+  cooldownMaskColor: {r: 0, g: 0, b: 0, a: 0.6}
+  keyLabelColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
+  timerTextColor: {r: 1, g: 1, b: 1, a: 0.95}
+  defaultAbilities:
+  - key: 0
+    icon: {fileID: 21300000, guid: 0279262b0cd96a5458291bc169c7c79d, type: 3}
+    present: 1
+  - key: 1
+    icon: {fileID: 21300000, guid: 6635380863adb29499697ac9cc491e47, type: 3}
+    present: 1
+  - key: 2
+    icon: {fileID: 21300000, guid: 35333023defb9af45b8fcfdc1fb8fae2, type: 3}
+    present: 1
+  - key: 3
+    icon: {fileID: 21300000, guid: 287af5f5527c2404d80748bd2200f9e0, type: 3}
+    present: 1
+  defaultDash:
+    key: 4
+    icon: {fileID: 21300000, guid: fb2788fffcb8b95429433a3b6036c5c5, type: 3}
+    present: 1
+  forceStayOnThisObject: 1
+--- !u!114 &8906237517448752376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75f5d3e62daa74c4b806581e319f8722, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  impactRadius: 6
+  damage: 50
+  knockupForce: 7
+  knockupDuration: 0.5
+  enemyTag: Enemy
+  abilityCooldown: 5
+  smashVfxPrefab: {fileID: 0}
 --- !u!1 &4889469300711654489
 GameObject:
   m_ObjectHideFlags: 0

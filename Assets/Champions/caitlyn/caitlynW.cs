@@ -31,13 +31,13 @@ public class caitlynW : MonoBehaviour
         }
 
         // Check for input to charge the throw
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
             StartCharging();
         }
 
         // Check for input release to throw
-        if (Input.GetKeyUp(KeyCode.Alpha1) && isCharging)
+        if (Input.GetKeyUp(KeyCode.Q) && isCharging)
         {
             Throw();
         }
@@ -68,6 +68,12 @@ public class caitlynW : MonoBehaviour
         isCharging = false;
         isOnCooldown = true; // Start cooldown
         Invoke(nameof(ResetCooldown), cooldownTime);
+
+        // Push cooldown to HUD (key 1)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.One, cooldownTime);
+        }
 
         // Calculate the throw force based on the throw level
         float throwForce = baseThrowForce + (throwLevel - 1) * 10f;

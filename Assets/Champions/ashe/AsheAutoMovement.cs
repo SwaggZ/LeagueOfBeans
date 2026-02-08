@@ -14,6 +14,13 @@ public class AsheAutoMovement : MonoBehaviour
     public float ultRadius = 5f; // Radius of the area damage for ultimate
     public float maxUltDamage = 50f; // Maximum damage for enemies at the center of the area
 
+    [Header("Forward-only homing")]
+    [Tooltip("Center of the homing query is placed this many units in front of the arrow.")]
+    public float forwardHomingOffset = 1.5f;
+
+    [Tooltip("Radius of the small area *in front* of the arrow that can acquire a target.")]
+    public float forwardHomingRadius = 2.0f;
+
     private GameObject targetEnemy; // The current target for homing
 
     void Start()
@@ -81,19 +88,41 @@ public class AsheAutoMovement : MonoBehaviour
 
     void FindClosestEnemy()
     {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        // Position the detection sphere slightly in front of the arrow
+        Vector3 queryCenter = transform.position + transform.forward * forwardHomingOffset;
+
+        // Get everything in that small forward sphere
+        Collider[] hits = Physics.OverlapSphere(
+            queryCenter,
+            forwardHomingRadius,
+            ~0, // everything
+            QueryTriggerInteraction.Ignore
+        );
+
         float closestDistance = homingRange;
         targetEnemy = null;
 
-        foreach (GameObject enemy in enemies)
+        foreach (Collider hit in hits)
         {
-            float distanceToEnemy = Vector3.Distance(transform.position, enemy.transform.position);
-            if (distanceToEnemy < closestDistance)
+            // ONLY enemies
+            if (!hit.CompareTag("Enemy"))
+                continue;
+
+            float distance = Vector3.Distance(transform.position, hit.transform.position);
+
+            if (distance < closestDistance)
             {
-                closestDistance = distanceToEnemy;
-                targetEnemy = enemy;
+                closestDistance = distance;
+                targetEnemy = hit.gameObject;
             }
         }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (!isCurving) return;
+        Vector3 queryCenter = transform.position + transform.forward * forwardHomingOffset;
+        Gizmos.DrawWireSphere(queryCenter, forwardHomingRadius);
     }
 
     void ApplyAreaDamage()

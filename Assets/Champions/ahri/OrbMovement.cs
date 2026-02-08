@@ -13,9 +13,40 @@ public class OrbMovement : MonoBehaviour
     public float damage = 50f; // Damage dealt by the orb
     public float damageCooldown = 0.4f; // Cooldown between consecutive damage to the same enemy
 
+    // OrbMovement.cs
+    [SerializeField] private Transform owner;
+    private Collider orbCol;
+    private Collider ownerCol;
+
     private Vector3 initialPosition;
     private Vector3 targetPosition;
     private Dictionary<GameObject, float> damageCooldownTimers = new Dictionary<GameObject, float>(); // Tracks cooldowns for each enemy
+
+    // OrbMovement.cs
+    public void Init(Transform ownerTransform)
+    {
+        owner = ownerTransform;
+
+        // Cache colliders and ignore collision with the owner immediately
+        if (orbCol == null) orbCol = GetComponent<Collider>();
+
+        if (owner != null)
+        {
+            ownerCol = owner.GetComponent<Collider>();
+            if (orbCol != null && ownerCol != null)
+            {
+                Physics.IgnoreCollision(orbCol, ownerCol, true);
+            }
+        }
+    }
+
+    // OrbMovement.cs
+    void Awake()
+    {
+        orbCol = GetComponent<Collider>();
+        if (orbCol == null)
+            Debug.LogError("OrbMovement.cs: Orb has no Collider!");
+    }
 
     void Start()
     {
@@ -41,6 +72,10 @@ public class OrbMovement : MonoBehaviour
         if (Physics.Raycast(ray, out hit, speed * Time.deltaTime))
         {
             Debug.Log($"Projectile collided with: {hit.collider.gameObject.name}, Tag: {hit.collider.gameObject.tag}");
+
+            // OrbMovement.cs - prevent self hit
+            if (owner != null && hit.collider.transform == owner) return;
+            if (hit.collider.CompareTag("Player")) return;
 
             // Check if the object hit has a HealthSystem component
             HealthSystem healthSystem = hit.collider.gameObject.GetComponent<HealthSystem>();

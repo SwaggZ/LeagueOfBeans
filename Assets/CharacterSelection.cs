@@ -4,183 +4,201 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 
+// Clean and robust character selection controller
 public class CharacterSelection : MonoBehaviour
 {
-    public GameObject[] characters;
-    public int selectedCharacter = 0;
+    [System.Serializable]
+    public class CharacterEntry
+    {
+        public string id; // e.g., "Ahri", "Ashe", "Caitlyn", "Galio"
+        public GameObject preview; // scene preview object (enabled/disabled in selection scene)
+        public GameObject gameplayPrefab; // prefab to spawn in gameplay scene
+
+        [Header("Ability Names")]
+        public string lmbName = "Left Click";
+        public string rmbName = "Right Click";
+        public string oneName = "1";
+        public string twoName = "2";
+
+        [Header("Ability Descriptions")]
+        [TextArea] public string lmbDesc = "";
+        [TextArea] public string rmbDesc = "";
+        [TextArea] public string oneDesc = "";
+        [TextArea] public string twoDesc = "";
+    }
+
+    [Header("Characters (configure in Inspector)")]
+    public List<CharacterEntry> characters = new List<CharacterEntry>();
+
+    [Header("UI References")] 
     public TMP_Text label;
-    public TMP_Text LClick;
-    public TMP_Text RClick;
-    public TMP_Text OneClick;
-    public TMP_Text TwoClick;
-    public TMP_Text LClickName;
-    public TMP_Text RClickName;
-    public TMP_Text OneClickName;
-    public TMP_Text TwoClickName;
+    public TMP_Text lmbNameText;
+    public TMP_Text rmbNameText;
+    public TMP_Text oneNameText;
+    public TMP_Text twoNameText;
+    public TMP_Text lmbDescText;
+    public TMP_Text rmbDescText;
+    public TMP_Text oneDescText;
+    public TMP_Text twoDescText;
 
-    public string[] AhriDesc;
-    public string[] AsheDesc;
-    public string[] CaitlynDesc;
+    [Header("Target Scene")] 
+    [Tooltip("If not empty, loads by name; otherwise uses scene index.")]
+    public string gameplaySceneName = "";
+    public int gameplaySceneIndex = 1;
+    [Header("Spawn Point (in gameplay scene)")]
+    public string spawnPointName = "PlayerSpawn";
+    public string spawnPointTag = "PlayerSpawn";
 
-    public string[] AhriNames;
-    public string[] AsheNames;
-    public string[] CaitlynNames;
+    [Header("Defaults")] 
+    public int selectedIndex = 0;
 
-    // Variables for dynamic values
-    public int ahriLBaseDamage = 5;
-    public int ahriQBaseDamage = 20;
-    public int ahriWBaseDamage = 40;
-    public int ahriEBaseDamage = 50;
-
-    public int asheLBaseDamage = 20;
-    public int asheQArrowDamage = 20;
-    public int asheQArrowCount = 10;
-    public int asheEArrowDamage = 20;
-    public int asheEArrowCount = 20;
-    public int asheRBaseDamage = 200;
-    public int asheRAoeDamage = 50;
-
-    public int caitlynLBaseDamage = 50;
-    public int caitlynRBaseDamage = 20;
-    public int caitlynQBaseDamage = 50;
-    public int caitlynEBaseDamage = 40;
-    public int piercing = 2;
-
-    private void Start() {
-        AhriNames = new string[] {
-            $"Spirit Shot",
-            $"Enchanted Allure",
-            $"Flickering Flames",
-            $"Twin Echo"
-        };
-
-        AsheNames = new string[] {
-            $"Frost Arrow",
-            $"Rapid Barrage",
-            $"Hailstorm Arrows",
-            $"Glacial Strike"
-        };
-        
-        CaitlynNames = new string[] {
-            $"Precision Shot",
-            $"Sniper's Mark",
-            $"Explosive Trap",
-            $"Net Escape"
-        };
-
-
-        // Generate descriptions dynamically
-        AhriDesc = new string[] {
-            $"Fires a single energy orb forward, dealing damage to the first target it hits ({ahriLBaseDamage}).",
-            $"Fires a heart-shaped projectile that damages and charms the first enemy hit, forcing them to slowly walk toward Ahri for a short duration. ({ahriEBaseDamage})",
-            $"Summons three flames that orbit Ahri, targeting and firing at nearby enemies. Each flame deals damage upon impact. ({ahriWBaseDamage})",
-            $"Launches an orb forward that damages enemies it passes through and returns to Ahri after reaching its maximum distance. The returning orb also deals damage to enemies in its path. ({ahriQBaseDamage})"
-        };
-
-        AsheDesc = new string[] {
-            $"Fires a single arrow straight forward, dealing damage to the first target it hits. ({asheLBaseDamage})",
-            $"Rapidly fires multiple arrows with a slight spread over a short time, dealing damage to enemies in quick succession. ({asheEArrowCount}*{asheEArrowDamage})",
-            $"Fires a spread of arrows in a cone-shaped pattern. Each arrow deals damage to enemies in its path. ({asheQArrowCount}*{asheQArrowDamage})",
-            $"Fires a large arrow that deals heavy damage upon impact and creates an area effect that deals decreasing damage based on distance. ({asheRBaseDamage}; {asheRAoeDamage} AOE)"
-        };
-
-        CaitlynDesc = new string[] {
-            $"Fires a precise bullet forward, dealing significant damage to enemies in its path. The bullet can pierce through up to {piercing} enemy targets ({caitlynLBaseDamage}).",
-            $"Marks an enemy with a stun and a knockback effect. The shot deals minor damage but focuses on controlling the enemy ({caitlynRBaseDamage}).",
-            $"Places a trap that stuns and traps enemies upon activation. The trap is immovable and lasts for a limited duration ({caitlynQBaseDamage}).",
-            $"Fires a net as a projectile that deals solid damage, stuns the first enemy it hits, and pushes Caitlyn backward for repositioning ({caitlynEBaseDamage})."
-        };
-
-        label.text = characters[selectedCharacter].name;
-        LClick.text = AhriDesc[0];
-        LClickName.text = AhriNames[0];
-        RClick.text =  AhriDesc[1];
-        RClickName.text = AhriNames[1];
-        OneClick.text = AhriDesc[2];
-        OneClickName.text = AhriNames[2];
-        TwoClick.text = AhriDesc[3];
-        TwoClickName.text = AhriNames[3];
-    }
-
-    public void NextCharacter()
+    void Awake()
     {
-        characters[selectedCharacter].SetActive(false);
-        selectedCharacter = (selectedCharacter + 1) % characters.Length;
-        characters[selectedCharacter].SetActive(true);
-        label.text = characters[selectedCharacter].name;
-    }
-
-    public void PreviousCharacter()
-    {
-        characters[selectedCharacter].SetActive(false);
-        selectedCharacter--;
-        if(selectedCharacter < 0)
+        // Auto-fill gameplayPrefab from PreviewBinding if missing, then prefer gameplay prefab name for id
+        for (int i = 0; i < characters.Count; i++)
         {
-            selectedCharacter += characters.Length;
+            var e = characters[i];
+            if (e == null) continue;
+            if (e.gameplayPrefab == null && e.preview != null)
+            {
+                var binding = e.preview.GetComponent<PreviewBinding>();
+                if (binding != null && binding.gameplayPrefab != null)
+                {
+                    e.gameplayPrefab = binding.gameplayPrefab;
+                    Debug.Log($"[Selection] Auto-bound gameplay prefab for '{e.preview.name}' -> {e.gameplayPrefab.name}");
+                }
+            }
+
+            // Prefer gameplay prefab name for id when available; otherwise use preview name
+            if (string.IsNullOrWhiteSpace(e.id))
+            {
+                if (e.gameplayPrefab != null)
+                {
+                    e.id = e.gameplayPrefab.name;
+                    Debug.Log($"[Selection] Auto-set id for entry {i} to '{e.id}' from gameplay prefab name");
+                }
+                else if (e.preview != null)
+                {
+                    e.id = e.preview.name;
+                    Debug.Log($"[Selection] Auto-set id for entry {i} to '{e.id}' from preview name");
+                }
+            }
         }
-        characters[selectedCharacter].SetActive(true);
-        label.text = characters[selectedCharacter].name;
     }
 
-    public void Ahri()
+    void Start()
     {
-        characters[selectedCharacter].SetActive(false);
-        selectedCharacter = 0;
-        characters[selectedCharacter].SetActive(true);
-        label.text = characters[selectedCharacter].name;
-        LClick.text = AhriDesc[0];
-        LClickName.text = AhriNames[0];
-        RClick.text =  AhriDesc[1];
-        RClickName.text = AhriNames[1];
-        OneClick.text = AhriDesc[2];
-        OneClickName.text = AhriNames[2];
-        TwoClick.text = AhriDesc[3];
-        TwoClickName.text = AhriNames[3];
+        // Enable only selected preview
+        ApplySelection(Mathf.Clamp(selectedIndex, 0, Mathf.Max(0, characters.Count - 1)));
     }
 
-    public void Ashe()
+    public void SelectByIndex(int index)
     {
-        characters[selectedCharacter].SetActive(false);
-        selectedCharacter = 1;
-        characters[selectedCharacter].SetActive(true);
-        label.text = characters[selectedCharacter].name;
-        LClick.text = AsheDesc[0];
-        LClickName.text = AsheNames[0];
-        RClick.text =  AsheDesc[1];
-        RClickName.text = AsheNames[1];
-        OneClick.text = AsheDesc[2];
-        OneClickName.text = AsheNames[2];
-        TwoClick.text = AsheDesc[3];
-        TwoClickName.text = AsheNames[3];
+        ApplySelection(index);
     }
 
-    public void Cait()
+    // Convenience hooks for existing buttons (optional)
+    public void Ahri()  => ApplySelectionById("Ahri");
+    public void Ashe()  => ApplySelectionById("Ashe");
+    public void Cait()  => ApplySelectionById("Caitlyn");
+    public void Galio() => ApplySelectionById("Galio");
+
+    private void ApplySelectionById(string id)
     {
-        characters[selectedCharacter].SetActive(false);
-        selectedCharacter = 2;
-        characters[selectedCharacter].SetActive(true);
-        label.text = characters[selectedCharacter].name;
-        LClick.text = CaitlynDesc[0];
-        LClickName.text = CaitlynNames[0];
-        RClick.text =  CaitlynDesc[1];
-        RClickName.text = CaitlynNames[1];
-        OneClick.text = CaitlynDesc[2];
-        OneClickName.text = CaitlynNames[2];
-        TwoClick.text = CaitlynDesc[3];
-        TwoClickName.text = CaitlynNames[3];
+        int idx = characters.FindIndex(c =>
+            c != null && (
+                (!string.IsNullOrEmpty(c.id) && string.Equals(c.id, id, System.StringComparison.OrdinalIgnoreCase)) ||
+                (c.preview != null && string.Equals(c.preview.name, id, System.StringComparison.OrdinalIgnoreCase)) ||
+                (c.gameplayPrefab != null && string.Equals(c.gameplayPrefab.name, id, System.StringComparison.OrdinalIgnoreCase))
+            )
+        );
+        if (idx < 0) { Debug.LogWarning($"[Selection] Could not find id '{id}'. Falling back to index 0."); idx = 0; }
+        ApplySelection(idx);
     }
 
-    public void Galio()
+    private void ApplySelection(int index)
     {
-        characters[selectedCharacter].SetActive(false);
-        selectedCharacter = 3;
-        characters[selectedCharacter].SetActive(true);
-        label.text = characters[selectedCharacter].name;
+        if (characters == null || characters.Count == 0) return;
+        index = Mathf.Clamp(index, 0, characters.Count - 1);
+        selectedIndex = index;
+
+        for (int i = 0; i < characters.Count; i++)
+        {
+            var e = characters[i];
+            if (e != null && e.preview != null)
+            {
+                e.preview.SetActive(i == selectedIndex);
+            }
+        }
+
+        UpdateUI();
+        DumpPreviewStates();
+    }
+
+    private void UpdateUI()
+    {
+        var e = GetCurrent();
+        if (e == null) return;
+
+        if (label != null)
+            label.text = e.preview != null ? e.preview.name : (e.id ?? "<Character>");
+
+        if (lmbNameText) lmbNameText.text = e.lmbName;
+        if (rmbNameText) rmbNameText.text = e.rmbName;
+        if (oneNameText) oneNameText.text = e.oneName;
+        if (twoNameText) twoNameText.text = e.twoName;
+
+        if (lmbDescText) lmbDescText.text = e.lmbDesc;
+        if (rmbDescText) rmbDescText.text = e.rmbDesc;
+        if (oneDescText) oneDescText.text = e.oneDesc;
+        if (twoDescText) twoDescText.text = e.twoDesc;
     }
 
     public void StartGame()
     {
-        PlayerPrefs.SetInt("selectedCharacter", selectedCharacter);
-        SceneManager.LoadScene(1, LoadSceneMode.Single);
+        var e = GetCurrent();
+        if (e == null)
+        {
+            Debug.LogError("[Selection] No current character selected.");
+            return;
+        }
+        if (e.gameplayPrefab == null)
+        {
+            Debug.LogError($"[Selection] Selected '{(e.preview!=null?e.preview.name:e.id)}' has no gameplayPrefab assigned. Add PreviewBinding to preview or assign in CharacterSelection.");
+            return;
+        }
+
+        // Carry over spawn request into the next scene
+        var go = new GameObject("SelectionSpawnRequest");
+        var req = go.AddComponent<SelectionSpawnRequest>();
+        req.prefab = e.gameplayPrefab;
+        req.spawnPointName = spawnPointName;
+        req.spawnPointTag = spawnPointTag;
+        DontDestroyOnLoad(go);
+
+        Debug.Log($"[Selection] Starting game with '{e.gameplayPrefab.name}'. Loading scene {(string.IsNullOrEmpty(gameplaySceneName)?("#"+gameplaySceneIndex):gameplaySceneName)}");
+        if (!string.IsNullOrEmpty(gameplaySceneName))
+            SceneManager.LoadScene(gameplaySceneName, LoadSceneMode.Single);
+        else
+            SceneManager.LoadScene(gameplaySceneIndex, LoadSceneMode.Single);
+    }
+
+    private CharacterEntry GetCurrent()
+    {
+        if (characters == null || characters.Count == 0) return null;
+        int idx = Mathf.Clamp(selectedIndex, 0, characters.Count - 1);
+        return characters[idx];
+    }
+
+    private void DumpPreviewStates()
+    {
+        if (characters == null) return;
+        for (int i = 0; i < characters.Count; i++)
+        {
+            var e = characters[i];
+            string name = e?.preview != null ? e.preview.name : (e?.id ?? "<null>");
+            bool active = e?.preview != null && e.preview.activeSelf;
+            Debug.Log($"[Selection] Preview[{i}] {name} active={active}");
+        }
     }
 }

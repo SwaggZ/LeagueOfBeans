@@ -41,5 +41,10 @@ public class ahriE : MonoBehaviour
         // Start cooldown timer
         isOnCooldown = true;
         cooldownTimer = cooldownTime;
+        // Push cooldown to HUD (RightClick)
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.RightClick, cooldownTime);
+        }
     }
 }
