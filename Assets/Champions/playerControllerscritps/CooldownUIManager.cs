@@ -148,6 +148,17 @@ public class CooldownUIManager : MonoBehaviour
         {
             _rootRT.gameObject.SetActive(!inSelection);
         }
+
+        // Ensure the cursor is free/visible in selection scenes
+        if (inSelection)
+        {
+            try
+            {
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+            }
+            catch { }
+        }
     }
 
     private void EnsureResources()

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
  
 
 public class HealthSystem : MonoBehaviour
@@ -87,7 +88,26 @@ public class HealthSystem : MonoBehaviour
     private void Die()
     {
         Debug.Log($"{gameObject.name} has died.");
+        // If this is the player, return to character selection scene
+        if (CompareTag("Player"))
+        {
+            TryReturnToSelection();
+        }
         Destroy(gameObject); // Destroy the object
+    }
+
+    private void TryReturnToSelection()
+    {
+        // Load the character selection scene by name. Adjust if your selection scene has a different name.
+        const string selectionSceneName = "selection";
+        try
+        {
+            SceneManager.LoadScene(selectionSceneName, LoadSceneMode.Single);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"HealthSystem: Failed to load '{selectionSceneName}' scene on death: {ex.Message}");
+        }
     }
 
     // Getter for current health (optional)

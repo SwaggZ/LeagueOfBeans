@@ -54,6 +54,8 @@ public class CharacterSelection : MonoBehaviour
 
     void Awake()
     {
+        // Ensure cursor is free/visible in selection
+        try { Cursor.visible = true; Cursor.lockState = CursorLockMode.None; } catch {}
         // Auto-fill gameplayPrefab from PreviewBinding if missing, then prefer gameplay prefab name for id
         for (int i = 0; i < characters.Count; i++)
         {
@@ -88,6 +90,8 @@ public class CharacterSelection : MonoBehaviour
 
     void Start()
     {
+        // Redo in Start in case other scripts toggled during scene load
+        try { Cursor.visible = true; Cursor.lockState = CursorLockMode.None; } catch {}
         // Enable only selected preview
         ApplySelection(Mathf.Clamp(selectedIndex, 0, Mathf.Max(0, characters.Count - 1)));
     }
@@ -102,6 +106,7 @@ public class CharacterSelection : MonoBehaviour
     public void Ashe()  => ApplySelectionById("Ashe");
     public void Cait()  => ApplySelectionById("Caitlyn");
     public void Galio() => ApplySelectionById("Galio");
+    public void Aphelios() => ApplySelectionById("Aphelios");
 
     private void ApplySelectionById(string id)
     {
