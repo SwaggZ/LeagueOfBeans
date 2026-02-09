@@ -1,6 +1,4 @@
 # LeagueOfBeans
-League of Beans
-Description
 Welcome to League of Beans, a fan-inspired FPS shooter game that brings the iconic champions from League of Legends into the world of fast-paced first-person action! Immerse yourself in the thrilling battles, each character featuring unique abilities and playstyles reminiscent of your favorite League champions.
 
 This project is a labor of love by developer Dev Dambel, who has skillfully crafted an engaging and dynamic gaming experience. Dive into the intense battles, explore vibrant arenas, and unleash the power of your chosen champion in this unofficial, unlicensed fan project.
