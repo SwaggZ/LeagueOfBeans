@@ -24,9 +24,9 @@ public class CooldownUIManager : MonoBehaviour
 
     [Header("Layout")]
     public Vector2 anchorPos = new Vector2(0.5f, 0f); // bottom-center
-    public Vector2 anchoredOffset = new Vector2(0f, 32f);
-    public float slotSize = 64f;
-    public float spacing = 8f;
+    public Vector2 anchoredOffset = new Vector2(0f, 24f);
+    public float slotSize = 52f;
+    public float spacing = 6f;
 
     [Header("Appearance")]
     public Color slotBorderColor = new Color(1f, 1f, 1f, 0.9f);
@@ -201,7 +201,11 @@ public class CooldownUIManager : MonoBehaviour
 
         _canvas = canvasGO.AddComponent<Canvas>();
         _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasGO.AddComponent<CanvasScaler>();
+        var scaler = canvasGO.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 1f; // prefer matching height to keep bottom bar consistent
         canvasGO.AddComponent<GraphicRaycaster>();
 
         // No need for DontDestroyOnLoad on the canvas since it's a child of this manager

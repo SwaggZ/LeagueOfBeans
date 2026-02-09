@@ -3,6 +3,7 @@ using UnityEngine;
 public class ApheliosProjectile : MonoBehaviour
 {
     private ApheliosController _owner;
+    private ApheliosController.WeaponType _firedWeapon;
     private float _damage;
     private float _speed;
     private float _maxDistance;
@@ -12,10 +13,18 @@ public class ApheliosProjectile : MonoBehaviour
     private Vector3 _startPos;
     private float _burnDur;
     private float _burnDps;
+    private bool _hitTwice;
+    private int _bouncesRemaining;
+    private float _bounceRadius;
 
-    public void Init(ApheliosController owner, float damage, float speed, float maxDistance, float lifestealPercent, float slowPercent, float slowDuration, float burnDuration = 0f, float burnDps = 2f)
+    public void Init(ApheliosController owner,
+                     ApheliosController.WeaponType firedWeapon,
+                     float damage, float speed, float maxDistance,
+                     float lifestealPercent, float slowPercent, float slowDuration,
+                     float burnDuration = 0f, float burnDps = 2f,
+                     bool hitTwice = false, int bounces = 0, float bounceRadius = 0f)
     {
-        _owner = owner; _damage = damage; _speed = speed; _maxDistance = maxDistance; _lifesteal = lifestealPercent; _slowPct = slowPercent; _slowDur = slowDuration; _burnDur = burnDuration; _burnDps = burnDps;
+        _owner = owner; _firedWeapon = firedWeapon; _damage = damage; _speed = speed; _maxDistance = maxDistance; _lifesteal = lifestealPercent; _slowPct = slowPercent; _slowDur = slowDuration; _burnDur = burnDuration; _burnDps = burnDps; _hitTwice = hitTwice; _bouncesRemaining = bounces; _bounceRadius = bounceRadius;
         _startPos = transform.position;
     }
 
@@ -27,8 +36,7 @@ public class ApheliosProjectile : MonoBehaviour
         // raycast to detect hit between positions
         if (Physics.Raycast(transform.position, transform.forward, out var hit, step))
         {
-            OnHit(hit.collider);
-            Destroy(gameObject);
+            OnHit(hit.collider, hit.point);
             return;
         }
         transform.position = nextPos;
@@ -38,18 +46,22 @@ public class ApheliosProjectile : MonoBehaviour
         }
     }
 
-    void OnHit(Collider col)
+    void OnHit(Collider col, Vector3 hitPoint)
     {
         if (col == null) return;
         var hp = col.GetComponent<HealthSystem>();
-        if (hp != null)
+        // Damage application: single or double hit for empowered sniper
+        int times = _hitTwice ? 2 : 1;
+        for (int i = 0; i < times; i++)
         {
-            hp.TakeDamage(_damage);
-            // lifesteal heals the shooter if he has HealthSystem
-            if (_lifesteal > 0f && _owner != null)
+            if (hp != null)
             {
-                var selfHp = _owner.GetComponent<HealthSystem>();
-                if (selfHp != null) selfHp.Heal(_damage * _lifesteal);
+                hp.TakeDamage(_damage);
+                if (_lifesteal > 0f && _owner != null)
+                {
+                    var selfHp = _owner.GetComponent<HealthSystem>();
+                    if (selfHp != null) selfHp.Heal(_damage * _lifesteal);
+                }
             }
         }
 
@@ -66,7 +78,6 @@ public class ApheliosProjectile : MonoBehaviour
                 slow = col.gameObject.AddComponent<SlowStatus>();
             }
             slow.Apply(_slowPct, _slowDur);
-            // Do NOT push enemy status effects to the player's Modifiers HUD
         }
 
         // Burn (non-stackable refresh)
@@ -83,5 +94,50 @@ public class ApheliosProjectile : MonoBehaviour
             }
             burn.Apply(_burnDur, _burnDps);
         }
+
+        // Orbs: track recent hits so E can stun
+        if (_owner != null && _firedWeapon == ApheliosController.WeaponType.Orbs)
+        {
+            _owner.RecordOrbsHit(col);
+        }
+
+        // Flamethrower (Ability): reflect one shot away from the player (no further bounces)
+        // Flamethrower ability: enemy hit emits a second wave continuing AWAY in the hit direction.
+        // The second wave should NOT emit another wave.
+        if (_firedWeapon == ApheliosController.WeaponType.Flamethrower && _bouncesRemaining > 0)
+        {
+            // "Hit direction" = the direction this projectile was moving when it hit
+            Vector3 waveDir = transform.forward;
+            if (waveDir.sqrMagnitude < 0.0001f) waveDir = (hitPoint - transform.position).normalized;
+
+            Vector3 spawnPos = hitPoint + waveDir * 0.15f; // nudge forward so it doesn't instantly re-hit the same collider
+
+            GameObject go = Instantiate(gameObject, spawnPos, Quaternion.LookRotation(waveDir));
+
+            // Prevent immediate re-hit on the same enemy collider (if both have colliders)
+            var newCol = go.GetComponent<Collider>();
+            if (newCol != null && col != null)
+                Physics.IgnoreCollision(newCol, col, true);
+
+            var proj = go.GetComponent<ApheliosProjectile>();
+            if (proj == null) proj = go.AddComponent<ApheliosProjectile>();
+
+            // Second wave: bounces = 0 so it won't create another wave
+            proj.Init(_owner, _firedWeapon,
+                      _damage, _speed, _maxDistance,
+                      _lifesteal, _slowPct, _slowDur,
+                      _burnDur, _burnDps,
+                      hitTwice: false,
+                      bounces: 0,
+                      bounceRadius: 0f);
+        }
+
+        Destroy(gameObject);
+    }
+
+    private Vector3 GetColliderCenter(Collider c)
+    {
+        if (c == null) return transform.position;
+        return c.bounds.center;
     }
 }

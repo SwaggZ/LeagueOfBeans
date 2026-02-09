@@ -223,6 +223,19 @@ public class CharacterControl : MonoBehaviour
             isStunned = true;
             stunEndTime = Time.time + stunDuration;
             Debug.Log($"{gameObject.name} is stunned for {stunDuration} seconds.");
+            if (CompareTag("Player") && ModifiersUIManager.Instance != null)
+            {
+                Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.STUN : null;
+                ModifiersUIManager.Instance.AddOrUpdate("StatusStun", icon, "Stunned", stunDuration, 0);
+            }
+        }
+
+        // If there's an upward component, show a Knockup badge for the player
+        if (direction.y > 0.1f && CompareTag("Player") && ModifiersUIManager.Instance != null)
+        {
+            float dur = stunDuration > 0 ? stunDuration : Mathf.Max(0.4f, distance > 0 && speed > 0 ? (distance / speed) : 0.6f);
+            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.KNOCKUP : null;
+            ModifiersUIManager.Instance.AddOrUpdate("StatusKnockup", icon, "Knocked Up", dur, 0);
         }
     }
 
@@ -231,6 +244,11 @@ public class CharacterControl : MonoBehaviour
         isStunned = true;
         stunEndTime = Time.time + duration;
         Debug.Log($"{gameObject.name} is stunned for {duration} seconds.");
+        if (CompareTag("Player") && ModifiersUIManager.Instance != null)
+        {
+            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.STUN : null;
+            ModifiersUIManager.Instance.AddOrUpdate("StatusStun", icon, "Stunned", duration, 0);
+        }
     }
 
     private void HandleKnockback()
@@ -261,27 +279,36 @@ public class CharacterControl : MonoBehaviour
         // Knockup: prefer applying CharacterControl's ApplyKnockback if present
         if (dashKnockup)
         {
+            // Try DummyController first (for enemies)
+            DummyController dummyCtrl = hit.GetComponent<DummyController>();
+            if (dummyCtrl != null)
+            {
+                Vector3 dir = (hit.transform.position - transform.position).normalized;
+                dir.y = 1f; // ensure upward component
+                dummyCtrl.ApplyKnockback(dir, 2f, dashKnockupForce, 0f);
+                return;
+            }
+
+            // Try CharacterControl
             CharacterControl other = hit.GetComponent<CharacterControl>();
             if (other != null)
             {
                 Vector3 dir = (hit.transform.position - transform.position).normalized;
                 dir.y = 1f; // ensure upward component
                 other.ApplyKnockback(dir, 2f, dashKnockupForce, 0f);
+                return;
             }
-            else
+
+            // fallback: if the hit has a rigidbody, apply an upward impulse
+            Rigidbody rb = hit.attachedRigidbody;
+            if (rb != null)
             {
-                // fallback: if the hit has a rigidbody, apply an upward impulse
-                Rigidbody rb = hit.attachedRigidbody;
-                if (rb != null)
-                {
-                    rb.AddForce(Vector3.up * dashKnockupForce, ForceMode.VelocityChange);
-                }
-                else
-                {
-                    // try SendMessage for a generic knockup handler
-                    hit.SendMessage("ApplyKnup", dashKnockupForce, SendMessageOptions.DontRequireReceiver);
-                }
+                rb.AddForce(Vector3.up * dashKnockupForce, ForceMode.VelocityChange);
+                return;
             }
+
+            // try SendMessage for a generic knockup handler
+            hit.SendMessage("ApplyKnup", dashKnockupForce, SendMessageOptions.DontRequireReceiver);
         }
     }
 }

@@ -9,11 +9,13 @@ public class SlowStatus : MonoBehaviour
     private float _baseSpeed;
     private float _activePct = 0f; // 0.3 = 30% slow
     private Coroutine _co;
+    private ModifierTracker _modifierTracker;
 
     void Awake()
     {
         _cc = GetComponent<CharacterControl>();
         if (_cc != null) _baseSpeed = _cc.speed;
+        _modifierTracker = GetComponent<ModifierTracker>();
     }
 
     public void Apply(float slowPercent, float duration)
@@ -25,6 +27,20 @@ public class SlowStatus : MonoBehaviour
         if (_co != null) StopCoroutine(_co);
         _co = StartCoroutine(Run(duration));
         UpdateSpeed();
+        // Show slowness icon for the local player only
+        if (CompareTag("Player") && ModifiersUIManager.Instance != null)
+        {
+            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.SLOWNESS : null;
+            float d = Mathf.Max(0.01f, duration);
+            ModifiersUIManager.Instance.AddOrUpdate("StatusSlow", icon, "Slowed", d, 0);
+        }
+
+        // Dummy / enemy modifier icon
+        if (!CompareTag("Player") && _modifierTracker != null && ModifiersIconLibrary.Instance != null)
+        {
+            Sprite icon = ModifiersIconLibrary.Instance.SLOWNESS;
+            _modifierTracker.AddOrUpdate("StatusSlow", icon, duration);
+        }
     }
 
     IEnumerator Run(float dur)
@@ -38,6 +54,15 @@ public class SlowStatus : MonoBehaviour
         _activePct = 0f;
         UpdateSpeed();
         _co = null;
+        if (CompareTag("Player") && ModifiersUIManager.Instance != null)
+        {
+            ModifiersUIManager.Instance.Remove("StatusSlow");
+        }
+        // Dummy / enemy cleanup
+        if (!CompareTag("Player") && _modifierTracker != null)
+        {
+            _modifierTracker.Remove("StatusSlow");
+        }
     }
 
     void UpdateSpeed()

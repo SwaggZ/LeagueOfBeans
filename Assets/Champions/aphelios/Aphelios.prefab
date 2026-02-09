@@ -600,6 +600,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healthSystem: {fileID: 0}
+  modifierIconSize: 0.3
+  modifierSpacing: 0.05
+  modifierVerticalOffset: 0.25
   verticalOffset: 1.25
   barWidth: 1.6
   barHeight: 0.18
@@ -620,8 +623,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anchorPos: {x: 0.5, y: 0}
-  anchoredOffset: {x: 0, y: 32}
-  slotSize: 200
+  anchoredOffset: {x: 0, y: 0.2}
+  slotSize: 150
   spacing: 8
   slotBorderColor: {r: 1, g: 1, b: 1, a: 0.9}
   missingIconColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
@@ -637,10 +640,10 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: e6c73dbe64557584785063a3609bdfa7, type: 3}
     present: 1
   - key: 2
-    icon: {fileID: 21300000, guid: 6de861a003d3e00408c25e3da49a32fe, type: 3}
-    present: 0
+    icon: {fileID: 21300000, guid: e6c73dbe64557584785063a3609bdfa7, type: 3}
+    present: 1
   - key: 3
-    icon: {fileID: 21300000, guid: 1e82df6973469a9479ffca333017e3ee, type: 3}
+    icon: {fileID: 21300000, guid: e6c73dbe64557584785063a3609bdfa7, type: 3}
     present: 0
   defaultDash:
     key: 0
@@ -669,6 +672,10 @@ MonoBehaviour:
   scytheIcon: {fileID: 21300000, guid: a88dabde5b50f01478ca3a1e9392c6f6, type: 3}
   orbsIcon: {fileID: 21300000, guid: 6cd4825d70e17b64998bbd75a295a12f, type: 3}
   flamethrowerIcon: {fileID: 21300000, guid: 1c217c0f84f7d30409a2352e227a5a2b, type: 3}
+  sniperAbilityIcon: {fileID: 21300000, guid: d403803833477064d81fbde8e9bb178c, type: 3}
+  scytheAbilityIcon: {fileID: 21300000, guid: a55979f0e3328774387fbeb01b4abbf5, type: 3}
+  orbsAbilityIcon: {fileID: 21300000, guid: f2f5ce437311781488e0ed0c3cb0eac4, type: 3}
+  flamethrowerAbilityIcon: {fileID: 21300000, guid: b75367dedc035c94691a2da117aaf660, type: 3}
   sniper:
     damage: 60
     cooldown: 1.8
@@ -710,5 +717,23 @@ MonoBehaviour:
     slowPercent: 0
     slowDuration: 0
   currentWeapon: 0
+  sniperAbilityCooldown: 8
+  scytheAbilityCooldown: 10
+  orbsAbilityCooldown: 12
+  flamethrowerAbilityCooldown: 10
+  sniperEmpoweredShots: 0
+  orbsStunWindow: 3
+  orbsStunDuration: 1.5
+  scytheAuraDuration: 3
+  scytheAuraRadius: 6
+  scytheAuraTickInterval: 0.3
+  scytheAuraDamagePerTick: 10
+  flameBounceCount: 4
+  flameBounceRadius: 8
+  flameBounceWindow: 4
+  flameAbilityPellets: 10
+  flameAbilitySpreadAngle: 30
+  flameAbilitySpeedMult: 1.5
+  flameAbilityRangeMult: 1.5
   burnDuration: 3
   burnDamagePerSecond: 2

@@ -48,7 +48,7 @@ public class galioR : MonoBehaviour, IIncomingDamageModifier
         // Show DR indicator (50%) while active
         if (ModifiersUIManager.Instance != null)
         {
-            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.damageReduction : null;
+            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.DMGRD : null;
             ModifiersUIManager.Instance.AddOrUpdate("GalioDR50", icon, "50%", -1f, 0);
         }
 
@@ -171,35 +171,46 @@ public class galioR : MonoBehaviour, IIncomingDamageModifier
             if (_impactHitTargets.Contains(target)) continue;
             _impactHitTargets.Add(target);
 
-            // Try to apply knockback via CharacterControl on the target gameobject
-            CharacterControl enemyControl = target.GetComponent<CharacterControl>();
-            if (enemyControl != null)
-            {
-                Vector3 knockupDir = new Vector3(0f, 1f, 0f); // Pure upward knockup
-                enemyControl.ApplyKnockback(knockupDir, knockupForce, knockupForce, knockupDuration);
-                Debug.Log($"Galio R knockup applied to {target.name}");
-            }
-            else
-            {
-                // Fallback: apply force via rigidbody on the collider or parent
-                Rigidbody rb = hit.attachedRigidbody ?? target.GetComponent<Rigidbody>();
-                if (rb != null)
-                {
-                    rb.AddForce(Vector3.up * knockupForce, ForceMode.VelocityChange);
-                    Debug.Log($"Galio R knockup (rigidbody) applied to {target.name}");
-                }
-                else
-                {
-                    // Last resort: send message to the target
-                    target.SendMessage("ApplyKnockup", knockupForce, SendMessageOptions.DontRequireReceiver);
-                }
-            }
-
             // Apply damage if HealthSystem exists on the target
             HealthSystem healthSystem = target.GetComponent<HealthSystem>();
             if (healthSystem != null)
             {
                 healthSystem.TakeDamage(50f); // Base impact damage
+            }
+
+            // Try DummyController first (for enemies/dummies)
+            DummyController dummyControl = target.GetComponent<DummyController>();
+            if (dummyControl != null)
+            {
+                Vector3 knockupDir = new Vector3(0f, 1f, 0f); // Pure upward knockup
+                dummyControl.ApplyKnockback(knockupDir, knockupForce, knockupForce, knockupDuration);
+                Debug.Log($"Galio R knockup applied to {target.name} (DummyController)");
+            }
+            else
+            {
+                // Try CharacterControl on the target gameobject
+                CharacterControl enemyControl = target.GetComponent<CharacterControl>();
+                if (enemyControl != null)
+                {
+                    Vector3 knockupDir = new Vector3(0f, 1f, 0f); // Pure upward knockup
+                    enemyControl.ApplyKnockback(knockupDir, knockupForce, knockupForce, knockupDuration);
+                    Debug.Log($"Galio R knockup applied to {target.name}");
+                }
+                else
+                {
+                    // Fallback: apply force via rigidbody on the collider or parent
+                    Rigidbody rb = hit.attachedRigidbody ?? target.GetComponent<Rigidbody>();
+                    if (rb != null)
+                    {
+                        rb.AddForce(Vector3.up * knockupForce, ForceMode.VelocityChange);
+                        Debug.Log($"Galio R knockup (rigidbody) applied to {target.name}");
+                    }
+                    else
+                    {
+                        // Last resort: send message to the target
+                        target.SendMessage("ApplyKnockup", knockupForce, SendMessageOptions.DontRequireReceiver);
+                    }
+                }
             }
         }
 

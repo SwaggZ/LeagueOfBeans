@@ -62,6 +62,17 @@ public class SelectionSpawnRequest : MonoBehaviour
             new GameObject("ModifiersUIManager").AddComponent<ModifiersUIManager>();
         }
 
+        // Ensure ModifiersIconLibrary exists so modifiers pull icons from it
+        if (ModifiersIconLibrary.Instance == null)
+        {
+            var libInScene = FindObjectOfType<ModifiersIconLibrary>(true);
+            if (libInScene == null)
+            {
+                Debug.LogWarning("[SelectionSpawnRequest] No ModifiersIconLibrary found. Creating an empty one; assign sprites in your persistent scene to avoid NO IMG placeholders.");
+                new GameObject("ModifiersIconLibrary").AddComponent<ModifiersIconLibrary>();
+            }
+        }
+
         // Ensure a camera is available
         Camera chosenCam = null;
         var cam = player.GetComponentInChildren<Camera>(true);

@@ -4,11 +4,17 @@ MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences:
-  - damageReduction: {fileID: 21300000, guid: cd004810f0d9a614aa5f1ebc6bb32236, type: 3}
-  - burn: {fileID: 21300000, guid: 0f91d19157fa313468ef6842de51ada9, type: 3}
-  - poison: {fileID: 21300000, guid: 9258fc4726072a24fa1de3cf958172ae, type: 3}
-  - shield: {fileID: 21300000, guid: 2f59af998bd920a42bddbc3ed85bd9e9, type: 3}
-  - haste: {fileID: 21300000, guid: 03fc1642bfc77784aa7b24a6bc211729, type: 3}
+  - damageReduction: {instanceID: 0}
+  - ATTRACT: {fileID: 21300000, guid: af0351ebb93b3a04b9db489d906df6d7, type: 3}
+  - DMGBURN: {fileID: 21300000, guid: 0f91d19157fa313468ef6842de51ada9, type: 3}
+  - DMGPOISON: {fileID: 21300000, guid: 9258fc4726072a24fa1de3cf958172ae, type: 3}
+  - DMGRD: {fileID: 21300000, guid: cd004810f0d9a614aa5f1ebc6bb32236, type: 3}
+  - HASTE: {fileID: 21300000, guid: 03fc1642bfc77784aa7b24a6bc211729, type: 3}
+  - KNOCKUP: {fileID: 21300000, guid: ece28fec18b142d48a6b75cc6e2c8ac7, type: 3}
+  - MOVESPEED: {fileID: 21300000, guid: f913d2ae3e7bf834da39fea9a6ed1cdc, type: 3}
+  - SHIELD: {fileID: 21300000, guid: 2f59af998bd920a42bddbc3ed85bd9e9, type: 3}
+  - SLOWNESS: {fileID: 21300000, guid: 5be3c9d1281e2e54286c32dde62d3f09, type: 3}
+  - STUN: {fileID: 21300000, guid: 771fe6a680774a24e92060495ff7f157, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

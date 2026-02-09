@@ -8,20 +8,47 @@ public class BurnStatus : MonoBehaviour
     private float _remaining;
     private Coroutine _co;
     private HealthSystem _hp;
+    private ModifierTracker _modifierTracker;
 
     void Awake()
     {
         _hp = GetComponent<HealthSystem>();
+        _modifierTracker = GetComponent<ModifierTracker>();
     }
 
     // Apply or refresh burn. Non-stackable.
     public void Apply(float duration, float dps)
     {
         if (_hp == null) return;
+
         damagePerSecond = dps;
         _remaining = duration;
+
         if (_co == null)
             _co = StartCoroutine(Run());
+
+        // Player UI (unchanged)
+        if (CompareTag("Player") && ModifiersUIManager.Instance != null)
+        {
+            Sprite icon = ModifiersIconLibrary.Instance != null
+                ? ModifiersIconLibrary.Instance.DMGBURN
+                : null;
+
+            ModifiersUIManager.Instance.AddOrUpdate(
+                "StatusBurn",
+                icon,
+                "Burning",
+                Mathf.Max(0.01f, duration),
+                0
+            );
+        }
+
+        // Dummy / enemy modifier icon
+        if (!CompareTag("Player") && _modifierTracker != null && ModifiersIconLibrary.Instance != null)
+        {
+            Sprite icon = ModifiersIconLibrary.Instance.DMGBURN;
+            _modifierTracker.AddOrUpdate("StatusBurn", icon, duration);
+        }
     }
 
     IEnumerator Run()
@@ -36,6 +63,10 @@ public class BurnStatus : MonoBehaviour
             _remaining -= 1f;
         }
         _co = null;
+        if (CompareTag("Player") && ModifiersUIManager.Instance != null)
+        {
+            ModifiersUIManager.Instance.Remove("StatusBurn");
+        }
         // Optionally remove component; keep it lightweight
         // Destroy(this);
     }

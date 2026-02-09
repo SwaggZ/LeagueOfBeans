@@ -40,6 +40,16 @@ public class PlayerSpawner : MonoBehaviour
         {
             new GameObject("ModifiersUIManager").AddComponent<ModifiersUIManager>();
         }
+        // Ensure a ModifiersIconLibrary exists early so badges can fetch sprites
+        if (ModifiersIconLibrary.Instance == null)
+        {
+            var libInScene = FindObjectOfType<ModifiersIconLibrary>(true);
+            if (libInScene == null)
+            {
+                Debug.LogWarning("[Spawner] No ModifiersIconLibrary found. Creating an empty one; assign sprites in your persistent scene to avoid NO IMG placeholders.");
+                new GameObject("ModifiersIconLibrary").AddComponent<ModifiersIconLibrary>();
+            }
+        }
         if (characterPrefabs == null || characterPrefabs.Length == 0)
         {
             Debug.LogError("PlayerSpawner: No characterPrefabs assigned.");

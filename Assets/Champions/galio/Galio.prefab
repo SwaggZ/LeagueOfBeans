@@ -277,7 +277,7 @@ MonoBehaviour:
   dashTime: 1
   dashSpeed: 40
   dashKnockup: 1
-  dashKnockupForce: 15
+  dashKnockupForce: 8
   dashDamage: 1
   dashDamageAmount: 15
   dashHitMask:
@@ -386,7 +386,7 @@ MonoBehaviour:
   liftDuration: 0.5
   aimDuration: 3
   impactRadius: 8
-  knockupForce: 20
+  knockupForce: 12
   knockupDuration: 0.15
   enemyTag: Enemy
   abilityCooldown: 12
@@ -403,6 +403,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healthSystem: {fileID: 0}
+  modifierIconSize: 0.3
+  modifierSpacing: 0.05
+  modifierVerticalOffset: 0.25
   verticalOffset: 1.25
   barWidth: 1.6
   barHeight: 0.18
@@ -423,8 +426,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anchorPos: {x: 0.5, y: 0}
-  anchoredOffset: {x: 0, y: 32}
-  slotSize: 200
+  anchoredOffset: {x: 0, y: 0.25}
+  slotSize: 150
   spacing: 8
   slotBorderColor: {r: 1, g: 1, b: 1, a: 0.9}
   missingIconColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}

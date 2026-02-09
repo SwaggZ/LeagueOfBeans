@@ -1070,8 +1070,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anchorPos: {x: 0.5, y: 0}
-  anchoredOffset: {x: 0, y: 32}
-  slotSize: 200
+  anchoredOffset: {x: 0, y: 0.25}
+  slotSize: 150
   spacing: 8
   slotBorderColor: {r: 1, g: 1, b: 1, a: 0.9}
   missingIconColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}

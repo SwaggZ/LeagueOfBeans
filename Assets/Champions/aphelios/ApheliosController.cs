@@ -21,6 +21,12 @@ public class ApheliosController : MonoBehaviour
     public Sprite orbsIcon;
     public Sprite flamethrowerIcon;
 
+    [Header("HUD Icons (RMB Ability)")]
+    public Sprite sniperAbilityIcon;
+    public Sprite scytheAbilityIcon;
+    public Sprite orbsAbilityIcon;
+    public Sprite flamethrowerAbilityIcon;
+
     [System.Serializable]
     public class WeaponStats
     {
@@ -45,9 +51,44 @@ public class ApheliosController : MonoBehaviour
     public WeaponType currentWeapon = WeaponType.Sniper;
     private bool _onCooldown = false;
 
+    [Header("Ability (RMB) - General")]
+    public float sniperAbilityCooldown = 8f;
+    public float scytheAbilityCooldown = 10f;
+    public float orbsAbilityCooldown = 12f;
+    public float flamethrowerAbilityCooldown = 10f;
+    private bool _abilityOnCooldown = false;
+
+    [Header("Ability (RMB) - Sniper")] 
+    public int sniperEmpoweredShots = 0; // when > 0, next sniper shots hit twice
+
+    [Header("Ability (RMB) - Orbs")] 
+    public float orbsStunWindow = 3f; // seconds back in time to search
+    public float orbsStunDuration = 1.5f;
+
+    [Header("Ability (RMB) - Scythe")]
+    public float scytheAuraDuration = 3f;
+    public float scytheAuraRadius = 6f;
+    public float scytheAuraTickInterval = 0.3f;
+    public float scytheAuraDamagePerTick = 10f;
+
+    [Header("Ability (RMB) - Flamethrower")] 
+    public int flameBounceCount = 2; // number of times a projectile can bounce
+    public float flameBounceRadius = 8f; // search radius to find next target
+    public float flameBounceWindow = 4f; // time window after cast where shots can bounce
+    private bool _flameBounceActive = false;
+    [Header("Ability (RMB) - Flamethrower Tuning")] 
+    public int flameAbilityPellets = 9; // wider volley: default more pellets than base
+    public float flameAbilitySpreadAngle = 28f; // degrees, wider than base spread
+    public float flameAbilitySpeedMult = 1.15f; // slightly faster
+    public float flameAbilityRangeMult = 1.5f; // go further than base
+
     [Header("Burn (Flamethrower)")]
     public float burnDuration = 3f; // seconds
     public float burnDamagePerSecond = 2f;
+
+    // Track recent orbs hits for the stun recall
+    private struct RecentHit { public Collider col; public float time; }
+    private readonly System.Collections.Generic.List<RecentHit> _recentOrbsHits = new System.Collections.Generic.List<RecentHit>();
 
     void Awake()
     {
@@ -62,6 +103,7 @@ public class ApheliosController : MonoBehaviour
         // UI managers might not exist yet in Awake (spawn order). We'll also update in Start.
         ShowWeaponIndicator();
         UpdateLmbIcon();
+        UpdateAbilityIcon();
     }
 
     void Start()
@@ -69,12 +111,14 @@ public class ApheliosController : MonoBehaviour
         // Ensure UI gets updated after managers are spawned by the spawner
         ShowWeaponIndicator();
         UpdateLmbIcon();
+        UpdateAbilityIcon();
     }
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0)) TryShoot();
         if (Input.GetKeyDown(KeyCode.Q)) CycleWeapon(); // switcher ability
+        if (Input.GetMouseButtonDown(1)) TryUseAbility(); // weapon ability on RMB
     }
 
     public void CycleWeapon()
@@ -82,16 +126,17 @@ public class ApheliosController : MonoBehaviour
         currentWeapon = (WeaponType)(((int)currentWeapon + 1) % 4);
         ShowWeaponIndicator();
         UpdateLmbIcon();
+        UpdateAbilityIcon();
         // small switch cooldown on HUD (Q)
         if (CooldownUIManager.Instance != null) CooldownUIManager.Instance.StartCooldown(AbilityKey.One, 0.2f);
     }
 
     private void ShowWeaponIndicator()
     {
+        // No longer show weapon name at the top; ensure it is removed if present
         if (ModifiersUIManager.Instance != null)
         {
-            string label = currentWeapon.ToString();
-            ModifiersUIManager.Instance.AddOrUpdate("ApheliosWeapon", null, label, -1f, 0);
+            ModifiersUIManager.Instance.Remove("ApheliosWeapon");
         }
     }
 
@@ -109,6 +154,23 @@ public class ApheliosController : MonoBehaviour
         if (icon != null)
         {
             CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.LeftClick, icon);
+        }
+    }
+
+    private void UpdateAbilityIcon()
+    {
+        if (CooldownUIManager.Instance == null) return;
+        Sprite icon = null;
+        switch (currentWeapon)
+        {
+            case WeaponType.Sniper: icon = sniperAbilityIcon != null ? sniperAbilityIcon : sniperIcon; break;
+            case WeaponType.Scythe: icon = scytheAbilityIcon != null ? scytheAbilityIcon : scytheIcon; break;
+            case WeaponType.Orbs: icon = orbsAbilityIcon != null ? orbsAbilityIcon : orbsIcon; break;
+            case WeaponType.Flamethrower: icon = flamethrowerAbilityIcon != null ? flamethrowerAbilityIcon : flamethrowerIcon; break;
+        }
+        if (icon != null)
+        {
+            CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.RightClick, icon);
         }
     }
 
@@ -168,7 +230,29 @@ public class ApheliosController : MonoBehaviour
             var proj = go.GetComponent<ApheliosProjectile>();
             if (proj == null) proj = go.AddComponent<ApheliosProjectile>();
             bool applyBurn = (currentWeapon == WeaponType.Flamethrower) && burnDuration > 0f && burnDamagePerSecond > 0f;
-            proj.Init(this, stats.damage, stats.projectileSpeed, stats.maxDistance, stats.lifestealPercent, stats.slowPercent, stats.slowDuration, applyBurn ? burnDuration : 0f, burnDamagePerSecond);
+            bool hitTwice = false;
+            int bounces = 0;
+            float bounceRadius = 0f;
+            // Apply weapon-ability modifiers captured at fire time
+            if (currentWeapon == WeaponType.Sniper && sniperEmpoweredShots > 0)
+            {
+                hitTwice = true;
+                sniperEmpoweredShots--;
+                // Remove any HUD indicator if count reaches 0
+                if (sniperEmpoweredShots <= 0 && ModifiersUIManager.Instance != null)
+                {
+                    ModifiersUIManager.Instance.Remove("ApheliosSniperEmpower");
+                }
+            }
+            if (currentWeapon == WeaponType.Flamethrower && _flameBounceActive)
+            {
+                bounces = Mathf.Max(0, flameBounceCount);
+                bounceRadius = Mathf.Max(0.1f, flameBounceRadius);
+            }
+            proj.Init(this, currentWeapon, stats.damage, stats.projectileSpeed, stats.maxDistance,
+                      stats.lifestealPercent, stats.slowPercent, stats.slowDuration,
+                      applyBurn ? burnDuration : 0f, burnDamagePerSecond,
+                      hitTwice, bounces, bounceRadius);
         }
 
         // start weapon-specific cooldown + HUD
@@ -181,6 +265,12 @@ public class ApheliosController : MonoBehaviour
     {
         yield return new WaitForSeconds(t);
         _onCooldown = false;
+    }
+
+    IEnumerator AbilityCooldown(float t)
+    {
+        yield return new WaitForSeconds(t);
+        _abilityOnCooldown = false;
     }
 
     private GameObject CreateRuntimeProjectile(Vector3 position, Quaternion rotation)
@@ -210,5 +300,175 @@ public class ApheliosController : MonoBehaviour
         var col = go.GetComponent<Collider>();
         if (col != null) Destroy(col);
         return go;
+    }
+
+    // Ability (RMB)
+    public void TryUseAbility()
+    {
+        if (_abilityOnCooldown) return;
+        float cd = 8f;
+        switch (currentWeapon)
+        {
+            case WeaponType.Sniper:
+                sniperEmpoweredShots = Mathf.Max(sniperEmpoweredShots, 1);
+                if (ModifiersUIManager.Instance != null)
+                {
+                    ModifiersUIManager.Instance.AddOrUpdate("ApheliosSniperEmpower", sniperIcon, "Empowered Shot", -1f, sniperEmpoweredShots);
+                }
+                cd = sniperAbilityCooldown;
+                break;
+
+            case WeaponType.Orbs:
+                StunRecentOrbsHits();
+                cd = orbsAbilityCooldown;
+                break;
+
+            case WeaponType.Scythe:
+                StartCoroutine(RunScytheAura());
+                cd = scytheAbilityCooldown;
+                break;
+
+            case WeaponType.Flamethrower:
+                // Fire a flamethrower volley where each hit causes a single reflected shot away from the player
+                FireFlamethrowerAbilityVolley();
+                cd = flamethrowerAbilityCooldown;
+                break;
+        }
+
+        _abilityOnCooldown = true;
+        if (CooldownUIManager.Instance != null)
+        {
+            CooldownUIManager.Instance.StartCooldown(AbilityKey.RightClick, cd);
+        }
+        StartCoroutine(AbilityCooldown(cd));
+    }
+
+    private void FireFlamethrowerAbilityVolley()
+    {
+        var stats = flamethrower; // explicit for clarity
+        var prefab = flameProjectile != null ? flameProjectile : GetProjectile();
+        if (cam == null) return;
+
+        Quaternion baseRot = cam.transform.rotation;
+        Vector3 pos = firePoint != null ? firePoint.position : transform.position;
+        // Ability-specific overrides to make it wider and further
+        int pellets = Mathf.Max(1, flameAbilityPellets > 0 ? flameAbilityPellets : stats.pellets);
+        float spread = flameAbilitySpreadAngle > 0f ? flameAbilitySpreadAngle : stats.spreadAngle;
+        float speed = Mathf.Max(0.1f, stats.projectileSpeed * Mathf.Max(0.01f, flameAbilitySpeedMult));
+        float maxDist = Mathf.Max(0.1f, stats.maxDistance * Mathf.Max(0.01f, flameAbilityRangeMult));
+        for (int i = 0; i < pellets; i++)
+        {
+            Quaternion rot = baseRot;
+            if (pellets > 1 || spread > 0f)
+            {
+                float half = spread * 0.5f;
+                float yaw = Random.Range(-half, half);
+                float pitch = Random.Range(-half, half) * 0.25f;
+                rot = baseRot * Quaternion.Euler(pitch, yaw, 0f);
+            }
+            GameObject go = prefab != null ? Instantiate(prefab, pos, rot) : CreateRuntimeProjectile(pos, rot);
+            var proj = go.GetComponent<ApheliosProjectile>();
+            if (proj == null) proj = go.AddComponent<ApheliosProjectile>();
+            bool applyBurn = burnDuration > 0f && burnDamagePerSecond > 0f;
+            // Set bounces=1 to create exactly one reflected shot away from the player on first hit
+            proj.Init(this, WeaponType.Flamethrower, stats.damage, speed, maxDist,
+                      stats.lifestealPercent, stats.slowPercent, stats.slowDuration,
+                      applyBurn ? burnDuration : 0f, burnDamagePerSecond,
+                      false, 1, flamethrowerAbilityCooldown > 0 ? flameBounceRadius : flameBounceRadius);
+        }
+    }
+
+    // Record an orbs hit (called by projectile)
+    public void RecordOrbsHit(Collider c)
+    {
+        if (c == null) return;
+        _recentOrbsHits.Add(new RecentHit { col = c, time = Time.time });
+        CleanupOldOrbsHits();
+    }
+
+    private void CleanupOldOrbsHits()
+    {
+        float cutoff = Time.time - orbsStunWindow;
+        for (int i = _recentOrbsHits.Count - 1; i >= 0; i--)
+        {
+            if (_recentOrbsHits[i].col == null || _recentOrbsHits[i].time < cutoff)
+                _recentOrbsHits.RemoveAt(i);
+        }
+    }
+
+    private void StunRecentOrbsHits()
+    {
+        CleanupOldOrbsHits();
+        foreach (var h in _recentOrbsHits)
+        {
+            if (h.col == null) continue;
+            var cc = h.col.GetComponentInParent<CharacterControl>();
+            if (cc == null && h.col.attachedRigidbody != null)
+            {
+                cc = h.col.attachedRigidbody.GetComponent<CharacterControl>();
+            }
+            if (cc != null)
+            {
+                cc.Stun(orbsStunDuration);
+            }
+        }
+        _recentOrbsHits.Clear();
+    }
+
+    private IEnumerator RunScytheAura()
+    {
+        float end = Time.time + scytheAuraDuration;
+        var selfHp = GetComponent<HealthSystem>();
+        // Apply temporary 10% move speed increase while aura is active
+        var cc = GetComponent<CharacterControl>();
+        float originalSpeed = 0f;
+        float originalRunSpeed = 0f;
+        if (cc != null)
+        {
+            originalSpeed = cc.speed;
+            originalRunSpeed = cc.runSpeed;
+            cc.speed = originalSpeed * 1.10f;
+            cc.runSpeed = originalRunSpeed * 1.10f;
+        }
+        if (ModifiersUIManager.Instance != null)
+        {
+            Sprite icon = ModifiersIconLibrary.Instance != null ? (ModifiersIconLibrary.Instance.MOVESPEED ?? ModifiersIconLibrary.Instance.HASTE) : null;
+            ModifiersUIManager.Instance.AddOrUpdate("ApheliosScytheHaste", icon, "+10% Move Speed", scytheAuraDuration, 0);
+        }
+        while (Time.time < end)
+        {
+            Collider[] hits = Physics.OverlapSphere(transform.position, scytheAuraRadius);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                var col = hits[i];
+                if (col == null) continue;
+                if (col.transform.IsChildOf(transform)) continue; // ignore self
+                var hp = col.GetComponent<HealthSystem>();
+                if (hp == null) continue;
+                hp.TakeDamage(scytheAuraDamagePerTick);
+                if (selfHp != null && scythe.lifestealPercent > 0f)
+                {
+                    selfHp.Heal(scytheAuraDamagePerTick * scythe.lifestealPercent);
+                }
+            }
+            yield return new WaitForSeconds(Mathf.Max(0.05f, scytheAuraTickInterval));
+        }
+        // Revert move speed and remove haste indicator
+        if (cc != null)
+        {
+            cc.speed = originalSpeed;
+            cc.runSpeed = originalRunSpeed;
+        }
+        if (ModifiersUIManager.Instance != null)
+        {
+            ModifiersUIManager.Instance.Remove("ApheliosScytheHaste");
+        }
+    }
+
+    private IEnumerator EnableFlameBounceWindow()
+    {
+        _flameBounceActive = true;
+        yield return new WaitForSeconds(flamethrowerAbilityCooldown > 0 ? Mathf.Min(flameBounceWindow, flamethrowerAbilityCooldown) : flameBounceWindow);
+        _flameBounceActive = false;
     }
 }

@@ -48,27 +48,40 @@ public class galioRightClick : MonoBehaviour
             if (hitSet.Contains(target)) continue;
             hitSet.Add(target);
 
-            // Try via CharacterControl first
-            var cc = target.GetComponent<CharacterControl>();
-            if (cc != null)
-            {
-                cc.ApplyKnockback(Vector3.up, knockupForce, knockupForce, knockupDuration);
-            }
-            else
-            {
-                // Fallback to rigidbody force
-                var rb = target.GetComponent<Rigidbody>();
-                if (rb != null)
-                {
-                    rb.AddForce(Vector3.up * knockupForce, ForceMode.VelocityChange);
-                }
-            }
-
-            // Damage
+            // Apply damage first
             var hp = target.GetComponent<HealthSystem>();
             if (hp != null)
             {
                 hp.TakeDamage(damage);
+            }
+
+            // Try DummyController first (for enemies/dummies)
+            var dummyCtrl = target.GetComponent<DummyController>();
+            if (dummyCtrl != null)
+            {
+                Vector3 knockDir = new Vector3(0f, 1f, 0f); // Pure upward knockup
+                dummyCtrl.ApplyKnockback(knockDir, knockupForce, knockupForce, knockupDuration);
+                Debug.Log($"Right-click knockup applied to {target.name} (DummyController)");
+            }
+            else
+            {
+                // Try CharacterControl
+                var cc = target.GetComponent<CharacterControl>();
+                if (cc != null)
+                {
+                    cc.ApplyKnockback(Vector3.up, knockupForce, knockupForce, knockupDuration);
+                    Debug.Log($"Right-click knockup applied to {target.name} (CharacterControl)");
+                }
+                else
+                {
+                    // Fallback to rigidbody force
+                    var rb = target.GetComponent<Rigidbody>();
+                    if (rb != null)
+                    {
+                        rb.AddForce(Vector3.up * knockupForce, ForceMode.VelocityChange);
+                        Debug.Log($"Right-click knockup applied to {target.name} (Rigidbody)");
+                    }
+                }
             }
         }
 

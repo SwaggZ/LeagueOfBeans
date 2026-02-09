@@ -100,9 +100,14 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
             Debug.Log("Tornado instantiated and growth started.");
             if (ModifiersUIManager.Instance != null)
             {
-                Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.damageReduction : null;
-                ModifiersUIManager.Instance.AddOrUpdate("GalioDR30", icon, "30%", -1f, 0);
+                Sprite drIcon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.DMGRD : null;
+                ModifiersUIManager.Instance.AddOrUpdate("GalioDR30", drIcon, "30%", -1f, 0);
+                Sprite slowIcon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.SLOWNESS : null;
+                ModifiersUIManager.Instance.AddOrUpdate("GalioSlow", slowIcon, "Slowed", -1f, 0);
             }
+
+            // Apply slow effect to enemies in range
+            ApplySlowToEnemies();
         }
         else
         {
@@ -154,6 +159,8 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
         // Detect enemies in the tornado's pull range
         Debug.Log($"Detecting enemies within pull radius: {pullRadius}");
         ApplyDamage();
+        AttractEnemies();
+        // ApplyKnockbackToEnemies(); // Apply knockback when tornado explodes
 
         // Destroy the tornado prefab
         if (currentTornado != null)
@@ -166,7 +173,7 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
         currentPullTime = 0f;
 
         // Apply temporary max HP boost
-        StartCoroutine(ApplyHealthBoost());
+        // StartCoroutine(ApplyHealthBoost());
 
         // Start cooldown
         StartCoroutine(StartCooldown());
@@ -179,6 +186,7 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
         if (ModifiersUIManager.Instance != null)
         {
             ModifiersUIManager.Instance.Remove("GalioDR30");
+            ModifiersUIManager.Instance.Remove("GalioSlow");
         }
 
         wActive = false;
@@ -211,23 +219,79 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
         }
     }
 
+    void ApplyKnockbackToEnemies()
+    {
+        Collider[] colliders = Physics.OverlapSphere(transform.position, pullRadius);
+        foreach (Collider collider in colliders)
+        {
+            if (collider.CompareTag("Enemy"))
+            {
+                DummyController dummyCtrl = collider.GetComponent<DummyController>();
+                if (dummyCtrl != null)
+                {
+                    // Knockback direction: away from Galio, with upward component
+                    Vector3 knockDirection = (collider.transform.position - transform.position).normalized;
+                    knockDirection.y = 0.5f; // Add upward component
+                    dummyCtrl.ApplyKnockback(knockDirection, 3f, 15f); // distance, speed, no stun
+                    Debug.Log($"Applied knockback to {collider.gameObject.name}");
+                }
+            }
+        }
+    }
+
     void AttractEnemies()
     {
         currentPullTime += Time.deltaTime;
 
-        foreach (GameObject enemy in pulledEnemies)
+        Collider[] colliders = Physics.OverlapSphere(transform.position, pullRadius);
+
+        foreach (Collider collider in colliders)
         {
-            if (enemy != null)
+            if (!collider.CompareTag("Enemy")) continue;
+
+            // Try to pull the root object (safer if collider is on a child)
+            GameObject enemyObj = collider.attachedRigidbody != null
+                ? collider.attachedRigidbody.gameObject
+                : collider.gameObject;
+
+            DummyController dummyCtrl = enemyObj.GetComponent<DummyController>();
+            if (dummyCtrl != null)
             {
-                enemy.transform.position = Vector3.MoveTowards(enemy.transform.position, transform.position, pullSpeed * Time.deltaTime);
-                Debug.Log($"Pulling enemy {enemy.name} towards Galio. Current position: {enemy.transform.position}");
+                dummyCtrl.ApplyAttract(transform.position, pullSpeed, pullDuration);
             }
+            else
+            {
+                enemyObj.transform.position = Vector3.MoveTowards(
+                    enemyObj.transform.position,
+                    transform.position,
+                    pullSpeed * Time.deltaTime
+                );
+            }
+
+            Debug.Log($"Pulling enemy {enemyObj.name} towards Galio. Current position: {enemyObj.transform.position}");
         }
 
         if (currentPullTime >= pullDuration)
         {
-            pulledEnemies.Clear();
-            Debug.Log("Pull effect ended. Enemies cleared.");
+            currentPullTime = pullDuration; // clamp
+            Debug.Log("Pull effect ended.");
+        }
+    }
+
+    void ApplySlowToEnemies()
+    {
+        Collider[] colliders = Physics.OverlapSphere(transform.position, pullRadius);
+        foreach (Collider collider in colliders)
+        {
+            if (collider.CompareTag("Enemy"))
+            {
+                DummyController dummyCtrl = collider.GetComponent<DummyController>();
+                if (dummyCtrl != null)
+                {
+                    dummyCtrl.ApplySlow(0.5f, pullDuration); // 50% slow for the duration
+                    Debug.Log($"Applied slow to {collider.gameObject.name}");
+                }
+            }
         }
     }
 

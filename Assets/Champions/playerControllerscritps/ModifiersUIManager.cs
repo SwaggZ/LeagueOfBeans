@@ -112,7 +112,11 @@ public class ModifiersUIManager : MonoBehaviour
         _rootRT.offsetMax = Vector2.zero;
         var canvas = canvasGO.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasGO.AddComponent<CanvasScaler>();
+        var scaler = canvasGO.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 1f; // match height so the top bar stays proportionate
         canvasGO.AddComponent<GraphicRaycaster>();
 
         var barGO = new GameObject("Bar", typeof(RectTransform));
@@ -214,25 +218,79 @@ public class ModifiersUIManager : MonoBehaviour
             _byId[id] = s;
             Layout();
         }
+        if (icon == null)
+        {
+            var lib = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance : GameObject.FindObjectOfType<ModifiersIconLibrary>(true);
+            if (lib != null)
+            {
+                icon = lib.Resolve(id, label);
+                // Fallback: if Resolve returned null but the library has assigned sprites, use the first available one
+                if (icon == null && Application.isPlaying)
+                {
+                    icon = lib.DMGRD ?? lib.SHIELD ?? lib.STUN ?? lib.SLOWNESS ?? lib.HASTE;
+                    if (icon != null)
+                    {
+                        Debug.LogWarning($"[ModifiersUI] No exact match for '{id}' (label: '{label}'). Using fallback sprite. Assign the correct sprite in ModifiersIconLibrary.");
+                    }
+                }
+            }
+        }
+
         if (icon != null)
         {
             s.icon.sprite = icon;
             s.icon.color = Color.white;
             s.icon.preserveAspect = true;
             s.icon.enabled = true;
+            RemoveMissingText(s);
         }
         else
         {
-            // No background/no placeholder when no icon is provided
-            s.icon.sprite = null;
-            var c = s.icon.color; c.a = 0f; s.icon.color = c;
-            s.icon.enabled = true; // keep object active for layout; transparent icon
+            // Show a neutral placeholder so it's obvious an icon is missing
+            s.icon.sprite = _uiSprite;
+            s.icon.color = new Color(0.7f, 0.7f, 0.7f, 1f);
+            s.icon.preserveAspect = true;
+            s.icon.enabled = true;
+            EnsureMissingText(s);
+            if (Application.isPlaying)
+            {
+                Debug.LogWarning($"[ModifiersUI] Missing icon for '{id}'. Assign sprites in ModifiersIconLibrary inspector (check SLOWNESS, SHIELD, STUN, HASTE, etc.)");
+            }
         }
         s.label.text = label ?? string.Empty;
         s.stacks = Mathf.Max(0, stacks);
         s.stackLabel.text = s.stacks > 1 ? s.stacks.ToString() : string.Empty;
         s.endTime = durationSeconds >= 0f ? (Time.unscaledTime + durationSeconds) : -1f;
         s.timer.text = string.Empty;
+    }
+
+    private void EnsureMissingText(Slot s)
+    {
+        var t = s.root.Find("MissingText") as RectTransform;
+        if (t == null)
+        {
+            GameObject mtGO = new GameObject("MissingText", typeof(RectTransform));
+            RectTransform mtRT = mtGO.GetComponent<RectTransform>();
+            mtRT.SetParent(s.root, false);
+            mtRT.anchorMin = Vector2.zero;
+            mtRT.anchorMax = Vector2.one;
+            mtRT.offsetMin = Vector2.zero;
+            mtRT.offsetMax = Vector2.zero;
+            var txt = mtGO.AddComponent<Text>();
+            txt.font = _font;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.fontSize = Mathf.Max(10, textSize - 4);
+            txt.color = new Color(0.9f, 0.9f, 0.9f, 0.85f);
+            txt.text = "NO IMG";
+            txt.raycastTarget = false;
+            mtGO.transform.SetAsLastSibling();
+        }
+    }
+
+    private void RemoveMissingText(Slot s)
+    {
+        var t = s.root.Find("MissingText");
+        if (t != null) Destroy(t.gameObject);
     }
 
     public void Remove(string id)

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 // Attach this to the same GameObject that has HealthSystem.
 // It creates a small world-space health bar above the object at runtime.
@@ -8,6 +9,15 @@ public class HealthBarUI : MonoBehaviour
 {
     [Header("References")]
     public HealthSystem healthSystem; // If left null, we'll find it on this GameObject
+    private ModifierTracker modifierTracker; // Optional; if present, displays modifiers above health bar
+
+    [Header("Modifier Icons")]
+    [Tooltip("Size of modifier icons in world units")]
+    public float modifierIconSize = 0.3f;
+    [Tooltip("Spacing between modifier icons")]
+    public float modifierSpacing = 0.05f;
+    [Tooltip("Vertical offset above the health bar")]
+    public float modifierVerticalOffset = 0.25f;
 
     [Header("Bar Appearance")]
     [Tooltip("Vertical offset (in world units) above the GameObject where the bar is placed.")]
@@ -34,6 +44,9 @@ public class HealthBarUI : MonoBehaviour
     private static Sprite _defaultUISprite; // cached UI sprite (generated 1x1 white)
     private static readonly Vector2 _basePixels = new Vector2(100f, 12f); // base pixel size; scaled to world units via localScale
 
+    private GameObject _modifiersContainer; // Parent for modifier icons
+    private List<Image> _modifierIconImages = new List<Image>(); // Reusable pool of modifier icon images
+
     private static Sprite GetDefaultUISprite()
     {
         if (_defaultUISprite == null)
@@ -54,6 +67,9 @@ public class HealthBarUI : MonoBehaviour
         {
             healthSystem = GetComponent<HealthSystem>();
         }
+        
+        // Optional modifier tracker
+        modifierTracker = GetComponent<ModifierTracker>();
 
         // Create canvas holder
         GameObject canvasGO = new GameObject("HealthBar_Canvas", typeof(RectTransform));
@@ -105,6 +121,16 @@ public class HealthBarUI : MonoBehaviour
         // Ensure fill renders above background
         _fillImage.transform.SetAsLastSibling();
 
+        // Modifier icons container (positioned above the health bar)
+        _modifiersContainer = new GameObject("ModifierIcons", typeof(RectTransform));
+        _modifiersContainer.transform.SetParent(canvasGO.transform, false);
+        RectTransform modRT = _modifiersContainer.GetComponent<RectTransform>();
+        modRT.anchorMin = new Vector2(0.5f, 1f);
+        modRT.anchorMax = new Vector2(0.5f, 1f);
+        modRT.pivot = new Vector2(0.5f, 0f);
+        modRT.anchoredPosition = new Vector2(0f, modifierVerticalOffset * 100f); // convert world units to pixels (rough)
+        modRT.sizeDelta = new Vector2(_basePixels.x, _basePixels.y * 0.5f);
+
         UpdateFillImmediate();
         ApplyVisibility();
     }
@@ -142,6 +168,75 @@ public class HealthBarUI : MonoBehaviour
             1f);
         _bgImage.color = backgroundColor;
         _fillImage.color = fillColor;
+
+        // Update modifier icons if tracker exists
+        if (modifierTracker != null && _modifiersContainer != null)
+        {
+            UpdateModifierIcons();
+        }
+    }
+
+    private void UpdateModifierIcons()
+    {
+        var activeModifiers = modifierTracker.GetActiveModifiers();
+
+        // Adjust number of display icons to match active modifiers
+        while (_modifierIconImages.Count < activeModifiers.Count)
+        {
+            CreateModifierIcon();
+        }
+        while (_modifierIconImages.Count > activeModifiers.Count)
+        {
+            RemoveModifierIcon();
+        }
+
+        // Update each icon's sprite and position
+        float totalWidth = activeModifiers.Count * modifierIconSize + (Mathf.Max(0, activeModifiers.Count - 1) * modifierSpacing);
+        float startX = -totalWidth * 0.5f;
+
+        for (int i = 0; i < activeModifiers.Count; i++)
+        {
+            var (sprite, remaining) = activeModifiers[i];
+            var img = _modifierIconImages[i];
+
+            img.sprite = sprite;
+            img.color = sprite != null ? Color.white : new Color(0.5f, 0.5f, 0.5f, 1f);
+            img.enabled = true;
+
+            // Position horizontally
+            RectTransform rt = img.GetComponent<RectTransform>();
+            float xPos = startX + i * (modifierIconSize + modifierSpacing);
+            rt.anchoredPosition = new Vector2(xPos * 100f, 0f); // convert to pixels
+        }
+    }
+
+    private void CreateModifierIcon()
+    {
+        GameObject iconGO = new GameObject("ModifierIcon", typeof(RectTransform), typeof(Image));
+        iconGO.transform.SetParent(_modifiersContainer.transform, false);
+
+        RectTransform rt = iconGO.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(modifierIconSize * 100f, modifierIconSize * 100f);
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+
+        Image img = iconGO.GetComponent<Image>();
+        img.sprite = GetDefaultUISprite();
+        img.color = Color.white;
+        img.raycastTarget = false;
+
+        _modifierIconImages.Add(img);
+    }
+
+    private void RemoveModifierIcon()
+    {
+        if (_modifierIconImages.Count > 0)
+        {
+            Image lastIcon = _modifierIconImages[_modifierIconImages.Count - 1];
+            _modifierIconImages.RemoveAt(_modifierIconImages.Count - 1);
+            Destroy(lastIcon.gameObject);
+        }
     }
 
     private void UpdateFillImmediate()
