@@ -36,7 +36,7 @@ public class asheL : MonoBehaviour
         Quaternion currentRotation = cam.transform.rotation;
 
         // Instantiate a new GameObject using the same position and rotation
-        Instantiate(autoAttack, currentPosition, currentRotation);
+        NetworkHelper.SpawnProjectile(autoAttack, currentPosition, currentRotation);
 
         // Start cooldown
         isOnCooldown = true;

@@ -83,7 +83,7 @@ public class caitlynW : MonoBehaviour
         Quaternion currentRotation = cam != null ? cam.transform.rotation : transform.rotation;
 
         // Instantiate the throwable and add force to it
-        GameObject throwable = Instantiate(throwablePrefab, currentPosition, currentRotation);
+        GameObject throwable = NetworkHelper.SpawnProjectile(throwablePrefab, currentPosition, currentRotation);
         Rigidbody rb = throwable.GetComponent<Rigidbody>();
         if (rb != null)
         {

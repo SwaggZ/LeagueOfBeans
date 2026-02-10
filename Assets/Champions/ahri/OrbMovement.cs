@@ -51,7 +51,8 @@ public class OrbMovement : MonoBehaviour
     void Start()
     {
         cam = GameObject.FindGameObjectWithTag("MainCamera").transform;
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        var playerObj = LocalPlayerRef.GetLocalPlayerWithFallback();
+        player = playerObj != null ? playerObj.transform : null;
 
         if (cam == null || player == null)
         {
@@ -76,6 +77,8 @@ public class OrbMovement : MonoBehaviour
             // OrbMovement.cs - prevent self hit
             if (owner != null && hit.collider.transform == owner) return;
             if (hit.collider.CompareTag("Player")) return;
+            if (hit.collider.CompareTag("Ally")) return; // Don't damage allies
+            if (!hit.collider.CompareTag("Enemy")) return; // Only damage enemies
 
             // Check if the object hit has a HealthSystem component
             HealthSystem healthSystem = hit.collider.gameObject.GetComponent<HealthSystem>();

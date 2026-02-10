@@ -220,7 +220,7 @@ public class ApheliosController : MonoBehaviour
             GameObject go;
             if (prefab != null)
             {
-                go = Instantiate(prefab, pos, rot);
+                go = NetworkHelper.SpawnProjectile(prefab, pos, rot);
             }
             else
             {
@@ -369,7 +369,7 @@ public class ApheliosController : MonoBehaviour
                 float pitch = Random.Range(-half, half) * 0.25f;
                 rot = baseRot * Quaternion.Euler(pitch, yaw, 0f);
             }
-            GameObject go = prefab != null ? Instantiate(prefab, pos, rot) : CreateRuntimeProjectile(pos, rot);
+            GameObject go = prefab != null ? NetworkHelper.SpawnProjectile(prefab, pos, rot) : CreateRuntimeProjectile(pos, rot);
             var proj = go.GetComponent<ApheliosProjectile>();
             if (proj == null) proj = go.AddComponent<ApheliosProjectile>();
             bool applyBurn = burnDuration > 0f && burnDamagePerSecond > 0f;
@@ -464,6 +464,8 @@ public class ApheliosController : MonoBehaviour
                 var col = hits[i];
                 if (col == null) continue;
                 if (col.transform.IsChildOf(transform)) continue; // ignore self
+                if (col.CompareTag("Player") || col.CompareTag("Ally")) continue; // Skip allies
+                if (!col.CompareTag("Enemy")) continue; // Only damage enemies
                 var hp = col.GetComponent<HealthSystem>();
                 if (hp == null) continue;
                 hp.TakeDamage(scytheAuraDamagePerTick);

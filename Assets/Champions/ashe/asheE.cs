@@ -41,7 +41,7 @@ public class asheE : MonoBehaviour
         float angleOffset = totalArcAngle / (numberOfArrows - 1);
 
         // Instantiate the center arrow
-        Instantiate(autoAttack, currentPosition, centerRotation);
+        NetworkHelper.SpawnProjectile(autoAttack, currentPosition, centerRotation);
 
         // Calculate the number of arrows on each side of the center
         int sideArrows = (numberOfArrows - 1) / 2;
@@ -51,11 +51,11 @@ public class asheE : MonoBehaviour
         {
             // Right angle offset
             Quaternion rightRotation = centerRotation * Quaternion.Euler(0, angleOffset * i, 0);
-            Instantiate(autoAttack, currentPosition, rightRotation);
+            NetworkHelper.SpawnProjectile(autoAttack, currentPosition, rightRotation);
 
             // Left angle offset
             Quaternion leftRotation = centerRotation * Quaternion.Euler(0, -angleOffset * i, 0);
-            Instantiate(autoAttack, currentPosition, leftRotation);
+            NetworkHelper.SpawnProjectile(autoAttack, currentPosition, leftRotation);
         }
 
         // Start cooldown

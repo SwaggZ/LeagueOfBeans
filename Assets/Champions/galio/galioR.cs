@@ -158,6 +158,9 @@ public class galioR : MonoBehaviour, IIncomingDamageModifier
             // Ignore self
             if (target == this.gameObject) continue;
 
+            // Skip allies
+            if (target.CompareTag("Player") || target.CompareTag("Ally")) continue;
+
             // Only hit enemies
             if (!target.CompareTag(enemyTag)) continue;
 

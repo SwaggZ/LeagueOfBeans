@@ -104,6 +104,19 @@ public class JhinBounceBullet : MonoBehaviour
     void OnHit(Collider col, Vector3 hitPoint)
     {
         if (col == null) return;
+        if (col.CompareTag("Player")) return;
+        if (col.CompareTag("Ally"))
+        {
+            // Pass through allies without destroying (needs to bounce to enemies)
+            transform.position = hitPoint + transform.forward * 0.1f;
+            return;
+        }
+        if (!col.CompareTag("Enemy"))
+        {
+            // Pass through non-enemies
+            transform.position = hitPoint + transform.forward * 0.1f;
+            return;
+        }
 
         GameObject target = ModifierUtils.ResolveTarget(col);
         if (target == null)

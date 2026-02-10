@@ -39,15 +39,23 @@ public class JhinProjectile : MonoBehaviour
 
         if (Vector3.Distance(_startPos, transform.position) >= _maxDistance)
         {
-            Destroy(gameObject);
+            NetworkHelper.Despawn(gameObject);
         }
     }
 
     void OnHit(Collider col, Vector3 hitPoint)
     {
         if (col == null) return;
+        if (col.CompareTag("Player")) return;
+        if (col.CompareTag("Ally"))
+        {
+            NetworkHelper.Despawn(gameObject); // Destroy on ally contact without dealing damage
+            return;
+        }
+        if (!col.CompareTag("Enemy")) { NetworkHelper.Despawn(gameObject); return; } // Only damage enemies
 
         GameObject target = ModifierUtils.ResolveTarget(col);
+        if (target == null) { NetworkHelper.Despawn(gameObject); return; }
 
         // Apply damage
         var hp = target.GetComponent<HealthSystem>();
@@ -74,6 +82,6 @@ public class JhinProjectile : MonoBehaviour
             _owner.RecordHit(col);
         }
 
-        Destroy(gameObject);
+        NetworkHelper.Despawn(gameObject);
     }
 }

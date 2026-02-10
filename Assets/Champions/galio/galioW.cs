@@ -92,7 +92,7 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
         }
 
         // Spawn and start growing the tornado
-        currentTornado = Instantiate(tornadoPrefab, transform.position, Quaternion.identity);
+        currentTornado = NetworkHelper.SpawnProjectile(tornadoPrefab, transform.position, Quaternion.identity);
         if (currentTornado != null)
         {
             currentTornado.transform.localScale = Vector3.zero; // Start at scale 0
@@ -199,6 +199,7 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
         Collider[] colliders = Physics.OverlapSphere(transform.position, pullRadius);
         foreach (Collider collider in colliders)
         {
+            if (collider.CompareTag("Player") || collider.CompareTag("Ally")) continue;
             if (collider.CompareTag("Enemy"))
             {
                 HealthSystem enemyHealth = collider.GetComponent<HealthSystem>();
@@ -216,6 +217,7 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
         Collider[] colliders = Physics.OverlapSphere(transform.position, pullRadius);
         foreach (Collider collider in colliders)
         {
+            if (collider.CompareTag("Player") || collider.CompareTag("Ally")) continue;
             if (collider.CompareTag("Enemy"))
             {
                 DummyController dummyCtrl = collider.GetComponent<DummyController>();
@@ -239,6 +241,7 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
 
         foreach (Collider collider in colliders)
         {
+            if (collider.CompareTag("Player") || collider.CompareTag("Ally")) continue;
             if (!collider.CompareTag("Enemy")) continue;
 
             // Try to pull the root object (safer if collider is on a child)

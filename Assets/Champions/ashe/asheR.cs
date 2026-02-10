@@ -36,7 +36,7 @@ public class asheR : MonoBehaviour
         Quaternion currentRotation = cam.transform.rotation;
 
         // Instantiate the ultimate projectile using the same position and rotation
-        Instantiate(ultimateProjectile, currentPosition, currentRotation);
+        NetworkHelper.SpawnProjectile(ultimateProjectile, currentPosition, currentRotation);
 
         // Start cooldown
         isOnCooldown = true;

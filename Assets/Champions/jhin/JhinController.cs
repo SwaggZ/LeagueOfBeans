@@ -173,7 +173,7 @@ public class JhinController : MonoBehaviour
         Quaternion rot = cam.transform.rotation;
 
         GameObject go = bulletPrefab != null
-            ? Instantiate(bulletPrefab, pos, rot)
+            ? NetworkHelper.SpawnProjectile(bulletPrefab, pos, rot)
             : CreateRuntimeBullet(pos, rot, isLastBullet);
 
         var proj = go.GetComponent<JhinProjectile>();
@@ -206,7 +206,7 @@ public class JhinController : MonoBehaviour
         Quaternion rot = cam.transform.rotation;
 
         GameObject go = specialBulletPrefab != null
-            ? Instantiate(specialBulletPrefab, pos, rot)
+            ? NetworkHelper.SpawnProjectile(specialBulletPrefab, pos, rot)
             : CreateRuntimeBullet(pos, rot, true);
 
         var proj = go.GetComponent<JhinProjectile>();
@@ -311,7 +311,7 @@ public class JhinController : MonoBehaviour
         Quaternion spawnRot = cam.transform.rotation;
 
         GameObject go = minePrefab != null
-            ? Instantiate(minePrefab, spawnPos, spawnRot)
+            ? NetworkHelper.SpawnProjectile(minePrefab, spawnPos, spawnRot)
             : CreateRuntimeMine(spawnPos, spawnRot);
 
         var mine = go.GetComponent<JhinMine>();
@@ -341,7 +341,7 @@ public class JhinController : MonoBehaviour
         Quaternion rot = cam.transform.rotation;
 
         GameObject go = bounceBulletPrefab != null
-            ? Instantiate(bounceBulletPrefab, pos, rot)
+            ? NetworkHelper.SpawnProjectile(bounceBulletPrefab, pos, rot)
             : CreateRuntimeBounceBullet(pos, rot);
 
         var proj = go.GetComponent<JhinBounceBullet>();

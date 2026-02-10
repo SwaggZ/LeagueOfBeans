@@ -33,7 +33,7 @@ public class galioRightClick : MonoBehaviour
         // Play VFX
         if (smashVfxPrefab != null)
         {
-            Instantiate(smashVfxPrefab, transform.position, Quaternion.identity);
+            NetworkHelper.SpawnProjectile(smashVfxPrefab, transform.position, Quaternion.identity);
         }
 
         // Apply area knockup and damage
@@ -44,6 +44,7 @@ public class galioRightClick : MonoBehaviour
             if (hit == null) continue;
             GameObject target = hit.attachedRigidbody != null ? hit.attachedRigidbody.gameObject : hit.transform.root.gameObject;
             if (target == gameObject) continue;
+            if (target.CompareTag("Player") || target.CompareTag("Ally")) continue;
             if (!target.CompareTag(enemyTag)) continue;
             if (hitSet.Contains(target)) continue;
             hitSet.Add(target);

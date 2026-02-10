@@ -48,7 +48,7 @@ public class caitlynE : MonoBehaviour
         // Spawn the projectile
         Vector3 currentPosition = transform.position;
         Quaternion currentRotation = cam.transform.rotation;
-        GameObject projectile = Instantiate(autoAttack, currentPosition, currentRotation);
+        GameObject projectile = NetworkHelper.SpawnProjectile(autoAttack, currentPosition, currentRotation);
         var autoMove = projectile.GetComponent<caitlynAutoMovement>();
         if (autoMove != null)
         {

@@ -802,7 +802,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 76d3079f3e112fb4c8056db9f7d4b26a, type: 2}
+  - {fileID: 2100000, guid: ef64703929c52e94aacdf22d9db672bf, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1022,6 +1022,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healthSystem: {fileID: 0}
+  modifierIconSize: 0.3
+  modifierSpacing: 0.05
+  modifierVerticalOffset: 0.25
   verticalOffset: 1.25
   barWidth: 1.6
   barHeight: 0.18

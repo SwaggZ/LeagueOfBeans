@@ -7,6 +7,7 @@ TagManager:
   - Ground
   - Enemy
   - PlayerSpawn
+  - Ally
   layers:
   - Default
   - TransparentFX

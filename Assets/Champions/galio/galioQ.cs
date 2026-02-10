@@ -63,10 +63,10 @@ public class galioQ : MonoBehaviour
     void StartPrefabMovement()
     {
         // Instantiate and start moving prefabs along the original paths
-        GameObject prefabInstance1 = Instantiate(prefabForOriginalPath, gizmoPoints[0], Quaternion.identity);
+        GameObject prefabInstance1 = NetworkHelper.SpawnProjectile(prefabForOriginalPath, gizmoPoints[0], Quaternion.identity);
         StartCoroutine(MovePrefabAlongPath(prefabInstance1, gizmoPoints, speedForOriginalPath, false));
 
-        GameObject prefabInstance2 = Instantiate(prefabForOriginalPath, gizmoPointsInverse[0], Quaternion.identity);
+        GameObject prefabInstance2 = NetworkHelper.SpawnProjectile(prefabForOriginalPath, gizmoPointsInverse[0], Quaternion.identity);
         StartCoroutine(MovePrefabAlongPath(prefabInstance2, gizmoPointsInverse, speedForOriginalPath, false));
     }
 
@@ -83,19 +83,19 @@ public class galioQ : MonoBehaviour
 
         if (!isFlatPath)
         {
-            Destroy(prefab); // Destroy the original prefab once it reaches the end
+            NetworkHelper.Despawn(prefab); // Destroy the original prefab once it reaches the end
 
             if (path == gizmoPoints || path == gizmoPointsInverse)
             {
                 // Instantiate and move prefab along the flat path
-                GameObject flatPathPrefab = Instantiate(prefabForFlatPath, path[path.Length - 1], Quaternion.identity);
+                GameObject flatPathPrefab = NetworkHelper.SpawnProjectile(prefabForFlatPath, path[path.Length - 1], Quaternion.identity);
                 StartCoroutine(MovePrefabAlongPath(flatPathPrefab, gizmoPointsFlat, speedForFlatPath, true));
             }
         }
         else
         {
             // Destroy the flat path prefab once it reaches the end
-            Destroy(prefab);
+            NetworkHelper.Despawn(prefab);
         }
     }
 

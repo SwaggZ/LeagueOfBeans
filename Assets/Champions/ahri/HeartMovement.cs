@@ -46,6 +46,12 @@ public class HeartMovement : MonoBehaviour
             {
                 Debug.Log($"Heart collided with: {hit.collider.gameObject.name}, Tag: {hit.collider.gameObject.tag}");
 
+                // Skip allies - pass through without damage
+                if (hit.collider.CompareTag("Player") || hit.collider.CompareTag("Ally"))
+                {
+                    return; // Pass through allies
+                }
+
                 // Check if the object hit has a HealthSystem component
                 HealthSystem healthSystem = hit.collider.gameObject.GetComponent<HealthSystem>();
                 if (healthSystem != null)

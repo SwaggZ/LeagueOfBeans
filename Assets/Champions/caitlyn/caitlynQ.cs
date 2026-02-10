@@ -37,7 +37,7 @@ public class caitlynQ : MonoBehaviour
         Quaternion currentRotation = cam.transform.rotation;
 
         // Instantiate a new GameObject using the same position and rotation
-        GameObject projectile = Instantiate(autoAttack, currentPosition, currentRotation);
+        GameObject projectile = NetworkHelper.SpawnProjectile(autoAttack, currentPosition, currentRotation);
         var autoMove = projectile.GetComponent<caitlynAutoMovement>();
         if (autoMove != null)
         {

@@ -45,7 +45,7 @@ public class asheQ : MonoBehaviour
         currentPosition.y += randomY;
 
         // Instantiate a new GameObject using the modified position and rotation
-        Instantiate(autoAttack, currentPosition, currentRotation);
+        NetworkHelper.SpawnProjectile(autoAttack, currentPosition, currentRotation);
     }
 
     IEnumerator RepeatWithDelay()

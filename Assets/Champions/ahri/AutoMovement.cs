@@ -28,21 +28,32 @@ public class AutoMovement : MonoBehaviour
         {
             Debug.Log($"Projectile collided with: {hit.collider.gameObject.name}, Tag: {hit.collider.gameObject.tag}");
 
+            // Skip allies
+            if (hit.collider.CompareTag("Player") || hit.collider.CompareTag("Ally"))
+            {
+                return; // Pass through allies
+            }
+            if (!hit.collider.CompareTag("Enemy"))
+            {
+                NetworkHelper.Despawn(gameObject); // Destroy on non-enemy collision
+                return;
+            }
+
             // Check if the object hit has a HealthSystem component
             HealthSystem healthSystem = hit.collider.gameObject.GetComponent<HealthSystem>();
             if (healthSystem != null)
             {
-                Debug.Log("Projectile hit an object with HealthSystem. Applying damage.");
-                healthSystem.TakeDamage(damage); // Apply damage to the object
+                Debug.Log("Projectile hit an enemy with HealthSystem. Applying damage.");
+                healthSystem.TakeDamage(damage); // Apply damage to the enemy
             }
 
             // Destroy the projectile on any collision
-            Destroy(gameObject);
+            NetworkHelper.Despawn(gameObject);
         }
     }
 
     void DestroySelf()
     {
-        Destroy(gameObject); // Destroy the projectile after the timer
+        NetworkHelper.Despawn(gameObject); // Destroy the projectile after the timer
     }
 }

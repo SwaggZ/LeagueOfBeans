@@ -18,7 +18,8 @@ public class FoxFireContainer : MonoBehaviour
 
     private void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        var playerObj = LocalPlayerRef.GetLocalPlayerWithFallback();
+        player = playerObj != null ? playerObj.transform : null;
 
         // Follow the player's position and rotation
         transform.position = player.position;

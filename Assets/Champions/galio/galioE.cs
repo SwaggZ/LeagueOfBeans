@@ -44,6 +44,7 @@ public class galioE : MonoBehaviour
         Collider[] colliders = Physics.OverlapSphere(transform.position, knockupRange);
         foreach (Collider collider in colliders)
         {
+            if (collider.CompareTag("Player") || collider.CompareTag("Ally")) continue;
             if (collider.CompareTag("Enemy"))
             {
                 // Try DummyController first

@@ -36,6 +36,17 @@ public class caitlynAutoMovement : MonoBehaviour
         {
             Debug.Log($"Bullet collided with: {hit.collider.gameObject.name}");
 
+            // Skip allies
+            if (hit.collider.CompareTag("Player") || hit.collider.CompareTag("Ally"))
+            {
+                return; // Pass through allies
+            }
+            if (!hit.collider.CompareTag("Enemy"))
+            {
+                Destroy(gameObject); // Destroy on non-enemy collision
+                return;
+            }
+
             HealthSystem healthSystem = hit.collider.gameObject.GetComponent<HealthSystem>();
             if (healthSystem != null)
             {

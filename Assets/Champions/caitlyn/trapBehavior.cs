@@ -30,6 +30,9 @@ public class TrapBehavior : MonoBehaviour
 
         foreach (Collider collider in colliders)
         {
+            // Skip allies
+            if (collider.CompareTag("Player") || collider.CompareTag("Ally")) continue;
+
             // Check if the detected object has the "Enemy" tag
             if (collider.CompareTag("Enemy"))
             {

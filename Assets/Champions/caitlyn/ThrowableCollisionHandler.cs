@@ -64,16 +64,16 @@ public class ThrowableCollisionHandler : MonoBehaviour
         Debug.Log($"Trap collided with: {collider.gameObject.name}");
 
         // Destroy the throwable object
-        Destroy(gameObject);
+        NetworkHelper.Despawn(gameObject);
     }
 
     void InstantiateTrap()
     {
-        Instantiate(trapPrefab, transform.position, Quaternion.identity);
+        NetworkHelper.SpawnProjectile(trapPrefab, transform.position, Quaternion.identity);
     }
 
     void DestroySelf()
     {
-        Destroy(gameObject);
+        NetworkHelper.Despawn(gameObject);
     }
 }

@@ -56,6 +56,12 @@ public class AsheAutoMovement : MonoBehaviour
         {
             Debug.Log($"Projectile collided with: {hit.collider.gameObject.name}, Tag: {hit.collider.gameObject.tag}");
 
+            // Skip allies - pass through without damage
+            if (hit.collider.CompareTag("Player") || hit.collider.CompareTag("Ally"))
+            {
+                return; // Pass through allies
+            }
+
             // Check if the object hit has a HealthSystem component
             HealthSystem healthSystem = hit.collider.gameObject.GetComponent<HealthSystem>();
 
@@ -75,10 +81,11 @@ public class AsheAutoMovement : MonoBehaviour
             }
             else
             {
-                if (healthSystem != null)
+                // Only damage enemies
+                if (hit.collider.CompareTag("Enemy") && healthSystem != null)
                 {
-                    Debug.Log("Projectile hit an object with HealthSystem. Applying damage.");
-                    healthSystem.TakeDamage(damage); // Apply damage to the object
+                    Debug.Log("Projectile hit an enemy with HealthSystem. Applying damage.");
+                    healthSystem.TakeDamage(damage); // Apply damage to the enemy
                 }
             }
 
@@ -130,6 +137,9 @@ public class AsheAutoMovement : MonoBehaviour
         Collider[] colliders = Physics.OverlapSphere(transform.position, ultRadius);
         foreach (Collider collider in colliders)
         {
+            // Skip allies
+            if (collider.CompareTag("Player") || collider.CompareTag("Ally")) continue;
+            
             if (collider.CompareTag("Enemy"))
             {
                 float distanceToCenter = Vector3.Distance(transform.position, collider.transform.position);

@@ -42,13 +42,20 @@ public class ApheliosProjectile : MonoBehaviour
         transform.position = nextPos;
         if (Vector3.Distance(_startPos, transform.position) >= _maxDistance)
         {
-            Destroy(gameObject);
+            NetworkHelper.Despawn(gameObject);
         }
     }
 
     void OnHit(Collider col, Vector3 hitPoint)
     {
         if (col == null) return;
+        if (col.CompareTag("Player") || col.CompareTag("Ally"))
+        {
+            NetworkHelper.Despawn(gameObject); // Destroy on ally contact without dealing damage
+            return;
+        }
+        if (!col.CompareTag("Enemy")) { NetworkHelper.Despawn(gameObject); return; } // Only damage enemies
+
         var hp = col.GetComponent<HealthSystem>();
         // Damage application: single or double hit for empowered sniper
         int times = _hitTwice ? 2 : 1;
@@ -122,7 +129,7 @@ public class ApheliosProjectile : MonoBehaviour
 
             Vector3 spawnPos = hitPoint + waveDir * 0.15f; // nudge forward so it doesn't instantly re-hit the same collider
 
-            GameObject go = Instantiate(gameObject, spawnPos, Quaternion.LookRotation(waveDir));
+            GameObject go = NetworkHelper.SpawnProjectile(gameObject, spawnPos, Quaternion.LookRotation(waveDir));
 
             // Prevent immediate re-hit on the same enemy collider (if both have colliders)
             var newCol = go.GetComponent<Collider>();
@@ -142,7 +149,7 @@ public class ApheliosProjectile : MonoBehaviour
                       bounceRadius: 0f);
         }
 
-        Destroy(gameObject);
+        NetworkHelper.Despawn(gameObject);
     }
 
     private Vector3 GetColliderCenter(Collider c)

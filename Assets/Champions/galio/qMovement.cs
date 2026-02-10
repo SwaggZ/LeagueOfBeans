@@ -35,6 +35,10 @@ public class qMovement : MonoBehaviour
 
         foreach (RaycastHit hit in hits)
         {
+            // Skip allies
+            if (hit.collider.CompareTag("Player") || hit.collider.CompareTag("Ally")) continue;
+            if (!hit.collider.CompareTag("Enemy")) continue;
+
             HealthSystem healthSystem = hit.collider.GetComponent<HealthSystem>();
             if (healthSystem != null)
             {
