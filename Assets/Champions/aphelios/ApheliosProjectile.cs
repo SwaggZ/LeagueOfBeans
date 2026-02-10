@@ -95,10 +95,20 @@ public class ApheliosProjectile : MonoBehaviour
             burn.Apply(_burnDur, _burnDps);
         }
 
-        // Orbs: track recent hits so E can stun
+        // Orbs: apply marker status and track hit for ability stun
         if (_owner != null && _firedWeapon == ApheliosController.WeaponType.Orbs)
         {
             _owner.RecordOrbsHit(col);
+            
+            // Apply visual orb marker and weak slow - prefer adding to rigidbody's gameObject (root enemy)
+            GameObject targetObj = col.attachedRigidbody != null ? col.attachedRigidbody.gameObject : col.gameObject;
+            
+            var orbMarker = targetObj.GetComponent<OrbsMarkerStatus>();
+            if (orbMarker == null)
+            {
+                orbMarker = targetObj.AddComponent<OrbsMarkerStatus>();
+            }
+            orbMarker.Apply(_owner.orbsStunWindow);
         }
 
         // Flamethrower (Ability): reflect one shot away from the player (no further bounces)

@@ -920,7 +920,7 @@ MonoBehaviour:
     m_Bits: 65
   jumpHeight: 3
   playerCam: {fileID: 2685533559906960159}
-  canDash: 1
+  canDash: 0
   dashTime: 0.5
   dashSpeed: 30
   dashKnockup: 0
@@ -990,6 +990,7 @@ MonoBehaviour:
   autoAttack: {fileID: 6091600936105968078, guid: 5e75fe697a9ce01448245f803355ddd8, type: 3}
   cam: {fileID: 5625395854533514887}
   cooldownTime: 1
+  maxDistance: 20
 --- !u!114 &4589855055423176711
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1005,6 +1006,7 @@ MonoBehaviour:
   autoAttack: {fileID: 7027930886508640938, guid: 99ee4574187ee854795b276e5f030ad2, type: 3}
   cam: {fileID: 5625395854533514887}
   cooldownTime: 1
+  maxDistance: 30
 --- !u!114 &-2434015613543476413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1050,6 +1052,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healthSystem: {fileID: 0}
+  modifierIconSize: 0.3
+  modifierSpacing: 0.05
+  modifierVerticalOffset: 0.25
   verticalOffset: 1.25
   barWidth: 1.6
   barHeight: 0.18

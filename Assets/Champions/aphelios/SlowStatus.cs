@@ -27,19 +27,14 @@ public class SlowStatus : MonoBehaviour
         if (_co != null) StopCoroutine(_co);
         _co = StartCoroutine(Run(duration));
         UpdateSpeed();
-        // Show slowness icon for the local player only
+        Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.SLOWNESS : null;
         if (CompareTag("Player") && ModifiersUIManager.Instance != null)
         {
-            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.SLOWNESS : null;
-            float d = Mathf.Max(0.01f, duration);
-            ModifiersUIManager.Instance.AddOrUpdate("StatusSlow", icon, "Slowed", d, 0);
+            ModifiersUIManager.Instance.AddOrUpdate("StatusSlow", icon, "Slowed", Mathf.Max(0.01f, duration), 0);
         }
-
-        // Dummy / enemy modifier icon
-        if (!CompareTag("Player") && _modifierTracker != null && ModifiersIconLibrary.Instance != null)
+        if (!CompareTag("Player") && _modifierTracker != null)
         {
-            Sprite icon = ModifiersIconLibrary.Instance.SLOWNESS;
-            _modifierTracker.AddOrUpdate("StatusSlow", icon, duration);
+            _modifierTracker.AddOrUpdate("StatusSlow", icon, Mathf.Max(0.01f, duration), 0);
         }
     }
 
@@ -58,7 +53,6 @@ public class SlowStatus : MonoBehaviour
         {
             ModifiersUIManager.Instance.Remove("StatusSlow");
         }
-        // Dummy / enemy cleanup
         if (!CompareTag("Player") && _modifierTracker != null)
         {
             _modifierTracker.Remove("StatusSlow");

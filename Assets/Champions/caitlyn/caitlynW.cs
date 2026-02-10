@@ -79,8 +79,8 @@ public class caitlynW : MonoBehaviour
         float throwForce = baseThrowForce + (throwLevel - 1) * 10f;
 
         // Get the current position and rotation for the throwable
-        Vector3 currentPosition = transform.position;
-        Quaternion currentRotation = cam.transform.rotation;
+        Vector3 currentPosition = cam != null ? cam.transform.position : transform.position;
+        Quaternion currentRotation = cam != null ? cam.transform.rotation : transform.rotation;
 
         // Instantiate the throwable and add force to it
         GameObject throwable = Instantiate(throwablePrefab, currentPosition, currentRotation);

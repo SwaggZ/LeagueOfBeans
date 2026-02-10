@@ -33,20 +33,31 @@ public class TrapBehavior : MonoBehaviour
             // Check if the detected object has the "Enemy" tag
             if (collider.CompareTag("Enemy"))
             {
+                GameObject enemyObj = ModifierUtils.ResolveTarget(collider);
+
                 // Apply damage if the object has a HealthSystem
-                HealthSystem health = collider.GetComponent<HealthSystem>();
+                HealthSystem health = enemyObj.GetComponent<HealthSystem>();
                 if (health != null)
                 {
                     health.TakeDamage(damage);
-                    Debug.Log($"{collider.gameObject.name} took {damage} damage from the trap!");
+                    Debug.Log($"{enemyObj.name} took {damage} damage from the trap!");
                 }
 
-                // Apply stun if the object has a CharacterControl component
-                CharacterControl enemyController = collider.GetComponent<CharacterControl>();
-                if (enemyController != null)
+                // Apply stun if the object has a CharacterControl or DummyController component
+                DummyController dummyController = enemyObj.GetComponent<DummyController>();
+                if (dummyController != null)
                 {
-                    enemyController.Stun(stunDuration);
-                    Debug.Log($"{collider.gameObject.name} is stunned for {stunDuration} seconds!");
+                    dummyController.Stun(stunDuration);
+                    Debug.Log($"{enemyObj.name} is stunned for {stunDuration} seconds!");
+                }
+                else
+                {
+                    CharacterControl enemyController = enemyObj.GetComponent<CharacterControl>();
+                    if (enemyController != null)
+                    {
+                        enemyController.Stun(stunDuration);
+                        Debug.Log($"{enemyObj.name} is stunned for {stunDuration} seconds!");
+                    }
                 }
 
                 // Destroy the trap after applying effects

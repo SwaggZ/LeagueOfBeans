@@ -48,7 +48,14 @@ public class caitlynE : MonoBehaviour
         // Spawn the projectile
         Vector3 currentPosition = transform.position;
         Quaternion currentRotation = cam.transform.rotation;
-        Instantiate(autoAttack, currentPosition, currentRotation);
+        GameObject projectile = Instantiate(autoAttack, currentPosition, currentRotation);
+        var autoMove = projectile.GetComponent<caitlynAutoMovement>();
+        if (autoMove != null)
+        {
+            autoMove.isPlane = false;
+            autoMove.applyKnockback = false;
+            autoMove.applyStun = true;
+        }
 
         // Apply push-back movement
         StartCoroutine(PushBack());

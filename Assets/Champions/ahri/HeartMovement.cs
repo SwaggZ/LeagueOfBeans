@@ -14,6 +14,7 @@ public class HeartMovement : MonoBehaviour
     private GameObject targetEnemy; // Reference to the enemy being pulled
     private float pullElapsedTime = 0f; // Tracks pull effect time
     private bool impacted = false; // Whether the projectile has impacted/expired
+    private GameObject modifierTarget;
 
     void Start()
     {
@@ -56,8 +57,27 @@ public class HeartMovement : MonoBehaviour
                     if (hit.collider.gameObject.CompareTag("Enemy"))
                     {
                         Debug.Log("Heart hit an enemy. Starting pull effect.");
-                        targetEnemy = hit.collider.gameObject; // Set the enemy as the target for pulling
+                        GameObject enemyObj = hit.collider.attachedRigidbody != null
+                            ? hit.collider.attachedRigidbody.gameObject
+                            : hit.collider.gameObject;
+
+                        // Prefer DummyController for attract (handles modifier UI)
+                        DummyController dummyCtrl = enemyObj.GetComponent<DummyController>();
+                        if (dummyCtrl != null)
+                        {
+                            dummyCtrl.ApplyAttract(player != null ? player.transform.position : transform.position, pullSpeed, pullDuration);
+                            // End projectile immediately after applying attract
+                            ImpactNow();
+                            Destroy(gameObject);
+                            return;
+                        }
+
+                        targetEnemy = enemyObj; // Set the enemy as the target for pulling
                         pullElapsedTime = 0f; // Reset pull timer
+
+                        // Apply attract modifier icon for non-dummy enemies
+                        modifierTarget = enemyObj;
+                        ModifierUtils.ApplyModifier(enemyObj, "StatusAttract", null, "Attracted", pullDuration, 0);
                     }
                     else
                     {
@@ -76,6 +96,7 @@ public class HeartMovement : MonoBehaviour
             if (player == null)
             {
                 Debug.LogWarning("Player object is null. Stopping pull effect.");
+                ClearAttractModifier();
                 targetEnemy = null;
                 return;
             }
@@ -90,6 +111,7 @@ public class HeartMovement : MonoBehaviour
             if (pullElapsedTime >= pullDuration)
             {
                 Debug.Log("Pull effect completed.");
+                ClearAttractModifier();
                 targetEnemy = null;
                 // After pull completes, remove projectile completely
                 Destroy(gameObject);
@@ -103,6 +125,15 @@ public class HeartMovement : MonoBehaviour
         ImpactNow();
         // If we timed out without an enemy, just destroy entirely
         if (targetEnemy == null) Destroy(gameObject);
+    }
+
+    private void ClearAttractModifier()
+    {
+        if (modifierTarget != null)
+        {
+            ModifierUtils.RemoveModifier(modifierTarget, "StatusAttract");
+        }
+        modifierTarget = null;
     }
 
     // Stop visuals and further movement/raycasting

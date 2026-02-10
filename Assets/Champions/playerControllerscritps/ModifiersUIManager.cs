@@ -211,6 +211,11 @@ public class ModifiersUIManager : MonoBehaviour
     public void AddOrUpdate(string id, Sprite icon, string label = "", float durationSeconds = -1f, int stacks = 0)
     {
         if (string.IsNullOrEmpty(id)) return;
+
+        if (icon == null && ModifiersIconLibrary.Instance != null)
+        {
+            icon = ModifiersIconLibrary.Instance.Resolve(id, label);
+        }
         if (!_byId.TryGetValue(id, out var s))
         {
             s = CreateSlot(id);

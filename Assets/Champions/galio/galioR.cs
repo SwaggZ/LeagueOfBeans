@@ -46,11 +46,7 @@ public class galioR : MonoBehaviour, IIncomingDamageModifier
         Debug.Log("[GalioR] CastAbility started");
         isUltActive = true; // block other abilities and enable DR
         // Show DR indicator (50%) while active
-        if (ModifiersUIManager.Instance != null)
-        {
-            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.DMGRD : null;
-            ModifiersUIManager.Instance.AddOrUpdate("GalioDR50", icon, "50%", -1f, 0);
-        }
+        ModifierUtils.ApplyModifier(gameObject, "GalioDR50", null, "50%", -1f, 0, includePlayerHud: true, includeEnemy: false);
 
         // Step 1: Lift phase - move upward to maxHeight
         // Disable CharacterControl gravity so Galio can stay aloft during the aim phase
@@ -88,10 +84,7 @@ public class galioR : MonoBehaviour, IIncomingDamageModifier
 
         // Step 4: Start cooldown (ult phase ends here; unlock and DR off during cooldown)
         isUltActive = false;
-        if (ModifiersUIManager.Instance != null)
-        {
-            ModifiersUIManager.Instance.Remove("GalioDR50");
-        }
+        ModifierUtils.RemoveModifier(gameObject, "GalioDR50", removePlayerHud: true, removeEnemy: false);
         Debug.Log("[GalioR] Starting COOLDOWN phase");
         if (CooldownUIManager.Instance != null)
         {

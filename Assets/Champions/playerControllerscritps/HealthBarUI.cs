@@ -42,10 +42,12 @@ public class HealthBarUI : MonoBehaviour
     private Image _bgImage;
     private Image _fillImage;
     private static Sprite _defaultUISprite; // cached UI sprite (generated 1x1 white)
+    private static Font _defaultFont;
     private static readonly Vector2 _basePixels = new Vector2(100f, 12f); // base pixel size; scaled to world units via localScale
 
     private GameObject _modifiersContainer; // Parent for modifier icons
     private List<Image> _modifierIconImages = new List<Image>(); // Reusable pool of modifier icon images
+    private List<Text> _modifierStackLabels = new List<Text>(); // Reusable pool of stack labels
 
     private static Sprite GetDefaultUISprite()
     {
@@ -59,6 +61,15 @@ public class HealthBarUI : MonoBehaviour
             _defaultUISprite.name = "HealthBarUI_WhiteSprite";
         }
         return _defaultUISprite;
+    }
+
+    private static Font GetDefaultFont()
+    {
+        if (_defaultFont == null)
+        {
+            _defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        }
+        return _defaultFont;
     }
 
     void Awake()
@@ -196,12 +207,16 @@ public class HealthBarUI : MonoBehaviour
 
         for (int i = 0; i < activeModifiers.Count; i++)
         {
-            var (sprite, remaining) = activeModifiers[i];
+            var (sprite, remaining, stacks) = activeModifiers[i];
             var img = _modifierIconImages[i];
+            var stackLabel = _modifierStackLabels[i];
 
             img.sprite = sprite;
             img.color = sprite != null ? Color.white : new Color(0.5f, 0.5f, 0.5f, 1f);
             img.enabled = true;
+
+            stackLabel.text = stacks > 1 ? stacks.ToString() : string.Empty;
+            stackLabel.enabled = stacks > 1;
 
             // Position horizontally
             RectTransform rt = img.GetComponent<RectTransform>();
@@ -226,7 +241,25 @@ public class HealthBarUI : MonoBehaviour
         img.color = Color.white;
         img.raycastTarget = false;
 
+        GameObject stackGO = new GameObject("StackLabel", typeof(RectTransform), typeof(Text));
+        stackGO.transform.SetParent(iconGO.transform, false);
+        RectTransform srt = stackGO.GetComponent<RectTransform>();
+        srt.anchorMin = new Vector2(1f, 0f);
+        srt.anchorMax = new Vector2(1f, 0f);
+        srt.pivot = new Vector2(1f, 0f);
+        srt.anchoredPosition = new Vector2(-2f, 2f);
+        srt.sizeDelta = new Vector2(modifierIconSize * 100f, modifierIconSize * 100f);
+
+        Text stackText = stackGO.GetComponent<Text>();
+        stackText.font = GetDefaultFont();
+        stackText.fontSize = 12;
+        stackText.color = Color.white;
+        stackText.alignment = TextAnchor.LowerRight;
+        stackText.text = string.Empty;
+        stackText.raycastTarget = false;
+
         _modifierIconImages.Add(img);
+        _modifierStackLabels.Add(stackText);
     }
 
     private void RemoveModifierIcon()
@@ -236,6 +269,10 @@ public class HealthBarUI : MonoBehaviour
             Image lastIcon = _modifierIconImages[_modifierIconImages.Count - 1];
             _modifierIconImages.RemoveAt(_modifierIconImages.Count - 1);
             Destroy(lastIcon.gameObject);
+        }
+        if (_modifierStackLabels.Count > 0)
+        {
+            _modifierStackLabels.RemoveAt(_modifierStackLabels.Count - 1);
         }
     }
 

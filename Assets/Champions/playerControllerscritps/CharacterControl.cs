@@ -223,19 +223,14 @@ public class CharacterControl : MonoBehaviour
             isStunned = true;
             stunEndTime = Time.time + stunDuration;
             Debug.Log($"{gameObject.name} is stunned for {stunDuration} seconds.");
-            if (CompareTag("Player") && ModifiersUIManager.Instance != null)
-            {
-                Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.STUN : null;
-                ModifiersUIManager.Instance.AddOrUpdate("StatusStun", icon, "Stunned", stunDuration, 0);
-            }
+            ModifierUtils.ApplyModifier(gameObject, "StatusStun", null, "Stunned", stunDuration, 0);
         }
 
         // If there's an upward component, show a Knockup badge for the player
-        if (direction.y > 0.1f && CompareTag("Player") && ModifiersUIManager.Instance != null)
+        if (direction.y > 0.1f)
         {
             float dur = stunDuration > 0 ? stunDuration : Mathf.Max(0.4f, distance > 0 && speed > 0 ? (distance / speed) : 0.6f);
-            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.KNOCKUP : null;
-            ModifiersUIManager.Instance.AddOrUpdate("StatusKnockup", icon, "Knocked Up", dur, 0);
+            ModifierUtils.ApplyModifier(gameObject, "StatusKnockup", null, "Knocked Up", dur, 0);
         }
     }
 
@@ -244,11 +239,7 @@ public class CharacterControl : MonoBehaviour
         isStunned = true;
         stunEndTime = Time.time + duration;
         Debug.Log($"{gameObject.name} is stunned for {duration} seconds.");
-        if (CompareTag("Player") && ModifiersUIManager.Instance != null)
-        {
-            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.STUN : null;
-            ModifiersUIManager.Instance.AddOrUpdate("StatusStun", icon, "Stunned", duration, 0);
-        }
+        ModifierUtils.ApplyModifier(gameObject, "StatusStun", null, "Stunned", duration, 0);
     }
 
     private void HandleKnockback()

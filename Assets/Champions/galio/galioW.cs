@@ -98,16 +98,11 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
             currentTornado.transform.localScale = Vector3.zero; // Start at scale 0
             isGrowing = true;
             Debug.Log("Tornado instantiated and growth started.");
-            if (ModifiersUIManager.Instance != null)
-            {
-                Sprite drIcon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.DMGRD : null;
-                ModifiersUIManager.Instance.AddOrUpdate("GalioDR30", drIcon, "30%", -1f, 0);
-                Sprite slowIcon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.SLOWNESS : null;
-                ModifiersUIManager.Instance.AddOrUpdate("GalioSlow", slowIcon, "Slowed", -1f, 0);
-            }
+            ModifierUtils.ApplyModifier(gameObject, "GalioDR30", null, "30%", -1f, 0, includePlayerHud: true, includeEnemy: false);
+            ModifierUtils.ApplyModifier(gameObject, "GalioSlow", null, "Slowed", -1f, 0, includePlayerHud: true, includeEnemy: false);
 
             // Apply slow effect to enemies in range
-            ApplySlowToEnemies();
+            // ApplySlowToEnemies();
         }
         else
         {
@@ -183,11 +178,8 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
             CooldownUIManager.Instance.StartCooldown(AbilityKey.One, abilityCooldown);
         }
 
-        if (ModifiersUIManager.Instance != null)
-        {
-            ModifiersUIManager.Instance.Remove("GalioDR30");
-            ModifiersUIManager.Instance.Remove("GalioSlow");
-        }
+        ModifierUtils.RemoveModifier(gameObject, "GalioDR30", removePlayerHud: true, removeEnemy: false);
+        ModifierUtils.RemoveModifier(gameObject, "GalioSlow", removePlayerHud: true, removeEnemy: false);
 
         wActive = false;
     }
@@ -278,22 +270,22 @@ public class galioW : MonoBehaviour, IIncomingDamageModifier
         }
     }
 
-    void ApplySlowToEnemies()
-    {
-        Collider[] colliders = Physics.OverlapSphere(transform.position, pullRadius);
-        foreach (Collider collider in colliders)
-        {
-            if (collider.CompareTag("Enemy"))
-            {
-                DummyController dummyCtrl = collider.GetComponent<DummyController>();
-                if (dummyCtrl != null)
-                {
-                    dummyCtrl.ApplySlow(0.5f, pullDuration); // 50% slow for the duration
-                    Debug.Log($"Applied slow to {collider.gameObject.name}");
-                }
-            }
-        }
-    }
+    // void ApplySlowToEnemies()
+    // {
+    //     Collider[] colliders = Physics.OverlapSphere(transform.position, pullRadius);
+    //     foreach (Collider collider in colliders)
+    //     {
+    //         if (collider.CompareTag("Enemy"))
+    //         {
+    //             DummyController dummyCtrl = collider.GetComponent<DummyController>();
+    //             if (dummyCtrl != null)
+    //             {
+    //                 dummyCtrl.ApplySlow(0.5f, pullDuration); // 50% slow for the duration
+    //                 Debug.Log($"Applied slow to {collider.gameObject.name}");
+    //             }
+    //         }
+    //     }
+    // }
 
     IEnumerator ApplyHealthBoost()
     {

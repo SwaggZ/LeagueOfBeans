@@ -1,11 +1,16 @@
 using System.Collections;
 using UnityEngine;
 
-// Applies damage over time to the host. Non-stackable: re-applying refreshes duration and keeps the current DPS.
+// Applies damage over time to the host. Stacking: each apply adds a stack up to a cap.
+// Each stack increases DPS. Duration refreshes on each application.
 public class BurnStatus : MonoBehaviour
 {
-    public float damagePerSecond = 2f;
+    public float baseDamagePerSecond = 2f;
+    public int maxStacks = 5;
+    
+    private int _currentStacks = 0;
     private float _remaining;
+    private float _duration;
     private Coroutine _co;
     private HealthSystem _hp;
     private ModifierTracker _modifierTracker;
@@ -16,58 +21,72 @@ public class BurnStatus : MonoBehaviour
         _modifierTracker = GetComponent<ModifierTracker>();
     }
 
-    // Apply or refresh burn. Non-stackable.
+    // Apply or add burn stack. Stacking up to maxStacks.
     public void Apply(float duration, float dps)
     {
         if (_hp == null) return;
 
-        damagePerSecond = dps;
+        baseDamagePerSecond = dps;
+        _duration = duration;
         _remaining = duration;
+        
+        // Add a stack (up to cap)
+        _currentStacks = Mathf.Min(_currentStacks + 1, maxStacks);
 
         if (_co == null)
             _co = StartCoroutine(Run());
 
-        // Player UI (unchanged)
+        UpdateUI();
+    }
+    
+    private void UpdateUI()
+    {
+        float totalDps = baseDamagePerSecond * _currentStacks;
+        Sprite icon = ModifiersIconLibrary.Instance != null
+            ? ModifiersIconLibrary.Instance.DMGBURN
+            : null;
+
         if (CompareTag("Player") && ModifiersUIManager.Instance != null)
         {
-            Sprite icon = ModifiersIconLibrary.Instance != null
-                ? ModifiersIconLibrary.Instance.DMGBURN
-                : null;
-
             ModifiersUIManager.Instance.AddOrUpdate(
                 "StatusBurn",
                 icon,
-                "Burning",
-                Mathf.Max(0.01f, duration),
-                0
-            );
+                $"Burning ({totalDps} DPS)",
+                Mathf.Max(0.01f, _remaining),
+                _currentStacks);
         }
 
-        // Dummy / enemy modifier icon
-        if (!CompareTag("Player") && _modifierTracker != null && ModifiersIconLibrary.Instance != null)
+        if (!CompareTag("Player") && _modifierTracker != null)
         {
-            Sprite icon = ModifiersIconLibrary.Instance.DMGBURN;
-            _modifierTracker.AddOrUpdate("StatusBurn", icon, duration);
+            _modifierTracker.AddOrUpdate("StatusBurn", icon, Mathf.Max(0.01f, _remaining), _currentStacks);
         }
     }
 
     IEnumerator Run()
     {
-        // Tick whole-number damage once per second
-        int dmgPerTick = Mathf.Max(0, Mathf.RoundToInt(damagePerSecond));
         while (_remaining > 0f)
         {
             yield return new WaitForSeconds(1f);
             if (_hp == null) break;
+            
+            // Calculate damage based on current stacks
+            int dmgPerTick = Mathf.Max(0, Mathf.RoundToInt(baseDamagePerSecond * _currentStacks));
             if (dmgPerTick > 0) _hp.TakeDamage(dmgPerTick);
+            
             _remaining -= 1f;
+            UpdateUI();
         }
+        
+        // Reset stacks when burn expires
+        _currentStacks = 0;
         _co = null;
         if (CompareTag("Player") && ModifiersUIManager.Instance != null)
         {
             ModifiersUIManager.Instance.Remove("StatusBurn");
         }
-        // Optionally remove component; keep it lightweight
-        // Destroy(this);
+        if (!CompareTag("Player") && _modifierTracker != null)
+        {
+            _modifierTracker.Remove("StatusBurn");
+        }
     }
 }

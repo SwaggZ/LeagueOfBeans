@@ -88,10 +88,7 @@ public class DummyController : MonoBehaviour
         if (slowMultiplier < 1f && Time.time >= slowEndTime)
         {
             slowMultiplier = 1f;
-            if (modifierTracker != null)
-            {
-                modifierTracker.Remove("StatusSlow");
-            }
+            ModifierUtils.RemoveModifier(gameObject, "StatusSlow", removePlayerHud: false, removeEnemy: true);
         }
 
         // Ground check
@@ -152,11 +149,7 @@ public class DummyController : MonoBehaviour
     /// </summary>
     public void ApplyBurn(float duration)
     {
-        if (modifierTracker != null && ModifiersIconLibrary.Instance != null)
-        {
-            Sprite icon = ModifiersIconLibrary.Instance.DMGBURN;
-            modifierTracker.AddOrUpdate("StatusBurn", icon, duration);
-        }
+        ModifierUtils.ApplyModifier(gameObject, "StatusBurn", null, "Burning", duration, 0, includePlayerHud: false, includeEnemy: true);
     }
 
     /// <summary>
@@ -190,8 +183,7 @@ public class DummyController : MonoBehaviour
         if (direction.y > 0.1f && modifierTracker != null && ModifiersIconLibrary.Instance != null)
         {
             float dur = stunDuration > 0 ? stunDuration : Mathf.Max(0.4f, distance > 0 && speed > 0 ? (distance / speed) : 0.6f);
-            Sprite icon = ModifiersIconLibrary.Instance.KNOCKUP;
-            modifierTracker.AddOrUpdate("StatusKnockup", icon, dur);
+            ModifierUtils.ApplyModifier(gameObject, "StatusKnockup", null, "Knocked Up", dur, 0, includePlayerHud: false, includeEnemy: true);
         }
     }
 
@@ -204,11 +196,7 @@ public class DummyController : MonoBehaviour
         stunEndTime = Time.time + duration;
         Debug.Log($"{gameObject.name} is stunned for {duration} seconds.");
 
-        if (modifierTracker != null && ModifiersIconLibrary.Instance != null)
-        {
-            Sprite icon = ModifiersIconLibrary.Instance.STUN;
-            modifierTracker.AddOrUpdate("StatusStun", icon, duration);
-        }
+        ModifierUtils.ApplyModifier(gameObject, "StatusStun", null, "Stunned", duration, 0, includePlayerHud: false, includeEnemy: true);
     }
 
     /// <summary>
@@ -220,11 +208,17 @@ public class DummyController : MonoBehaviour
         slowEndTime = Time.time + duration;
         Debug.Log($"{gameObject.name} slowed to {multiplier * 100}% for {duration} seconds.");
 
-        if (modifierTracker != null && ModifiersIconLibrary.Instance != null)
-        {
-            Sprite icon = ModifiersIconLibrary.Instance.SLOWNESS;
-            modifierTracker.AddOrUpdate("StatusSlow", icon, duration);
-        }
+        ModifierUtils.ApplyModifier(gameObject, "StatusSlow", null, "Slowed", duration, 0, includePlayerHud: false, includeEnemy: true);
+    }
+
+    /// <summary>
+    /// Clear any active slow effect immediately
+    /// </summary>
+    public void ClearSlow()
+    {
+        slowMultiplier = 1f;
+        slowEndTime = 0f;
+        ModifierUtils.RemoveModifier(gameObject, "StatusSlow", removePlayerHud: false, removeEnemy: true);
     }
 
     public void SetGravityEnabled(bool enabled)
@@ -273,11 +267,7 @@ public class DummyController : MonoBehaviour
 
         Debug.Log($"{gameObject.name} is being pulled for {duration} seconds.");
 
-        if (modifierTracker != null && ModifiersIconLibrary.Instance != null)
-        {
-            Sprite icon = ModifiersIconLibrary.Instance.ATTRACT;
-            modifierTracker.AddOrUpdate("StatusAttract", icon, duration);
-        }
+        ModifierUtils.ApplyModifier(gameObject, "StatusAttract", null, "Attracted", duration, 0, includePlayerHud: false, includeEnemy: true);
     }
 
     /// <summary>

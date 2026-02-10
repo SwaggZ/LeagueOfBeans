@@ -239,9 +239,12 @@ public class ApheliosController : MonoBehaviour
                 hitTwice = true;
                 sniperEmpoweredShots--;
                 // Remove any HUD indicator if count reaches 0
-                if (sniperEmpoweredShots <= 0 && ModifiersUIManager.Instance != null)
+                if (sniperEmpoweredShots <= 0)
                 {
-                    ModifiersUIManager.Instance.Remove("ApheliosSniperEmpower");
+                    if (ModifiersUIManager.Instance != null)
+                    {
+                        ModifiersUIManager.Instance.Remove("ApheliosSniperEmpower");
+                    }
                 }
             }
             if (currentWeapon == WeaponType.Flamethrower && _flameBounceActive)
@@ -402,14 +405,30 @@ public class ApheliosController : MonoBehaviour
         foreach (var h in _recentOrbsHits)
         {
             if (h.col == null) continue;
-            var cc = h.col.GetComponentInParent<CharacterControl>();
-            if (cc == null && h.col.attachedRigidbody != null)
+            
+            // Try to find OrbsMarkerStatus on the hit target and stun via it
+            var orbMarker = h.col.GetComponentInParent<OrbsMarkerStatus>();
+            if (orbMarker == null && h.col.attachedRigidbody != null)
             {
-                cc = h.col.attachedRigidbody.GetComponent<CharacterControl>();
+                orbMarker = h.col.attachedRigidbody.GetComponent<OrbsMarkerStatus>();
             }
-            if (cc != null)
+            
+            if (orbMarker != null)
             {
-                cc.Stun(orbsStunDuration);
+                orbMarker.StunFromOrbs(orbsStunDuration);
+            }
+            else
+            {
+                // Fallback: if no marker (shouldn't happen), try to stun via CharacterControl
+                var cc = h.col.GetComponentInParent<CharacterControl>();
+                if (cc == null && h.col.attachedRigidbody != null)
+                {
+                    cc = h.col.attachedRigidbody.GetComponent<CharacterControl>();
+                }
+                if (cc != null)
+                {
+                    cc.Stun(orbsStunDuration);
+                }
             }
         }
         _recentOrbsHits.Clear();
@@ -430,9 +449,11 @@ public class ApheliosController : MonoBehaviour
             cc.speed = originalSpeed * 1.10f;
             cc.runSpeed = originalRunSpeed * 1.10f;
         }
+        Sprite icon = ModifiersIconLibrary.Instance != null
+            ? (ModifiersIconLibrary.Instance.MOVESPEED ?? ModifiersIconLibrary.Instance.HASTE)
+            : null;
         if (ModifiersUIManager.Instance != null)
         {
-            Sprite icon = ModifiersIconLibrary.Instance != null ? (ModifiersIconLibrary.Instance.MOVESPEED ?? ModifiersIconLibrary.Instance.HASTE) : null;
             ModifiersUIManager.Instance.AddOrUpdate("ApheliosScytheHaste", icon, "+10% Move Speed", scytheAuraDuration, 0);
         }
         while (Time.time < end)

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657755, g: 0.4964127, b: 0.57481825, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657695, g: 0.49641138, b: 0.5748176, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -651,58 +651,106 @@ MonoBehaviour:
   - id: 0
     preview: {fileID: 146816009}
     gameplayPrefab: {fileID: 6251159111481128476, guid: aa18dc0e16e06034280155d3bcba447a, type: 3}
-    lmbName: Ahri Left Click
-    rmbName: Ahri Right Click
-    oneName: Ahri 1
-    twoName: Ahri 2
-    lmbDesc: Ahri test
-    rmbDesc: Ahri test
-    oneDesc: Ahri test
-    twoDesc: Ahri test
+    lmbName: Spirit Bolt
+    rmbName: Bewitching Heart
+    oneName: Twin Spirit Orb
+    twoName: Fox-Fire Swarm
+    lmbDesc: Ahri fires a small burst of condensed spirit energy at her target, dealing
+      magic damage on hit.
+    rmbDesc: "Ahri releases a magical heart that flies forward and charms the first
+      enemy it hits.\nCharmed enemies are briefly stunned and become vulnerable,
+      unable to act while captivated by Ahri\u2019s magic."
+    oneDesc: Ahri fires a spirit orb that hits enemies on the way out and back, dealing
+      extra damage if both hits connect.
+    twoDesc: 'Ahri summons a cluster of fox-fires that orbit her briefly before seeking
+      out nearby enemies.
+
+      Each fox-fire homes in and strikes independently,
+      prioritizing the closest targets.'
   - id: 1
     preview: {fileID: 384077719}
     gameplayPrefab: {fileID: 8418642580960513542, guid: 1db6538dbc075b34ba921c1a8bde1918, type: 3}
-    lmbName: Left Click
-    rmbName: Right Click
-    oneName: 1
-    twoName: 2
-    lmbDesc: test
-    rmbDesc: test
-    oneDesc: test
-    twoDesc: test
+    lmbName: Frostbolt Arrow
+    rmbName: Rapid Volley
+    oneName: Glacial Fan
+    twoName: Crystalburst Arrow
+    lmbDesc: Ashe fires a basic arrow straight forward. The arrow travels until it
+      hits an enemy, dealing damage on impact.
+    rmbDesc: "Ashe unleashes a quick burst of arrows (9 arrows) in rapid succession.
+      Each shot has random spread, creating a scattered volley that\u2019s deadly
+      at close to mid range."
+    oneDesc: Ashe fires a wide fan of arrows in front of her (9 arrows spread evenly
+      across a large arc), damaging enemies caught in the volley.
+    twoDesc: Ashe fires a powerful ultimate arrow. On impact, it detonates in a large
+      area, dealing damage to enemies around the hit point with damage falloff (highest
+      at the center, lower near the edge).
   - id: 2
     preview: {fileID: 1666055148}
     gameplayPrefab: {fileID: 2814884194661736319, guid: a0f302033195e9045abf06dffacb07aa, type: 3}
-    lmbName: Left Click
-    rmbName: Right Click
-    oneName: 1
-    twoName: 2
-    lmbDesc: test
-    rmbDesc: test
-    oneDesc: test
-    twoDesc: test
+    lmbName: Twin Gust
+    rmbName: Groundbreaker
+    oneName: Colossal Vortex
+    twoName: Heroic Descent
+    lmbDesc: 'Galio launches two wind gusts that travel forward at an angle.
+
+      When
+      the gusts collide, they merge into a single powerful tornado that continues
+      forward, damaging enemies caught inside.'
+    rmbDesc: Galio smashes the ground in front of him, dealing damage and knocking
+      up enemies hit.
+    oneDesc: 'Galio creates a massive tornado at the target location.
+
+      Enemies
+      inside the vortex are pulled toward its center and damaged over time.'
+    twoDesc: Galio leaps into the air and crashes down at the target location, dealing
+      heavy area damage and disrupting enemies on impact.
   - id: 3
     preview: {fileID: 359851925}
     gameplayPrefab: {fileID: 8418642580960513542, guid: 0ed734fc127a82444afabf1a229d5f5b, type: 3}
-    lmbName: Left Click
-    rmbName: Right Click
-    oneName: 1
-    twoName: 2
-    lmbDesc: test
-    rmbDesc: test
-    oneDesc: test
-    twoDesc: test
+    lmbName: Precision Shot
+    rmbName: Piltover Peacemaker
+    oneName: Yordle Snap Trap
+    twoName: 90 Caliber Net
+    lmbDesc: 'Caitlyn fires a high-velocity rifle shot at her target, dealing physical
+      damage.
+
+      Long range and pinpoint accurate.'
+    rmbDesc: 'Caitlyn channels her rifle and fires a powerful piercing shot in a
+      straight line,
+
+      damaging all enemies hit. Enemies further along the path
+      take reduced damage.'
+    oneDesc: 'Caitlyn places a concealed trap on the ground.
+
+      Enemies that
+      step on it are briefly immobilized and revealed, leaving them exposed to follow-up
+      attacks.'
+    twoDesc: Caitlyn fires a net, launching herself backward while stunning and damaging
+      enemies caught in the blast.
   - id: 4
     preview: {fileID: 2015943958}
     gameplayPrefab: {fileID: 8418642580960513542, guid: c1b0f2a2eec61dc4685da20a1b6d0c91, type: 3}
-    lmbName: Left Click
-    rmbName: Right Click
-    oneName: 1
-    twoName: 2
-    lmbDesc: test
-    rmbDesc: test
-    oneDesc: test
-    twoDesc: test
+    lmbName: Longrifle
+    rmbName: Severing Scythe
+    oneName: Binding Orbs
+    twoName: Infernal Flamethrower
+    lmbDesc: 'A precision rifle built for distance.
+
+      Shots travel far and hit
+      hard, but fire slowly, rewarding careful positioning and timing.'
+    rmbDesc: 'A rapid slashing weapon that trades power for speed.
+
+      Attacks
+      restore a portion of health on hit, allowing Aphelios to sustain himself in
+      close combat.'
+    oneDesc: 'Magical orbs fired at nearby enemies.
+
+      Targets hit are slowed,
+      making it easier to control enemy movement and set up follow-up attacks.'
+    twoDesc: 'A short-range weapon that fires a wide cone of flame.
+
+      Enemies
+      hit are burned, taking damage over time. Most effective against grouped enemies.'
   label: {fileID: 1318466610}
   lmbNameText: {fileID: 1785961447}
   rmbNameText: {fileID: 2001366063}
@@ -866,7 +914,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.000030517578}
+  m_AnchoredPosition: {x: 0, y: 0.0010484959}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &340349280
@@ -2135,7 +2183,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 606834768}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.9999986
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

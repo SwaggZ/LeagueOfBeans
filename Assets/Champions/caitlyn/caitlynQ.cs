@@ -7,6 +7,7 @@ public class caitlynQ : MonoBehaviour
     public GameObject autoAttack; // Prefab for the bullet
     public GameObject cam; // Reference to the camera
     public float cooldownTime = 1f; // Cooldown duration in seconds
+    public float maxDistance = 30f; // Distance limit for Q projectile
 
     private bool isOnCooldown = false; // Tracks whether the ability is on cooldown
 
@@ -36,7 +37,16 @@ public class caitlynQ : MonoBehaviour
         Quaternion currentRotation = cam.transform.rotation;
 
         // Instantiate a new GameObject using the same position and rotation
-        Instantiate(autoAttack, currentPosition, currentRotation);
+        GameObject projectile = Instantiate(autoAttack, currentPosition, currentRotation);
+        var autoMove = projectile.GetComponent<caitlynAutoMovement>();
+        if (autoMove != null)
+        {
+            autoMove.isPlane = false;
+            autoMove.applyKnockback = false;
+            autoMove.applyStun = false;
+            autoMove.piercing = int.MaxValue;
+            autoMove.maxDistance = maxDistance;
+        }
     }
 
     IEnumerator CooldownRoutine()
