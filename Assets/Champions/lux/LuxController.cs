@@ -58,6 +58,8 @@ public class LuxController : MonoBehaviour
     private bool _carpetOnCooldown = false;
     private LuxCarpet _activeCarpet;
 
+    private CooldownUIManager _cooldownUi;
+
     void Awake()
     {
         if (cam == null)
@@ -66,6 +68,7 @@ public class LuxController : MonoBehaviour
             if (c != null) cam = c.gameObject;
         }
         if (firePoint == null) firePoint = transform;
+        _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
     }
 
     void Start()
@@ -83,11 +86,12 @@ public class LuxController : MonoBehaviour
 
     private void UpdateAbilityIcons()
     {
-        if (CooldownUIManager.Instance == null) return;
-        if (lightOrbIcon != null) CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.LeftClick, lightOrbIcon);
-        if (wandForwardIcon != null) CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.RightClick, wandForwardIcon);
-        if (stunOrbIcon != null) CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.One, stunOrbIcon);
-        if (carpetThrowIcon != null) CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.Two, carpetThrowIcon);
+        var cooldownUi = ResolveCooldownUi();
+        if (cooldownUi == null) return;
+        if (lightOrbIcon != null) cooldownUi.SetAbilityIcon(AbilityKey.LeftClick, lightOrbIcon);
+        if (wandForwardIcon != null) cooldownUi.SetAbilityIcon(AbilityKey.RightClick, wandForwardIcon);
+        if (stunOrbIcon != null) cooldownUi.SetAbilityIcon(AbilityKey.One, stunOrbIcon);
+        if (carpetThrowIcon != null) cooldownUi.SetAbilityIcon(AbilityKey.Two, carpetThrowIcon);
     }
 
     #region LMB - Light Orb (Damage Only)
@@ -109,8 +113,9 @@ public class LuxController : MonoBehaviour
 
         _lightOrbOnCooldown = true;
         StartCoroutine(LightOrbCooldown());
-        if (CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.StartCooldown(AbilityKey.LeftClick, lightOrbCooldown);
+        var cooldownUi = ResolveCooldownUi();
+        if (cooldownUi != null)
+            cooldownUi.StartCooldown(AbilityKey.LeftClick, lightOrbCooldown);
     }
 
     IEnumerator LightOrbCooldown()
@@ -138,28 +143,32 @@ public class LuxController : MonoBehaviour
         _activeWand = wand;
 
         // Set forward icon
-        if (wandForwardIcon != null && CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.RightClick, wandForwardIcon);
+        var cooldownUi = ResolveCooldownUi();
+        if (wandForwardIcon != null && cooldownUi != null)
+            cooldownUi.SetAbilityIcon(AbilityKey.RightClick, wandForwardIcon);
 
         _wandOnCooldown = true;
         StartCoroutine(WandCooldown());
-        if (CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.StartCooldown(AbilityKey.RightClick, wandCooldown);
+        cooldownUi = ResolveCooldownUi();
+        if (cooldownUi != null)
+            cooldownUi.StartCooldown(AbilityKey.RightClick, wandCooldown);
     }
 
     public void OnWandReturning()
     {
         // Switch to return icon
-        if (wandReturnIcon != null && CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.RightClick, wandReturnIcon);
+        var cooldownUi = ResolveCooldownUi();
+        if (wandReturnIcon != null && cooldownUi != null)
+            cooldownUi.SetAbilityIcon(AbilityKey.RightClick, wandReturnIcon);
     }
 
     public void OnWandComplete()
     {
         _activeWand = null;
         // Reset to forward icon for next use
-        if (wandForwardIcon != null && CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.RightClick, wandForwardIcon);
+        var cooldownUi = ResolveCooldownUi();
+        if (wandForwardIcon != null && cooldownUi != null)
+            cooldownUi.SetAbilityIcon(AbilityKey.RightClick, wandForwardIcon);
     }
 
     IEnumerator WandCooldown()
@@ -188,8 +197,9 @@ public class LuxController : MonoBehaviour
 
         _stunOrbOnCooldown = true;
         StartCoroutine(StunOrbCooldown());
-        if (CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.StartCooldown(AbilityKey.One, stunOrbCooldown);
+        var cooldownUi = ResolveCooldownUi();
+        if (cooldownUi != null)
+            cooldownUi.StartCooldown(AbilityKey.One, stunOrbCooldown);
     }
 
     IEnumerator StunOrbCooldown()
@@ -209,8 +219,9 @@ public class LuxController : MonoBehaviour
             _activeCarpet = null;
 
             // Reset icon to throw
-            if (carpetThrowIcon != null && CooldownUIManager.Instance != null)
-                CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.Two, carpetThrowIcon);
+            var cooldownUi = ResolveCooldownUi();
+            if (carpetThrowIcon != null && cooldownUi != null)
+                cooldownUi.SetAbilityIcon(AbilityKey.Two, carpetThrowIcon);
             return;
         }
 
@@ -230,8 +241,9 @@ public class LuxController : MonoBehaviour
         throwable.Init(this, carpetDamage, carpetSlowAmount, carpetRadius, carpetDuration, carpetThrowForce, cam.transform.forward);
 
         // Switch to detonate icon
-        if (carpetDetonateIcon != null && CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.Two, carpetDetonateIcon);
+        var cooldownUi2 = ResolveCooldownUi();
+        if (carpetDetonateIcon != null && cooldownUi2 != null)
+            cooldownUi2.SetAbilityIcon(AbilityKey.Two, carpetDetonateIcon);
     }
 
     public void OnCarpetCreated(LuxCarpet carpet)
@@ -244,13 +256,24 @@ public class LuxController : MonoBehaviour
         _activeCarpet = null;
         
         // Reset icon and start cooldown
-        if (carpetThrowIcon != null && CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.Two, carpetThrowIcon);
+        var cooldownUi = ResolveCooldownUi();
+        if (carpetThrowIcon != null && cooldownUi != null)
+            cooldownUi.SetAbilityIcon(AbilityKey.Two, carpetThrowIcon);
 
         _carpetOnCooldown = true;
         StartCoroutine(CarpetCooldown());
-        if (CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.StartCooldown(AbilityKey.Two, carpetCooldown);
+        cooldownUi = ResolveCooldownUi();
+        if (cooldownUi != null)
+            cooldownUi.StartCooldown(AbilityKey.Two, carpetCooldown);
+    }
+
+    private CooldownUIManager ResolveCooldownUi()
+    {
+        if (_cooldownUi == null)
+        {
+            _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        }
+        return _cooldownUi;
     }
 
     IEnumerator CarpetCooldown()

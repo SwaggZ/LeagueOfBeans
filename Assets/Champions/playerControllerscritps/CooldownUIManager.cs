@@ -142,7 +142,9 @@ public class CooldownUIManager : MonoBehaviour
 
     private void UpdateVisibilityForScene()
     {
-        bool inSelection = FindObjectOfType<CharacterSelection>(true) != null
+        // Check if SelectionCanvas is actually active, not just if CharacterSelection exists
+        GameObject selectionCanvas = GameObject.Find("SelectionCanvas");
+        bool inSelection = (selectionCanvas != null && selectionCanvas.activeInHierarchy)
                            || SceneManager.GetActiveScene().name.ToLower().Contains("select");
         if (_rootRT != null)
         {
@@ -454,6 +456,30 @@ public class CooldownUIManager : MonoBehaviour
         s.icon.canvasRenderer.SetAlpha(a);
         s.border.canvasRenderer.SetAlpha(a);
         s.keyLabel.canvasRenderer.SetAlpha(a);
+    }
+    
+    /// <summary>
+    /// Force the HUD to be visible. Useful when spawning in gameplay after hiding for selection.
+    /// </summary>
+    public void ForceShowHUD()
+    {
+        if (_rootRT != null)
+        {
+            _rootRT.gameObject.SetActive(true);
+            Debug.Log("[CooldownUIManager] HUD force-shown");
+        }
+    }
+    
+    /// <summary>
+    /// Hide the HUD.
+    /// </summary>
+    public void HideHUD()
+    {
+        if (_rootRT != null)
+        {
+            _rootRT.gameObject.SetActive(false);
+            Debug.Log("[CooldownUIManager] HUD hidden");
+        }
     }
 
     private void EnsureMissingText(Slot s)

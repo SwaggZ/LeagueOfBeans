@@ -180,7 +180,7 @@ public class DummyController : MonoBehaviour
         }
 
         // Show knockup modifier
-        if (direction.y > 0.1f && modifierTracker != null && ModifiersIconLibrary.Instance != null)
+        if (direction.y > 0.1f && modifierTracker != null && FindObjectOfType<ModifiersIconLibrary>(true) != null)
         {
             float dur = stunDuration > 0 ? stunDuration : Mathf.Max(0.4f, distance > 0 && speed > 0 ? (distance / speed) : 0.6f);
             ModifierUtils.ApplyModifier(gameObject, "StatusKnockup", null, "Knocked Up", dur, 0, includePlayerHud: false, includeEnemy: true);

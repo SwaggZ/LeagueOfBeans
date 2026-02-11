@@ -26,9 +26,13 @@ public class ModifierTracker : MonoBehaviour
     {
         if (string.IsNullOrEmpty(id)) return;
 
-        if (sprite == null && ModifiersIconLibrary.Instance != null)
+        if (sprite == null)
         {
-            sprite = ModifiersIconLibrary.Instance.Resolve(id, string.Empty);
+            var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+            if (iconLibrary != null)
+            {
+                sprite = iconLibrary.Resolve(id, string.Empty);
+            }
         }
 
         // Find existing modifier with this ID

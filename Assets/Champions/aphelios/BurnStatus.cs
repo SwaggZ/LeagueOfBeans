@@ -42,13 +42,13 @@ public class BurnStatus : MonoBehaviour
     private void UpdateUI()
     {
         float totalDps = baseDamagePerSecond * _currentStacks;
-        Sprite icon = ModifiersIconLibrary.Instance != null
-            ? ModifiersIconLibrary.Instance.DMGBURN
-            : null;
+        var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        Sprite icon = iconLibrary != null ? iconLibrary.DMGBURN : null;
 
-        if (CompareTag("Player") && ModifiersUIManager.Instance != null)
+        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        if (CompareTag("Player") && modifiersUi != null)
         {
-            ModifiersUIManager.Instance.AddOrUpdate(
+            modifiersUi.AddOrUpdate(
                 "StatusBurn",
                 icon,
                 $"Burning ({totalDps} DPS)",
@@ -80,9 +80,10 @@ public class BurnStatus : MonoBehaviour
         // Reset stacks when burn expires
         _currentStacks = 0;
         _co = null;
-        if (CompareTag("Player") && ModifiersUIManager.Instance != null)
+        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        if (CompareTag("Player") && modifiersUi != null)
         {
-            ModifiersUIManager.Instance.Remove("StatusBurn");
+            modifiersUi.Remove("StatusBurn");
         }
         if (!CompareTag("Player") && _modifierTracker != null)
         {

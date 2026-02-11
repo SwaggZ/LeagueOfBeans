@@ -5,6 +5,7 @@ using UnityEngine;
 public class OrbMovement : MonoBehaviour
 {
     public Transform player;
+    [SerializeField] private Camera cameraOverride;
     private Transform cam;
     private bool isReturning = false;
     public float speed = 15f;
@@ -17,6 +18,9 @@ public class OrbMovement : MonoBehaviour
     [SerializeField] private Transform owner;
     private Collider orbCol;
     private Collider ownerCol;
+    private NetworkTransformProxy _netTransform;
+    private DamageService _damageService;
+    private SpawnService _spawnService;
 
     private Vector3 initialPosition;
     private Vector3 targetPosition;
@@ -46,13 +50,34 @@ public class OrbMovement : MonoBehaviour
         orbCol = GetComponent<Collider>();
         if (orbCol == null)
             Debug.LogError("OrbMovement.cs: Orb has no Collider!");
+
+        _netTransform = GetComponent<NetworkTransformProxy>();
+        _damageService = FindObjectOfType<DamageService>(true);
+        _spawnService = FindObjectOfType<SpawnService>(true);
     }
 
     void Start()
     {
-        cam = GameObject.FindGameObjectWithTag("MainCamera").transform;
-        var playerObj = LocalPlayerRef.GetLocalPlayerWithFallback();
-        player = playerObj != null ? playerObj.transform : null;
+        var camObj = cameraOverride != null ? cameraOverride : Camera.main;
+        cam = camObj != null ? camObj.transform : null;
+
+        if (player == null)
+        {
+            if (owner != null)
+            {
+                player = owner;
+            }
+            else
+            {
+                var reg = FindObjectOfType<PlayerRegistration>(true);
+                if (reg != null) player = reg.transform;
+                if (player == null)
+                {
+                    var playerObj = LocalPlayerRef.GetLocalPlayerWithFallback();
+                    player = playerObj != null ? playerObj.transform : null;
+                }
+            }
+        }
 
         if (cam == null || player == null)
         {
@@ -65,6 +90,9 @@ public class OrbMovement : MonoBehaviour
 
     void Update()
     {
+        if (_netTransform != null && !_netTransform.CanSimulate) return;
+        if (player == null) return;
+
         // Perform a raycast to detect collisions manually
         Ray ray = new Ray(transform.position, transform.forward);
         RaycastHit hit;
@@ -90,7 +118,7 @@ public class OrbMovement : MonoBehaviour
                 if (!damageCooldownTimers.ContainsKey(hit.collider.gameObject) || Time.time >= damageCooldownTimers[hit.collider.gameObject])
                 {
                     Debug.Log("Damage applied to enemy.");
-                    healthSystem.TakeDamage(damage); // Apply damage to the object
+                    TryDealDamage(hit.collider.gameObject);
 
                     // Set the cooldown timer for this enemy
                     damageCooldownTimers[hit.collider.gameObject] = Time.time + damageCooldown;
@@ -105,7 +133,8 @@ public class OrbMovement : MonoBehaviour
         if (!isReturning)
         {
             // Move towards the target position
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
+            Vector3 next = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
+            ApplyPosition(next, transform.rotation);
 
             // Check if the orb reaches its target position
             if (Vector3.Distance(transform.position, targetPosition) < 0.1f)
@@ -116,13 +145,44 @@ public class OrbMovement : MonoBehaviour
         else
         {
             // Return to the player
-            transform.position = Vector3.MoveTowards(transform.position, player.position, BackSpeed * Time.deltaTime);
+            Vector3 next = Vector3.MoveTowards(transform.position, player.position, BackSpeed * Time.deltaTime);
+            ApplyPosition(next, transform.rotation);
 
             // Destroy the orb when it reaches the player
             if (Vector3.Distance(transform.position, player.position) < 0.1f)
             {
-                Destroy(gameObject);
+                if (_spawnService != null)
+                {
+                    _spawnService.Despawn(gameObject);
+                }
+                else
+                {
+                    Destroy(gameObject);
+                }
             }
         }
+    }
+
+    private void ApplyPosition(Vector3 position, Quaternion rotation)
+    {
+        if (_netTransform != null)
+        {
+            _netTransform.ApplyPositionAndRotation(position, rotation);
+        }
+        else
+        {
+            transform.SetPositionAndRotation(position, rotation);
+        }
+    }
+
+    private void TryDealDamage(GameObject target)
+    {
+        if (_damageService != null)
+        {
+            _damageService.DealDamage(target, damage, owner != null ? owner.gameObject : gameObject);
+            return;
+        }
+
+        DamageDealer.DealDamage(target, damage, owner != null ? owner.gameObject : gameObject);
     }
 }

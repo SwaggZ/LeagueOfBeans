@@ -130,6 +130,9 @@ GameObject:
   - component: {fileID: 69405687590020218}
   - component: {fileID: 8997370681590712589}
   - component: {fileID: 8906237517448752376}
+  - component: {fileID: 8342251052142122948}
+  - component: {fileID: -1313345094900212336}
+  - component: {fileID: 7841266699669579337}
   m_Layer: 7
   m_Name: Galio
   m_TagString: Player
@@ -472,6 +475,95 @@ MonoBehaviour:
   enemyTag: Enemy
   abilityCooldown: 5
   smashVfxPrefab: {fileID: 0}
+--- !u!114 &8342251052142122948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 0
+  WasActiveDuringEdit_Set1: 1
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours:
+  - {fileID: -1313345094900212336}
+  InitializedParentNetworkBehaviour: {fileID: 0}
+  InitializedNestedNetworkObjects: []
+  RuntimeParentNetworkBehaviour: {fileID: 0}
+  RuntimeChildNetworkBehaviours: []
+  _isNetworked: 1
+  _isSpawnable: 1
+  _isGlobal: 0
+  _initializeOrder: 0
+  _preventDespawnOnDisconnect: 0
+  _defaultDespawnType: 0
+  _initializedTimestamp: -8584307924144895548
+  NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _localReconcileCorrectionType: 2
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 255
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 255
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  <PrefabId>k__BackingField: 1
+  <SpawnableCollectionId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 2968582749096801104
+  SceneId: 0
+  SerializedTransformProperties:
+    Position: {x: 1.391, y: 3.7, z: -6.23}
+    Rotation: {x: 0, y: 1, z: 0, w: 0.0000029504295}
+    Scale: {x: 1.2, y: 1.2, z: 1.2}
+    IsValid: 1
+--- !u!114 &-1313345094900212336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a6a39c46bf52104ba8efe3100bce3f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 8342251052142122948}
+  _networkObjectCache: {fileID: 8342251052142122948}
+--- !u!114 &7841266699669579337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2814884194661736319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14e93ef1160ad284ea453cdadfd6bd7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 8342251052142122948}
+  _networkObjectCache: {fileID: 0}
+  movementController: {fileID: 5269298411701574288}
+  abilityController: {fileID: 0}
+  playerCamera: {fileID: 5256818055656148713}
+  cameraObject: {fileID: 176393114111406686}
 --- !u!1 &4889469300711654489
 GameObject:
   m_ObjectHideFlags: 0

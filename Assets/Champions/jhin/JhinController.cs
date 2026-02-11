@@ -53,13 +53,13 @@ public class JhinController : MonoBehaviour
     private bool _mineOnCooldown = false;
 
     [Header("Bouncing Bullet (E)")]
-    public float bounceDamage = 25f;
+    public float bounceDamage = 40f;
     public float bounceSpeed = 35f;
     public float bounceArcSpeed = 25f; // Speed during arc bounces
     public float bounceMaxDistance = 60f;
     public int maxBounces = 4;
     public float bounceRadius = 10f; // Search radius for next target
-    public float missingHealthDamageBonus = 0.5f; // 50% of missing HP as bonus damage
+    public float missingHealthDamageBonus = 0.03f; // 3% of missing HP per bounce (capped at 30 per target, 60 total accumulated)
     public float bounceCooldown = 12f;
     private bool _bounceOnCooldown = false;
 
@@ -71,6 +71,10 @@ public class JhinController : MonoBehaviour
     private struct RecentHit { public Collider col; public float time; }
     private readonly List<RecentHit> _recentHits = new List<RecentHit>();
 
+    private CooldownUIManager _cooldownUi;
+    private ModifiersUIManager _modifiersUi;
+    private ModifiersIconLibrary _iconLibrary;
+
     void Awake()
     {
         if (cam == null)
@@ -81,6 +85,9 @@ public class JhinController : MonoBehaviour
         if (firePoint == null) firePoint = transform;
 
         currentAmmo = maxAmmo;
+        _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        _modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        _iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
         UpdateAmmoUI();
         UpdateAbilityIcons();
     }
@@ -102,16 +109,18 @@ public class JhinController : MonoBehaviour
 
     private void UpdateAbilityIcons()
     {
-        if (CooldownUIManager.Instance == null) return;
+        var cooldownUi = ResolveCooldownUi();
+        if (cooldownUi == null) return;
         UpdateLmbIcon();
-        if (specialBulletIcon != null) CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.RightClick, specialBulletIcon);
-        if (mineIcon != null) CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.One, mineIcon);
-        if (bounceIcon != null) CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.Two, bounceIcon);
+        if (specialBulletIcon != null) cooldownUi.SetAbilityIcon(AbilityKey.RightClick, specialBulletIcon);
+        if (mineIcon != null) cooldownUi.SetAbilityIcon(AbilityKey.One, mineIcon);
+        if (bounceIcon != null) cooldownUi.SetAbilityIcon(AbilityKey.Two, bounceIcon);
     }
 
     private void UpdateLmbIcon()
     {
-        if (CooldownUIManager.Instance == null) return;
+        var cooldownUi = ResolveCooldownUi();
+        if (cooldownUi == null) return;
         
         Sprite icon;
         if (_isReloading)
@@ -131,25 +140,25 @@ public class JhinController : MonoBehaviour
             icon = bulletIcon;
         }
         
-        if (icon != null) CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.LeftClick, icon);
+        if (icon != null) cooldownUi.SetAbilityIcon(AbilityKey.LeftClick, icon);
     }
 
     private void UpdateAmmoUI()
     {
         UpdateLmbIcon();
-        
-        if (ModifiersUIManager.Instance != null)
+        var modifiersUi = ResolveModifiersUi();
+        if (modifiersUi != null)
         {
             if (currentAmmo > 0)
             {
                 Sprite icon = currentAmmo == 1 ? (empoweredBulletIcon != null ? empoweredBulletIcon : bulletIcon) : bulletIcon;
                 string label = currentAmmo == 1 ? "FINAL BULLET!" : $"Ammo: {currentAmmo}/{maxAmmo}";
-                ModifiersUIManager.Instance.AddOrUpdate("JhinAmmo", icon, label, -1f, 0);
+                modifiersUi.AddOrUpdate("JhinAmmo", icon, label, -1f, 0);
             }
             else
             {
                 Sprite icon = reloadingIcon != null ? reloadingIcon : bulletIcon;
-                ModifiersUIManager.Instance.AddOrUpdate("JhinAmmo", icon, "EMPTY - Press R", -1f, 0);
+                modifiersUi.AddOrUpdate("JhinAmmo", icon, "EMPTY - Press R", -1f, 0);
             }
         }
     }
@@ -185,8 +194,9 @@ public class JhinController : MonoBehaviour
 
         _fireOnCooldown = true;
         StartCoroutine(FireCooldown(cooldown));
-        if (CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.StartCooldown(AbilityKey.LeftClick, cooldown);
+        var cooldownUi = ResolveCooldownUi();
+        if (cooldownUi != null)
+            cooldownUi.StartCooldown(AbilityKey.LeftClick, cooldown);
     }
 
     IEnumerator FireCooldown(float t)
@@ -218,8 +228,9 @@ public class JhinController : MonoBehaviour
 
         _specialOnCooldown = true;
         StartCoroutine(SpecialCooldown());
-        if (CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.StartCooldown(AbilityKey.RightClick, specialBulletCooldown);
+        var cooldownUi = ResolveCooldownUi();
+        if (cooldownUi != null)
+            cooldownUi.StartCooldown(AbilityKey.RightClick, specialBulletCooldown);
     }
 
     IEnumerator SpecialCooldown()
@@ -281,10 +292,12 @@ public class JhinController : MonoBehaviour
             StartCoroutine(MoveSpeedBoostRoutine(cc));
         }
 
-        if (ModifiersUIManager.Instance != null)
+        var modifiersUi = ResolveModifiersUi();
+        if (modifiersUi != null)
         {
-            Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.MOVESPEED : null;
-            ModifiersUIManager.Instance.AddOrUpdate("JhinSpeedBoost", icon, "Speed Boost", moveSpeedBoostDuration, 0);
+            var iconLibrary = ResolveIconLibrary();
+            Sprite icon = iconLibrary != null ? iconLibrary.MOVESPEED : null;
+            modifiersUi.AddOrUpdate("JhinSpeedBoost", icon, "Speed Boost", moveSpeedBoostDuration, 0);
         }
     }
 
@@ -295,8 +308,9 @@ public class JhinController : MonoBehaviour
         yield return new WaitForSeconds(moveSpeedBoostDuration);
         cc.speed = originalSpeed;
 
-        if (ModifiersUIManager.Instance != null)
-            ModifiersUIManager.Instance.Remove("JhinSpeedBoost");
+        var modifiersUi = ResolveModifiersUi();
+        if (modifiersUi != null)
+            modifiersUi.Remove("JhinSpeedBoost");
     }
     #endregion
 
@@ -320,8 +334,9 @@ public class JhinController : MonoBehaviour
 
         _mineOnCooldown = true;
         StartCoroutine(MineCooldown());
-        if (CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.StartCooldown(AbilityKey.One, mineCooldown);
+        var cooldownUi = ResolveCooldownUi();
+        if (cooldownUi != null)
+            cooldownUi.StartCooldown(AbilityKey.One, mineCooldown);
     }
 
     IEnumerator MineCooldown()
@@ -350,8 +365,36 @@ public class JhinController : MonoBehaviour
 
         _bounceOnCooldown = true;
         StartCoroutine(BounceCooldown());
-        if (CooldownUIManager.Instance != null)
-            CooldownUIManager.Instance.StartCooldown(AbilityKey.Two, bounceCooldown);
+        var cooldownUi = ResolveCooldownUi();
+        if (cooldownUi != null)
+            cooldownUi.StartCooldown(AbilityKey.Two, bounceCooldown);
+    }
+
+    private CooldownUIManager ResolveCooldownUi()
+    {
+        if (_cooldownUi == null)
+        {
+            _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        }
+        return _cooldownUi;
+    }
+
+    private ModifiersUIManager ResolveModifiersUi()
+    {
+        if (_modifiersUi == null)
+        {
+            _modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        }
+        return _modifiersUi;
+    }
+
+    private ModifiersIconLibrary ResolveIconLibrary()
+    {
+        if (_iconLibrary == null)
+        {
+            _iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        }
+        return _iconLibrary;
     }
 
     IEnumerator BounceCooldown()
@@ -380,10 +423,11 @@ public class JhinController : MonoBehaviour
         UpdateLmbIcon();
 
         // Update the existing ammo modifier to show reloading
-        if (ModifiersUIManager.Instance != null)
+        var modifiersUi = ResolveModifiersUi();
+        if (modifiersUi != null)
         {
             Sprite icon = reloadingIcon != null ? reloadingIcon : bulletIcon;
-            ModifiersUIManager.Instance.AddOrUpdate("JhinAmmo", icon, "Reloading...", reloadTime, 0);
+            modifiersUi.AddOrUpdate("JhinAmmo", icon, "Reloading...", reloadTime, 0);
         }
 
         yield return new WaitForSeconds(reloadTime);

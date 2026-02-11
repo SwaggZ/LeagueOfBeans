@@ -955,6 +955,9 @@ GameObject:
   - component: {fileID: 4497602494273469683}
   - component: {fileID: 7786980438536253177}
   - component: {fileID: 2826111302224370034}
+  - component: {fileID: 446973742508970173}
+  - component: {fileID: 3107385145998737632}
+  - component: {fileID: 8358989254620513258}
   m_Layer: 7
   m_Name: Ahri
   m_TagString: Player
@@ -1230,6 +1233,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healthSystem: {fileID: 0}
+  modifierIconSize: 0.3
+  modifierSpacing: 0.05
+  modifierVerticalOffset: 0.25
   verticalOffset: 1.25
   barWidth: 1.6
   barHeight: 0.18
@@ -1277,6 +1283,95 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: d9cd72474c0692a4d981b6121f5e8c80, type: 3}
     present: 1
   forceStayOnThisObject: 1
+--- !u!114 &446973742508970173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6251159111481128476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 0
+  WasActiveDuringEdit_Set1: 1
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours:
+  - {fileID: 3107385145998737632}
+  InitializedParentNetworkBehaviour: {fileID: 0}
+  InitializedNestedNetworkObjects: []
+  RuntimeParentNetworkBehaviour: {fileID: 0}
+  RuntimeChildNetworkBehaviours: []
+  _isNetworked: 1
+  _isSpawnable: 1
+  _isGlobal: 0
+  _initializeOrder: 0
+  _preventDespawnOnDisconnect: 0
+  _defaultDespawnType: 0
+  _initializedTimestamp: -8584307924144895548
+  NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _localReconcileCorrectionType: 2
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 255
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 255
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  <PrefabId>k__BackingField: 10
+  <SpawnableCollectionId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 12560877716902011044
+  SceneId: 0
+  SerializedTransformProperties:
+    Position: {x: 2.3403015, y: 5.75, z: -7.3780546}
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
+--- !u!114 &3107385145998737632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6251159111481128476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a6a39c46bf52104ba8efe3100bce3f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 446973742508970173}
+  _networkObjectCache: {fileID: 446973742508970173}
+--- !u!114 &8358989254620513258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6251159111481128476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14e93ef1160ad284ea453cdadfd6bd7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 446973742508970173}
+  _networkObjectCache: {fileID: 0}
+  movementController: {fileID: 388009435320471342}
+  abilityController: {fileID: 0}
+  playerCamera: {fileID: 4036491978145212554}
+  cameraObject: {fileID: 2010307734942041191}
 --- !u!1 &6878871091161275283
 GameObject:
   m_ObjectHideFlags: 0

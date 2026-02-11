@@ -133,20 +133,40 @@ public class JhinBounceBullet : MonoBehaviour
             return;
         }
 
-        // Calculate damage based on missing health
-        float damage = _baseDamage + _accumulatedBonus;
+        // First target: base damage only
+        // Subsequent targets: base + accumulated (3% missing HP from previous targets, capped per target) + 3% of current target's missing HP
+        float damage = _baseDamage;
         var hp = target.GetComponent<HealthSystem>();
         if (hp != null)
         {
-            float missingHealth = hp.maxHealth - hp.GetCurrentHealth();
-            float bonusDamage = missingHealth * _missingHealthBonus;
-            damage += bonusDamage;
-
-            hp.TakeDamage(damage);
-            Debug.Log($"Jhin bounce bullet hit {target.name} for {damage} damage (base: {_baseDamage}, bonus: {bonusDamage}, accumulated: {_accumulatedBonus})");
-
-            // Accumulate bonus for next bounce
-            _accumulatedBonus += bonusDamage * 0.5f; // Keep 50% of bonus damage for next hit
+            bool isFirstHit = (_hitTargets.Count == 0);
+            
+            if (isFirstHit)
+            {
+                // First hit: just base damage
+                damage = _baseDamage;
+                hp.TakeDamage(damage);
+                Debug.Log($"Jhin bounce bullet hit {target.name} (FIRST HIT) for {damage:F1} damage");
+            }
+            else
+            {
+                // Subsequent hits: base + accumulated from previous + current target's 3% missing HP
+                float missingHealth = hp.maxHealth - hp.GetCurrentHealth();
+                float currentBonus = missingHealth * _missingHealthBonus;
+                
+                // Cap current target bonus at 30 damage
+                currentBonus = Mathf.Min(currentBonus, 30f);
+                
+                // Cap total accumulated bonus at 60 damage
+                float cappedAccumulated = Mathf.Min(_accumulatedBonus, 60f);
+                
+                damage = _baseDamage + cappedAccumulated + currentBonus;
+                hp.TakeDamage(damage);
+                Debug.Log($"Jhin bounce bullet hit {target.name} for {damage:F1} damage (base: {_baseDamage}, accumulated: {cappedAccumulated:F1}/{_accumulatedBonus:F1}, current 3% missing: {currentBonus:F1})");
+                
+                // Accumulate this target's bonus for next bounce (capped at 30 per target)
+                _accumulatedBonus += currentBonus;
+            }
         }
 
         _hitTargets.Add(target);

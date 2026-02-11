@@ -135,12 +135,14 @@ public class LuxWand : MonoBehaviour
         shield.Apply(_shieldAmount, _shieldDuration);
 
         // Show modifier icon
-        Sprite icon = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance.SHIELD : null;
+        var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        Sprite icon = iconLibrary != null ? iconLibrary.SHIELD : null;
         
         // Show on player HUD if it's the player
-        if (target.CompareTag("Player") && ModifiersUIManager.Instance != null)
+        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        if (target.CompareTag("Player") && modifiersUi != null)
         {
-            ModifiersUIManager.Instance.AddOrUpdate("LuxShield", icon, $"Shield: {_shieldAmount:F0}", _shieldDuration, 0);
+            modifiersUi.AddOrUpdate("LuxShield", icon, $"Shield: {_shieldAmount:F0}", _shieldDuration, 0);
         }
         
         // Show on ally/enemy health bar

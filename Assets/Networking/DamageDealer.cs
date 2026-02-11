@@ -3,14 +3,14 @@ using UnityEngine;
 /// <summary>
 /// Centralized damage dealing helper. All damage should go through this.
 /// 
-/// MIRROR MIGRATION:
+/// FISHNET MIGRATION:
 /// - DealDamage should only execute on server
-/// - Use [Command] from player to request damage
+/// - Use [ServerRpc] from player to request damage
 /// - Server validates and applies damage, then syncs via SyncVar on target health
 /// 
-/// Pattern for Mirror:
+/// Pattern for FishNet:
 /// 1. Client detects hit (collision)
-/// 2. Client calls [Command] CmdRequestDamage(targetNetId, amount)
+/// 2. Client calls [ServerRpc] CmdRequestDamage(targetNetId, amount)
 /// 3. Server validates (anti-cheat) and calls DamageDealer.DealDamage
 /// 4. Target's health [SyncVar] updates, clients see new value
 /// </summary>
@@ -18,7 +18,7 @@ public static class DamageDealer
 {
     /// <summary>
     /// Deal damage to any valid target. Automatically finds the correct component.
-    /// MIRROR: Wrap call site in if (isServer) or call via Command
+    /// FISHNET: Wrap call site in if (IsServer) or call via ServerRpc
     /// </summary>
     public static bool DealDamage(GameObject target, float amount, GameObject source = null)
     {
@@ -45,7 +45,7 @@ public static class DamageDealer
     
     /// <summary>
     /// Deal damage to a specific HealthSystem.
-    /// MIRROR: Server-only
+    /// FISHNET: Server-only
     /// </summary>
     public static void DealDamage(HealthSystem target, float amount, GameObject source = null)
     {
@@ -56,7 +56,7 @@ public static class DamageDealer
     
     /// <summary>
     /// Deal AOE damage to all enemies in radius.
-    /// MIRROR: Server-only
+    /// FISHNET: Server-only
     /// </summary>
     public static int DealAoeDamage(Vector3 center, float radius, float damage, LayerMask enemyMask, GameObject source = null)
     {
@@ -92,7 +92,7 @@ public static class DamageDealer
     
     /// <summary>
     /// Validates if damage should be applied (anti-cheat checks for Mirror).
-    /// MIRROR: Call this on server before applying damage
+    /// FISHNET: Call this on server before applying damage
     /// </summary>
     public static bool ValidateDamage(GameObject source, GameObject target, float amount)
     {
@@ -104,7 +104,7 @@ public static class DamageDealer
         if (target.CompareTag("Player") || target.CompareTag("Ally"))
             return false;
         
-        // MIRROR: Add additional server-side validation:
+        // FISHNET: Add additional server-side validation:
         // - Check source is a valid player
         // - Check amount is within expected range for ability
         // - Check cooldowns haven't been bypassed

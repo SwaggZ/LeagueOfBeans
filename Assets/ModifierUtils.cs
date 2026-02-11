@@ -23,14 +23,16 @@ public static class ModifierUtils
         if (target == null || string.IsNullOrEmpty(id)) return;
 
         Sprite resolvedIcon = icon;
-        if (resolvedIcon == null && ModifiersIconLibrary.Instance != null)
+        var iconLibrary = Object.FindObjectOfType<ModifiersIconLibrary>(true);
+        if (resolvedIcon == null && iconLibrary != null)
         {
-            resolvedIcon = ModifiersIconLibrary.Instance.Resolve(id, label);
+            resolvedIcon = iconLibrary.Resolve(id, label);
         }
 
-        if (includePlayerHud && target.CompareTag("Player") && ModifiersUIManager.Instance != null)
+        var modifiersUi = Object.FindObjectOfType<ModifiersUIManager>(true);
+        if (includePlayerHud && target.CompareTag("Player") && modifiersUi != null)
         {
-            ModifiersUIManager.Instance.AddOrUpdate(id, resolvedIcon, label, durationSeconds, stacks);
+            modifiersUi.AddOrUpdate(id, resolvedIcon, label, durationSeconds, stacks);
         }
 
         if (includeEnemy && !target.CompareTag("Player"))
@@ -47,9 +49,10 @@ public static class ModifierUtils
     {
         if (target == null || string.IsNullOrEmpty(id)) return;
 
-        if (removePlayerHud && target.CompareTag("Player") && ModifiersUIManager.Instance != null)
+        var modifiersUi = Object.FindObjectOfType<ModifiersUIManager>(true);
+        if (removePlayerHud && target.CompareTag("Player") && modifiersUi != null)
         {
-            ModifiersUIManager.Instance.Remove(id);
+            modifiersUi.Remove(id);
         }
 
         if (removeEnemy && !target.CompareTag("Player"))

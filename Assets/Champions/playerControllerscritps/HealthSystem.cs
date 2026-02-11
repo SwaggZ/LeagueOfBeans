@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using FishNet.Object;
  
 
 public class HealthSystem : MonoBehaviour
@@ -88,12 +89,63 @@ public class HealthSystem : MonoBehaviour
     private void Die()
     {
         Debug.Log($"{gameObject.name} has died.");
-        // If this is the player, return to character selection scene
-        if (CompareTag("Player"))
+        
+        // Check if this is a networked object
+        var networkObject = GetComponent<NetworkObject>();
+        if (networkObject != null)
         {
-            TryReturnToSelection();
+            // Networked player death
+            if (networkObject.IsOwner)
+            {
+                Debug.Log("[HealthSystem] Local player died. Showing character selection for respawn.");
+                ShowCharacterSelectionForRespawn();
+            }
+            
+            // Despawn on server
+            if (networkObject.IsServerInitialized)
+            {
+                Debug.Log($"[HealthSystem] Despawning {gameObject.name} on server.");
+                networkObject.Despawn();
+            }
         }
-        Destroy(gameObject); // Destroy the object
+        else
+        {
+            // Non-networked death (legacy single-player)
+            if (CompareTag("Player"))
+            {
+                TryReturnToSelection();
+            }
+            Destroy(gameObject);
+        }
+    }
+
+    private void ShowCharacterSelectionForRespawn()
+    {
+        // Find CharacterSelection in the scene (it's DontDestroyOnLoad, so it should still exist)
+        var characterSelection = FindObjectOfType<CharacterSelection>();
+        if (characterSelection != null)
+        {
+            Debug.Log("[HealthSystem] Found CharacterSelection, showing UI for respawn.");
+            characterSelection.SetRespawnMode(true);
+            characterSelection.ShowSelectionUI();
+            
+            // Hide both HUDs during selection
+            var cooldownUI = FindObjectOfType<CooldownUIManager>();
+            if (cooldownUI != null)
+            {
+                cooldownUI.HideHUD();
+            }
+            
+            var modifiersUI = FindObjectOfType<ModifiersUIManager>();
+            if (modifiersUI != null)
+            {
+                modifiersUI.HideHUD();
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[HealthSystem] CharacterSelection not found. Cannot show selection UI for respawn.");
+        }
     }
 
     private void TryReturnToSelection()

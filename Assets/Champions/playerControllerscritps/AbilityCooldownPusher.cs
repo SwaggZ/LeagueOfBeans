@@ -26,9 +26,20 @@ public class AbilityCooldownPusher : MonoBehaviour
         new Entry { key = AbilityKey.Ctrl, durationSeconds = 8f, useInput = false }, // usually triggered explicitly when dash is used
     };
 
+    private CooldownUIManager _cooldownUi;
+
+    private void Awake()
+    {
+        _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+    }
+
     void Update()
     {
-        if (CooldownUIManager.Instance == null) return;
+        if (_cooldownUi == null)
+        {
+            _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+            if (_cooldownUi == null) return;
+        }
         if (abilities == null) return;
 
         foreach (var e in abilities)
@@ -62,8 +73,8 @@ public class AbilityCooldownPusher : MonoBehaviour
 
     private void StartCooldownSafe(AbilityKey key, float durationSeconds)
     {
-        if (CooldownUIManager.Instance == null) return;
+        if (_cooldownUi == null) return;
         if (durationSeconds <= 0f) return;
-        CooldownUIManager.Instance.StartCooldown(key, durationSeconds);
+        _cooldownUi.StartCooldown(key, durationSeconds);
     }
 }

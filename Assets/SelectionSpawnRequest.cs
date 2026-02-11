@@ -1,4 +1,5 @@
 using UnityEngine;
+using FishNet.Managing;
 using UnityEngine.SceneManagement;
 
 // Persisted across scene load by CharacterSelection. Spawns the chosen prefab in the next scene, then destroys itself.
@@ -6,11 +7,16 @@ public class SelectionSpawnRequest : MonoBehaviour
 {
     public GameObject prefab;
 
+    [Tooltip("Optional explicit spawn point reference.")]
+    public Transform spawnPointOverride;
+
     [Tooltip("Name of a Transform to use as spawn point if found in the target scene.")]
     public string spawnPointName = "PlayerSpawn";
 
     [Tooltip("Tag of a Transform to use as spawn point if found in the target scene.")]
     public string spawnPointTag = "PlayerSpawn";
+
+    [SerializeField] private SpawnService spawnService;
 
     private void OnEnable()
     {
@@ -24,6 +30,13 @@ public class SelectionSpawnRequest : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        var networkManager = FindObjectOfType<NetworkManager>(true);
+        if (networkManager != null && (networkManager.IsClientStarted || networkManager.IsServerStarted))
+        {
+            Cleanup();
+            return;
+        }
+
         if (prefab == null)
         {
             Debug.LogError("[SelectionSpawnRequest] No prefab assigned. Nothing to spawn.");
@@ -31,39 +44,64 @@ public class SelectionSpawnRequest : MonoBehaviour
             return;
         }
 
-        // Try to find a spawn point by tag, then by name
-        Transform spawn = null;
-        if (!string.IsNullOrEmpty(spawnPointTag))
+        // Try to find a spawn point via explicit reference or SpawnPointMarker, then by name
+        Transform spawn = spawnPointOverride;
+        if (spawn == null)
         {
-            var tagged = GameObject.FindGameObjectWithTag(spawnPointTag);
-            if (tagged != null) spawn = tagged.transform;
+            var markers = FindObjectsOfType<SpawnPointMarker>(true);
+            foreach (var marker in markers)
+            {
+                if (marker == null) continue;
+                if (!string.IsNullOrEmpty(spawnPointTag) && marker.key == spawnPointTag)
+                {
+                    spawn = marker.transform;
+                    break;
+                }
+                if (!string.IsNullOrEmpty(spawnPointName) && marker.key == spawnPointName)
+                {
+                    spawn = marker.transform;
+                    break;
+                }
+            }
         }
         if (spawn == null && !string.IsNullOrEmpty(spawnPointName))
         {
             var named = GameObject.Find(spawnPointName);
             if (named != null) spawn = named.transform;
         }
+        if (spawn == null && !string.IsNullOrEmpty(spawnPointTag))
+        {
+            // Legacy fallback for existing scenes that rely on tags
+            var tagged = GameObject.FindGameObjectWithTag(spawnPointTag);
+            if (tagged != null) spawn = tagged.transform;
+        }
 
         Vector3 pos = spawn != null ? spawn.position : Vector3.zero;
         Quaternion rot = spawn != null ? spawn.rotation : Quaternion.identity;
 
-        var player = Instantiate(prefab, pos, rot);
+        var spawner = spawnService != null ? spawnService : FindObjectOfType<SpawnService>(true);
+        var player = spawner != null
+            ? spawner.Spawn(prefab, pos, rot)
+            : Instantiate(prefab, pos, rot);
         Debug.Log($"[SelectionSpawnRequest] Spawned '{prefab.name}' at {pos} in scene '{scene.name}'");
 
         // Ensure a cooldown HUD exists in gameplay scenes
-        if (CooldownUIManager.Instance == null)
+        var cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        if (cooldownUi == null)
         {
             new GameObject("CooldownUIManager").AddComponent<CooldownUIManager>();
         }
 
         // Ensure modifiers HUD exists
-        if (ModifiersUIManager.Instance == null)
+        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        if (modifiersUi == null)
         {
             new GameObject("ModifiersUIManager").AddComponent<ModifiersUIManager>();
         }
 
         // Ensure ModifiersIconLibrary exists so modifiers pull icons from it
-        if (ModifiersIconLibrary.Instance == null)
+        var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        if (iconLibrary == null)
         {
             var libInScene = FindObjectOfType<ModifiersIconLibrary>(true);
             if (libInScene == null)
@@ -104,7 +142,8 @@ public class SelectionSpawnRequest : MonoBehaviour
 
         // Apply ability icon loadout from the spawned character if present
         var loadout = player.GetComponentInChildren<AbilityIconLoadout>(true);
-        if (loadout != null && CooldownUIManager.Instance != null)
+        cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        if (loadout != null && cooldownUi != null)
         {
             loadout.ApplyToHUD();
         }

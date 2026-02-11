@@ -23,7 +23,8 @@ public class AbilityIconLoadout : MonoBehaviour
 
     public void ApplyToHUD()
     {
-        if (CooldownUIManager.Instance == null) return;
+        var cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        if (cooldownUi == null) return;
 
         var list = new List<CooldownUIManager.AbilityEntry>
         {
@@ -34,6 +35,6 @@ public class AbilityIconLoadout : MonoBehaviour
         };
 
         var dash = new CooldownUIManager.AbilityEntry{ key = AbilityKey.Ctrl, icon = ctrlIcon, present = ctrlPresent };
-        CooldownUIManager.Instance.ApplyLoadout(list, dash);
+        cooldownUi.ApplyLoadout(list, dash);
     }
 }

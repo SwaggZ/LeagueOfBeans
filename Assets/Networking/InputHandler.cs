@@ -8,10 +8,10 @@ using UnityEngine;
 /// - ReadInput() is called in Update
 /// - If input detected, ExecuteAction() is called immediately
 /// 
-/// MIRROR MIGRATION:
-/// - ReadInput() only runs on local player (if (isLocalPlayer))
-/// - ExecuteAction() becomes a [Command] that runs on server
-/// - Server validates and executes, then [ClientRpc] for effects
+/// FISHNET MIGRATION:
+/// - ReadInput() only runs on local player (if (IsOwner))
+/// - ExecuteAction() becomes a [ServerRpc] that runs on server
+/// - Server validates and executes, then [ObserversRpc] for effects
 /// 
 /// Example conversion pattern:
 /// void Update()
@@ -20,7 +20,7 @@ using UnityEngine;
 ///     ReadInput();
 /// }
 /// 
-/// [Command]
+/// [ServerRpc]
 /// void CmdExecuteAction(ActionData data)
 /// {
 ///     // Server validates and executes
@@ -31,22 +31,28 @@ using UnityEngine;
 /// </summary>
 public abstract class InputHandler : MonoBehaviour
 {
+    private IInputAuthority _authority;
+
+    protected virtual void Awake()
+    {
+        _authority = GetComponent<IInputAuthority>();
+    }
+
     /// <summary>
     /// Called to check for input. Only the owning client should read input.
-    /// MIRROR: Wrap in if (isLocalPlayer) check
+    /// FISHNET: Wrap in if (IsOwner) check
     /// </summary>
     protected abstract void ReadInput();
     
     /// <summary>
-    /// Called to execute the action. This will become a [Command] in Mirror.
+    /// Called to execute the action. This will become a [ServerRpc] in FishNet.
     /// </summary>
     protected abstract void ExecuteAction();
     
     protected virtual void Update()
     {
-        // MIRROR: Add this check:
-        // if (!isLocalPlayer) return;
-        
+        if (_authority != null && !_authority.HasInputAuthority) return;
+
         ReadInput();
     }
 }
@@ -63,7 +69,7 @@ public struct AbilityInput
     public float timestamp;
     
     // For abilities that target an entity
-    public uint targetNetId; // MIRROR: NetworkIdentity.netId of target
+    public uint targetNetId; // FISHNET: NetworkObject.ObjectId of target
     
     public static AbilityInput Create(Transform playerTransform, Camera cam)
     {

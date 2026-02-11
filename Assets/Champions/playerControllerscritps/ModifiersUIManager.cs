@@ -80,7 +80,9 @@ public class ModifiersUIManager : MonoBehaviour
 
     private void UpdateVisibilityForScene()
     {
-        bool inSelection = FindObjectOfType<CharacterSelection>(true) != null
+        // Check if SelectionCanvas is actually active, not just if CharacterSelection exists
+        GameObject selectionCanvas = GameObject.Find("SelectionCanvas");
+        bool inSelection = (selectionCanvas != null && selectionCanvas.activeInHierarchy)
                            || SceneManager.GetActiveScene().name.ToLower().Contains("select");
         if (_rootRT != null)
             _rootRT.gameObject.SetActive(!inSelection);
@@ -212,9 +214,13 @@ public class ModifiersUIManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(id)) return;
 
-        if (icon == null && ModifiersIconLibrary.Instance != null)
+        if (icon == null)
         {
-            icon = ModifiersIconLibrary.Instance.Resolve(id, label);
+            var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+            if (iconLibrary != null)
+            {
+                icon = iconLibrary.Resolve(id, label);
+            }
         }
         if (!_byId.TryGetValue(id, out var s))
         {
@@ -225,7 +231,7 @@ public class ModifiersUIManager : MonoBehaviour
         }
         if (icon == null)
         {
-            var lib = ModifiersIconLibrary.Instance != null ? ModifiersIconLibrary.Instance : GameObject.FindObjectOfType<ModifiersIconLibrary>(true);
+            var lib = FindObjectOfType<ModifiersIconLibrary>(true);
             if (lib != null)
             {
                 icon = lib.Resolve(id, label);
@@ -316,6 +322,30 @@ public class ModifiersUIManager : MonoBehaviour
             if (s.root != null) Destroy(s.root.gameObject);
         _order.Clear();
         _byId.Clear();
+    }
+    
+    /// <summary>
+    /// Force the HUD to be visible. Useful when spawning in gameplay after hiding for selection.
+    /// </summary>
+    public void ForceShowHUD()
+    {
+        if (_rootRT != null)
+        {
+            _rootRT.gameObject.SetActive(true);
+            Debug.Log("[ModifiersUIManager] HUD force-shown");
+        }
+    }
+    
+    /// <summary>
+    /// Hide the HUD.
+    /// </summary>
+    public void HideHUD()
+    {
+        if (_rootRT != null)
+        {
+            _rootRT.gameObject.SetActive(false);
+            Debug.Log("[ModifiersUIManager] HUD hidden");
+        }
     }
 
     void Update()

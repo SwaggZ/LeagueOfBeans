@@ -10,10 +10,10 @@ using System.Collections.Generic;
 /// - Use LocalPlayerRef.LocalPlayer to get the local player
 /// - Use LocalPlayerRef.GetAllPlayers() for all players (multiplayer ready)
 /// 
-/// MIRROR MIGRATION NOTES:
-/// - LocalPlayer will be set only for the local client's player (isLocalPlayer)
+/// FISHNET MIGRATION NOTES:
+/// - LocalPlayer will be set only for the local client's player (IsOwner)
 /// - AllPlayers will contain all player GameObjects across the network
-/// - Register should be called in OnStartLocalPlayer / OnStartClient
+/// - Register should be called in OnStartClient / OnStartServer as appropriate
 /// </summary>
 public static class LocalPlayerRef
 {
@@ -22,7 +22,7 @@ public static class LocalPlayerRef
     
     /// <summary>
     /// The local player's GameObject. Null if not spawned yet.
-    /// With Mirror, this is the player with isLocalPlayer = true.
+    /// With FishNet, this is the player with IsOwner = true.
     /// </summary>
     public static GameObject LocalPlayer => _localPlayer;
     
@@ -40,7 +40,7 @@ public static class LocalPlayerRef
     /// Registers a player. Call this when a player GameObject spawns.
     /// For local player, set isLocal = true.
     /// 
-    /// MIRROR: Call in OnStartLocalPlayer (isLocal=true) or OnStartClient (isLocal=false for other players)
+    /// FISHNET: Call in OnStartClient for all, and OnStartServer/OnStartClient for owner as needed
     /// </summary>
     public static void Register(GameObject player, bool isLocal = true)
     {
@@ -115,7 +115,7 @@ public static class LocalPlayerRef
     {
         _allPlayers.RemoveAll(p => p == null);
         
-        // MIRROR: Filter by team/ConnectionId for teams
+        // FISHNET: Filter by team/ConnectionId for teams
         return new List<GameObject>(_allPlayers);
     }
     
@@ -136,14 +136,23 @@ public static class LocalPlayerRef
     public static GameObject GetLocalPlayerWithFallback()
     {
         if (_localPlayer != null) return _localPlayer;
-        
-        // Fallback to old method
-        var found = GameObject.FindGameObjectWithTag("Player");
-        if (found != null)
+
+        // Prefer PlayerRegistration if present on the player prefab
+        var reg = Object.FindObjectOfType<PlayerRegistration>(true);
+        if (reg != null)
         {
-            // Auto-register it
-            Register(found, true);
+            Register(reg.gameObject, reg.isLocalPlayer);
+            return reg.gameObject;
         }
-        return found;
+
+        // Last-resort fallback: try CharacterControl root
+        var cc = Object.FindObjectOfType<CharacterControl>(true);
+        if (cc != null)
+        {
+            Register(cc.gameObject, true);
+            return cc.gameObject;
+        }
+
+        return null;
     }
 }

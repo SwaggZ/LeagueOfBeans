@@ -38,13 +38,23 @@ public class LuxLightOrb : MonoBehaviour
 
     void OnHit(Collider col)
     {
-        if (col == null) return;
+        if (col == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        
         if (col.CompareTag("Player") || col.CompareTag("Ally"))
         {
             Destroy(gameObject); // Destroy on ally contact without dealing damage
             return;
         }
-        if (!col.CompareTag("Enemy")) return; // Only damage enemies
+        
+        if (!col.CompareTag("Enemy"))
+        {
+            Destroy(gameObject); // Destroy on hitting ground, walls, or other non-enemy objects
+            return;
+        }
 
         GameObject target = ModifierUtils.ResolveTarget(col);
         if (target == null)

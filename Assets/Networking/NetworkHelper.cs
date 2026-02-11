@@ -2,19 +2,19 @@ using UnityEngine;
 
 /// <summary>
 /// Wrapper for network-sensitive operations. Currently uses standard Unity APIs.
-/// When Mirror is installed, this will be updated to use NetworkServer.Spawn / ClientRpc / etc.
+/// When FishNet is installed, this will be updated to use ServerManager.Spawn / ObserversRpc / etc.
 /// 
-/// MIRROR MIGRATION NOTES:
-/// - SpawnProjectile() → will become [Command] + NetworkServer.Spawn()
-/// - Despawn() → will become NetworkServer.Destroy()
-/// - IsLocalPlayer() → will check NetworkIdentity.isLocalPlayer
-/// - HasAuthority() → will check NetworkIdentity.hasAuthority
+/// FISHNET MIGRATION NOTES:
+/// - SpawnProjectile() → will become ServerRpc + ServerManager.Spawn()
+/// - Despawn() → will become ServerManager.Despawn()
+/// - IsLocalPlayer() → will check NetworkObject.IsOwner or IsController
+/// - HasAuthority() → will check NetworkObject.IsOwner
 /// </summary>
 public static class NetworkHelper
 {
     /// <summary>
     /// Spawns a projectile. In singleplayer, this just instantiates.
-    /// In multiplayer (Mirror), this will be called from a Command and use NetworkServer.Spawn.
+    /// In multiplayer (FishNet), this will be called from a ServerRpc and use ServerManager.Spawn.
     /// </summary>
     public static GameObject SpawnProjectile(GameObject prefab, Vector3 position, Quaternion rotation)
     {
@@ -26,8 +26,8 @@ public static class NetworkHelper
         
         GameObject go = Object.Instantiate(prefab, position, rotation);
         
-        // MIRROR: Replace with NetworkServer.Spawn(go);
-        // The caller should be a [Command] on the player's NetworkBehaviour
+        // FISHNET: Replace with ServerManager.Spawn(go);
+        // The caller should be a [ServerRpc] on the player's NetworkBehaviour
         
         return go;
     }
@@ -47,13 +47,13 @@ public static class NetworkHelper
     
     /// <summary>
     /// Despawns/destroys a networked object. In singleplayer, this just destroys.
-    /// In multiplayer (Mirror), this will use NetworkServer.Destroy.
+    /// In multiplayer (FishNet), this will use ServerManager.Despawn.
     /// </summary>
     public static void Despawn(GameObject go)
     {
         if (go == null) return;
         
-        // MIRROR: Replace with NetworkServer.Destroy(go);
+        // FISHNET: Replace with ServerManager.Despawn(go);
         // Only server should call this on networked objects
         
         Object.Destroy(go);
@@ -66,62 +66,62 @@ public static class NetworkHelper
     {
         if (go == null) return;
         
-        // MIRROR: For delayed network destroy, you may need a coroutine on server
+        // FISHNET: For delayed network despawn, you may need a coroutine on server
         
         Object.Destroy(go, delay);
     }
     
     /// <summary>
-    /// Checks if this is the local player. Without Mirror, always returns true if tagged "Player".
-    /// With Mirror, will check NetworkIdentity.isLocalPlayer.
+    /// Checks if this is the local player. Without FishNet, always returns true if tagged "Player".
+    /// With FishNet, will check NetworkObject.IsOwner or IsController.
     /// </summary>
     public static bool IsLocalPlayer(GameObject go)
     {
         if (go == null) return false;
         
-        // MIRROR: Replace with:
-        // var netId = go.GetComponent<NetworkIdentity>();
-        // return netId != null && netId.isLocalPlayer;
+        // FISHNET: Replace with:
+        // var netObj = go.GetComponent<NetworkObject>();
+        // return netObj != null && (netObj.IsOwner || netObj.IsController);
         
         return go.CompareTag("Player");
     }
     
     /// <summary>
     /// Checks if this object has authority (can be controlled). 
-    /// Without Mirror, always true for player objects.
-    /// With Mirror, checks NetworkIdentity.hasAuthority.
+    /// Without FishNet, always true for player objects.
+    /// With FishNet, checks NetworkObject.IsOwner.
     /// </summary>
     public static bool HasAuthority(GameObject go)
     {
         if (go == null) return false;
         
-        // MIRROR: Replace with:
-        // var netId = go.GetComponent<NetworkIdentity>();
-        // return netId != null && netId.hasAuthority;
+        // FISHNET: Replace with:
+        // var netObj = go.GetComponent<NetworkObject>();
+        // return netObj != null && netObj.IsOwner;
         
         return go.CompareTag("Player");
     }
     
     /// <summary>
-    /// Returns true if we're the server (or host). Without Mirror, always true.
+    /// Returns true if we're the server (or host). Without FishNet, always true.
     /// </summary>
     public static bool IsServer
     {
         get
         {
-            // MIRROR: Replace with NetworkServer.active
+            // FISHNET: Replace with InstanceFinder.IsServer
             return true;
         }
     }
     
     /// <summary>
-    /// Returns true if we're a client. Without Mirror, always true.
+    /// Returns true if we're a client. Without FishNet, always true.
     /// </summary>
     public static bool IsClient
     {
         get
         {
-            // MIRROR: Replace with NetworkClient.active
+            // FISHNET: Replace with InstanceFinder.IsClient
             return true;
         }
     }

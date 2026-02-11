@@ -37,8 +37,16 @@ public class ReactiveCrosshair : MonoBehaviour
         EnsureCanvasAndUI();
         if (playerRoot == null)
         {
-            var player = LocalPlayerRef.GetLocalPlayerWithFallback();
-            if (player != null) playerRoot = player.transform;
+            var reg = FindObjectOfType<PlayerRegistration>(true);
+            if (reg != null)
+            {
+                playerRoot = reg.transform;
+            }
+            else
+            {
+                var player = LocalPlayerRef.GetLocalPlayerWithFallback();
+                if (player != null) playerRoot = player.transform;
+            }
         }
     }
 

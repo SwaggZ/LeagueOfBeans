@@ -1,4 +1,5 @@
 using UnityEngine;
+using FishNet.Managing;
 
 // Drop this in your gameplay scene. Assign the character prefabs array and an optional spawn point.
 public class PlayerSpawner : MonoBehaviour
@@ -9,8 +10,17 @@ public class PlayerSpawner : MonoBehaviour
     [Tooltip("Optional spawn transform. If null, spawns at (0,0,0).")]
     public Transform spawnPoint;
 
+    [SerializeField] private SpawnService spawnService;
+
     private void Awake()
     {
+        var networkManager = FindObjectOfType<NetworkManager>(true);
+        if (networkManager != null && (networkManager.IsClientStarted || networkManager.IsServerStarted))
+        {
+            Debug.Log("[Spawner] FishNet active. Skipping legacy PlayerSpawner spawn.");
+            return;
+        }
+
         // If a SelectionSpawnRequest exists (new selection flow), skip default spawn to avoid duplicates.
         var pendingSelectionSpawn = FindObjectOfType<SelectionSpawnRequest>(true);
         if (pendingSelectionSpawn != null)
@@ -20,7 +30,12 @@ public class PlayerSpawner : MonoBehaviour
         }
 
         // If a player is already in the scene, do nothing (safety for additive loads).
-        var existingPlayer = GameObject.FindGameObjectWithTag("Player");
+        var existingPlayer = FindObjectOfType<PlayerRegistration>(true);
+        if (existingPlayer == null)
+        {
+            var existingControl = FindObjectOfType<CharacterControl>(true);
+            if (existingControl != null) existingPlayer = existingControl.GetComponent<PlayerRegistration>();
+        }
         if (existingPlayer != null)
         {
             Debug.Log("[Spawner] Existing Player found in scene. Skipping default spawn.");
@@ -32,16 +47,19 @@ public class PlayerSpawner : MonoBehaviour
         Debug.Log($"[Spawner] Awake. PlayerPrefs.selectedCharacter={idx}, name='{selName}'. Prefab count={(characterPrefabs!=null?characterPrefabs.Length:0)}");
 
         // Ensure a cooldown HUD exists if we are running the gameplay scene directly
-        if (CooldownUIManager.Instance == null)
+        var cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        if (cooldownUi == null)
         {
             new GameObject("CooldownUIManager").AddComponent<CooldownUIManager>();
         }
-        if (ModifiersUIManager.Instance == null)
+        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        if (modifiersUi == null)
         {
             new GameObject("ModifiersUIManager").AddComponent<ModifiersUIManager>();
         }
         // Ensure a ModifiersIconLibrary exists early so badges can fetch sprites
-        if (ModifiersIconLibrary.Instance == null)
+        var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        if (iconLibrary == null)
         {
             var libInScene = FindObjectOfType<ModifiersIconLibrary>(true);
             if (libInScene == null)
@@ -95,7 +113,10 @@ public class PlayerSpawner : MonoBehaviour
 
         Vector3 pos = spawnPoint != null ? spawnPoint.position : Vector3.zero;
         Quaternion rot = spawnPoint != null ? spawnPoint.rotation : Quaternion.identity;
-        GameObject player = Instantiate(prefab, pos, rot);
+        var spawner = spawnService != null ? spawnService : FindObjectOfType<SpawnService>(true);
+        GameObject player = spawner != null
+            ? spawner.Spawn(prefab, pos, rot)
+            : Instantiate(prefab, pos, rot);
         Debug.Log($"[Spawner] Instantiated '{prefab.name}' at {pos}");
 
         // Ensure camera exists/enabled on spawned character
@@ -131,7 +152,8 @@ public class PlayerSpawner : MonoBehaviour
 
         // Apply HUD icon loadout if available
         var loadout = player.GetComponentInChildren<AbilityIconLoadout>(true);
-        if (loadout != null && CooldownUIManager.Instance != null)
+        cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        if (loadout != null && cooldownUi != null)
         {
             loadout.ApplyToHUD();
         }

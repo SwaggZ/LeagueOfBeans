@@ -18,11 +18,22 @@ public class FoxFireContainer : MonoBehaviour
 
     private void Start()
     {
-        var playerObj = LocalPlayerRef.GetLocalPlayerWithFallback();
-        player = playerObj != null ? playerObj.transform : null;
+        var reg = FindObjectOfType<PlayerRegistration>(true);
+        if (reg != null)
+        {
+            player = reg.transform;
+        }
+        else
+        {
+            var playerObj = LocalPlayerRef.GetLocalPlayerWithFallback();
+            player = playerObj != null ? playerObj.transform : null;
+        }
 
         // Follow the player's position and rotation
-        transform.position = player.position;
+        if (player != null)
+        {
+            transform.position = player.position;
+        }
         Invoke("DestroyContainer", containerLifetime);
 
         SummonFoxFires();
@@ -31,7 +42,10 @@ public class FoxFireContainer : MonoBehaviour
     void Update()
     {
         // Follow the player's position and rotation
-        transform.position = player.position;
+        if (player != null)
+        {
+            transform.position = player.position;
+        }
         RotateContainer();
         EnemyDetected();
     }

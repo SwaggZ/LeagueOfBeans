@@ -4,17 +4,16 @@ using UnityEngine;
 /// Attach this to player prefabs to auto-register with LocalPlayerRef.
 /// This component replaces the need for FindGameObjectWithTag("Player").
 /// 
-/// MIRROR MIGRATION:
+/// FISHNET MIGRATION:
 /// - Change base class to NetworkBehaviour
-/// - Override OnStartLocalPlayer() to register local player
-/// - Override OnStartClient() to register remote players
+/// - Override OnStartClient() to register players
+/// - Use IsOwner to register local player
 /// - Override OnStopClient() to unregister
 /// 
-/// Example Mirror conversion:
+/// Example FishNet conversion:
 /// public class PlayerRegistration : NetworkBehaviour
 /// {
-///     public override void OnStartLocalPlayer() { LocalPlayerRef.Register(gameObject, true); }
-///     public override void OnStartClient() { LocalPlayerRef.Register(gameObject, false); }
+///     public override void OnStartClient() { LocalPlayerRef.Register(gameObject, IsOwner); }
 ///     public override void OnStopClient() { LocalPlayerRef.Unregister(gameObject); }
 /// }
 /// </summary>

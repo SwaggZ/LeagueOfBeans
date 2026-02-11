@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using FishNet.Managing;
 
 // Clean and robust character selection controller
 public class CharacterSelection : MonoBehaviour
@@ -52,10 +54,32 @@ public class CharacterSelection : MonoBehaviour
     [Header("Defaults")] 
     public int selectedIndex = 0;
 
+    [Header("Networking (Optional)")]
+    public NetworkGameSession networkSession;
+    
+    // Cached references for hiding/showing UI
+    private GameObject _cachedCanvas;
+    private GameObject _cachedCamera;
+    
+    // Track if this is a respawn (vs initial spawn)
+    private bool _isRespawnMode = false;
+
     void Awake()
     {
         // Ensure cursor is free/visible in selection
         try { Cursor.visible = true; Cursor.lockState = CursorLockMode.None; } catch {}
+        
+        // Auto-detect NetworkGameSession if not assigned
+        if (networkSession == null)
+        {
+            // Try direct find first
+            networkSession = FindObjectOfType<NetworkGameSession>();
+            if (networkSession != null)
+                Debug.Log("[Selection] Auto-detected NetworkGameSession");
+            else
+                Debug.LogWarning("[Selection] Could not auto-detect NetworkGameSession at Awake");
+        }
+        
         // Auto-fill gameplayPrefab from PreviewBinding if missing, then prefer gameplay prefab name for id
         for (int i = 0; i < characters.Count; i++)
         {
@@ -84,6 +108,60 @@ public class CharacterSelection : MonoBehaviour
                     e.id = e.preview.name;
                     Debug.Log($"[Selection] Auto-set id for entry {i} to '{e.id}' from preview name");
                 }
+            }
+        }
+    }
+    
+    void OnEnable()
+    {
+        // Try to wire START button if not already wired
+        WireStartButton();
+    }
+    
+    private void WireStartButton()
+    {
+        // Find StartButton specifically
+        GameObject startButtonGo = GameObject.Find("StartButton");
+        if (startButtonGo == null)
+        {
+            Debug.LogWarning("[Selection] Could not find 'StartButton' GameObject");
+            return;
+        }
+        
+        Button startButton = startButtonGo.GetComponent<Button>();
+        if (startButton == null)
+        {
+            Debug.LogError("[Selection] 'StartButton' found but has no Button component!");
+            return;
+        }
+        
+        Debug.Log("[Selection] Found StartButton, wiring to StartGame()");
+        
+        // Remove any existing listeners and add ours
+        startButton.onClick.RemoveAllListeners();
+        startButton.onClick.AddListener(() => {
+            Debug.Log("[Selection] === START BUTTON CLICKED ===");
+            // Disable button immediately to prevent double-clicks
+            startButton.interactable = false;
+            StartGame();
+        });
+        
+        Debug.Log("[Selection] StartButton wired successfully");
+    }
+    
+    /// <summary>
+    /// Re-enables the START button. Called when showing selection UI for respawn.
+    /// </summary>
+    private void ReenableStartButton()
+    {
+        GameObject startButtonGo = GameObject.Find("StartButton");
+        if (startButtonGo != null)
+        {
+            Button startButton = startButtonGo.GetComponent<Button>();
+            if (startButton != null)
+            {
+                startButton.interactable = true;
+                Debug.Log("[Selection] START button re-enabled for respawn.");
             }
         }
     }
@@ -140,6 +218,9 @@ public class CharacterSelection : MonoBehaviour
 
         UpdateUI();
         DumpPreviewStates();
+
+        // Don't submit selection to network yet - only when StartGame is called
+        // This allows browsing characters without triggering spawn
     }
 
     private void UpdateUI()
@@ -163,31 +244,175 @@ public class CharacterSelection : MonoBehaviour
 
     public void StartGame()
     {
+        Debug.Log("[Selection] ===== START GAME CALLED =====");
+        
         var e = GetCurrent();
         if (e == null)
         {
             Debug.LogError("[Selection] No current character selected.");
             return;
         }
+        Debug.Log($"[Selection] Current character: {(e.preview != null ? e.preview.name : e.id)}, gameplayPrefab: {(e.gameplayPrefab != null ? e.gameplayPrefab.name : "NULL")}");
+        
         if (e.gameplayPrefab == null)
         {
             Debug.LogError($"[Selection] Selected '{(e.preview!=null?e.preview.name:e.id)}' has no gameplayPrefab assigned. Add PreviewBinding to preview or assign in CharacterSelection.");
             return;
         }
 
-        // Carry over spawn request into the next scene
-        var go = new GameObject("SelectionSpawnRequest");
-        var req = go.AddComponent<SelectionSpawnRequest>();
-        req.prefab = e.gameplayPrefab;
-        req.spawnPointName = spawnPointName;
-        req.spawnPointTag = spawnPointTag;
-        DontDestroyOnLoad(go);
+        // Try multiple ways to find NetworkGameSession
+        if (networkSession == null)
+        {
+            Debug.Log("[Selection] networkSession is null, searching...");
+            networkSession = FindObjectOfType<NetworkGameSession>();
+            if (networkSession != null) Debug.Log("[Selection] Found NetworkGameSession via FindObjectOfType");
+        }
+        
+        if (networkSession == null)
+        {
+            Debug.Log("[Selection] Still null, trying FindObjectOfType(true)...");
+            networkSession = FindObjectOfType<NetworkGameSession>(true);
+            if (networkSession != null) Debug.Log("[Selection] Found NetworkGameSession via FindObjectOfType(true)");
+        }
+        
+        if (networkSession == null)
+        {
+            Debug.Log("[Selection] Still null, checking NetworkManager...");
+            var nm = FindObjectOfType<NetworkManager>();
+            if (nm == null)
+                nm = FindObjectOfType<NetworkManager>(true);
+            if (nm != null)
+            {
+                Debug.Log($"[Selection] Found NetworkManager: {nm.name}");
+                // Check children for NetworkGameSession
+                networkSession = nm.GetComponentInChildren<NetworkGameSession>();
+                if (networkSession != null) Debug.Log("[Selection] Found NetworkGameSession in NetworkManager children");
+            }
+            else
+            {
+                Debug.LogError("[Selection] Could not find NetworkManager!");
+            }
+        }
 
-        Debug.Log($"[Selection] Starting game with '{e.gameplayPrefab.name}'. Loading scene {(string.IsNullOrEmpty(gameplaySceneName)?("#"+gameplaySceneIndex):gameplaySceneName)}");
-        if (!string.IsNullOrEmpty(gameplaySceneName))
-            SceneManager.LoadScene(gameplaySceneName, LoadSceneMode.Single);
+        if (networkSession != null)
+        {
+            var nm = FindObjectOfType<NetworkManager>();
+            Debug.Log($"[Selection] NetworkManager={nm?.name}, IsClientStarted={nm?.IsClientStarted}, IsServerStarted={nm?.IsServerStarted}");
+            
+            string characterId = !string.IsNullOrEmpty(e.id) ? e.id : e.gameplayPrefab.name;
+            
+            if (_isRespawnMode)
+            {
+                Debug.Log($"[Selection] RESPAWN MODE: Requesting respawn with '{characterId}'");
+                // Update selection for this client
+                networkSession.ClientSubmitSelection(characterId);
+                // Call respawn on server
+                networkSession.ClientRequestRespawn();
+                _isRespawnMode = false; // Reset after request
+            }
+            else
+            {
+                Debug.Log($"[Selection] INITIAL SPAWN: Submitting selection '{characterId}' and marking ready");
+                networkSession.ClientSubmitSelection(characterId);
+                networkSession.ClientSetReady(true);
+                Debug.Log("[Selection] Selection and ready submitted to network");
+            }
+            
+            // Hide selection UI after submitting
+            HideSelectionUI();
+            return;
+        }
+
+        Debug.LogError("[Selection] StartGame: Could not find NetworkGameSession! Make sure NetworkGameSession exists in scene.");
+    }
+    
+    private void HideSelectionUI()
+    {
+        Debug.Log("[Selection] Hiding selection UI and camera");
+        
+        // Cache and disable the selection canvas
+        if (_cachedCanvas == null)
+            _cachedCanvas = GameObject.Find("SelectionCanvas");
+        
+        if (_cachedCanvas != null)
+        {
+            _cachedCanvas.SetActive(false);
+            Debug.Log("[Selection] Disabled SelectionCanvas");
+        }
         else
-            SceneManager.LoadScene(gameplaySceneIndex, LoadSceneMode.Single);
+        {
+            Debug.LogWarning("[Selection] Could not find SelectionCanvas to hide");
+        }
+        
+        // Cache and disable the selection camera
+        if (_cachedCamera == null)
+            _cachedCamera = GameObject.Find("SelectionCamera");
+        
+        if (_cachedCamera != null)
+        {
+            Camera cam = _cachedCamera.GetComponent<Camera>();
+            if (cam != null)
+            {
+                cam.enabled = false;
+                Debug.Log("[Selection] Disabled SelectionCamera");
+            }
+            _cachedCamera.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("[Selection] Could not find SelectionCamera to hide");
+        }
+        
+        // Disable all character previews
+        foreach (var character in characters)
+        {
+            if (character != null && character.preview != null)
+            {
+                character.preview.SetActive(false);
+            }
+        }
+        
+        // Re-enable cursor for gameplay
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+        
+        Debug.Log("[Selection] Selection UI hidden");
+    }
+    
+    public void SetRespawnMode(bool isRespawn)
+    {
+        _isRespawnMode = isRespawn;
+        Debug.Log($"[Selection] Respawn mode set to: {isRespawn}");
+    }
+    
+    public void ShowSelectionUI()
+    {
+        Debug.Log("[Selection] Showing selection UI");
+        
+        if (_cachedCanvas != null)
+        {
+            _cachedCanvas.SetActive(true);
+            Debug.Log("[Selection] Enabled SelectionCanvas");
+        }
+        
+        if (_cachedCamera != null)
+        {
+            _cachedCamera.SetActive(true);
+            Camera cam = _cachedCamera.GetComponent<Camera>();
+            if (cam != null)
+                cam.enabled = true;
+            Debug.Log("[Selection] Enabled SelectionCamera");
+        }
+        
+        // Re-enable the currently selected preview
+        ApplySelection(selectedIndex);
+        
+        // Re-enable START button for respawn
+        ReenableStartButton();
+        
+        // Ensure cursor is visible
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     private CharacterEntry GetCurrent()

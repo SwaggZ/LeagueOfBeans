@@ -4,18 +4,18 @@ using UnityEngine;
 /// Base class for projectiles that will eventually need networking.
 /// Inherit from this instead of MonoBehaviour for projectiles.
 /// 
-/// Currently extends MonoBehaviour. When Mirror is installed:
+/// Currently extends MonoBehaviour. When FishNet is installed:
 /// - Change to extend NetworkBehaviour
-/// - Add [SyncVar] attributes to synced fields
+/// - Add SyncVar attributes to synced fields
 /// - Movement updates will be handled by NetworkTransform or custom sync
 /// 
-/// MIRROR MIGRATION CHECKLIST:
+/// FISHNET MIGRATION CHECKLIST:
 /// [ ] Change base class to NetworkBehaviour
-/// [ ] Add NetworkIdentity component requirement
+/// [ ] Add NetworkObject component requirement
 /// [ ] Add NetworkTransform component for automatic position sync
-/// [ ] Mark damage, speed, etc as [SyncVar] if needed server-authoritative values
-/// [ ] Move collision/damage logic to server-only (if (isServer))
-/// [ ] Add [ClientRpc] for visual effects that all clients should see
+/// [ ] Mark damage, speed, etc as SyncVars if needed server-authoritative values
+/// [ ] Move collision/damage logic to server-only (if (IsServer))
+/// [ ] Add ObserversRpc for visual effects that all clients should see
 /// </summary>
 public class NetworkProjectile : MonoBehaviour
 {
@@ -23,20 +23,29 @@ public class NetworkProjectile : MonoBehaviour
     [Tooltip("Owner connection ID. Will be used for authority in multiplayer.")]
     public int ownerConnectionId = -1;
     
-    [Tooltip("Damage dealt by this projectile. Will be [SyncVar] in Mirror.")]
+    [Tooltip("Damage dealt by this projectile. Will be a SyncVar in FishNet.")]
     public float damage = 10f;
     
-    [Tooltip("Movement speed. Will be [SyncVar] in Mirror.")]
+    [Tooltip("Movement speed. Will be a SyncVar in FishNet.")]
     public float speed = 20f;
     
-    // MIRROR: These will become SyncVars
+    // FISHNET: These will become SyncVars
     // [SyncVar] public float damage;
     // [SyncVar] public float speed;
+
+    private NetworkTransformProxy _netTransform;
+    private DamageService _damageService;
+
+    protected virtual void Awake()
+    {
+        _netTransform = GetComponent<NetworkTransformProxy>();
+        _damageService = FindObjectOfType<DamageService>(true);
+    }
     
     /// <summary>
     /// Override this to initialize projectile after spawn.
     /// Called by the spawner after setting initial values.
-    /// MIRROR: This pattern remains the same, but may need [ClientRpc] for client init
+    /// FISHNET: This pattern remains the same, but may need ObserversRpc for client init
     /// </summary>
     public virtual void Initialize(GameObject owner, float damage, float speed)
     {
@@ -46,14 +55,14 @@ public class NetworkProjectile : MonoBehaviour
         if (owner != null)
         {
             // In singleplayer, owner is always the player
-            // MIRROR: Get owner's NetworkIdentity.connectionToClient.connectionId
+            // FISHNET: Get owner's NetworkObject.OwnerId
             ownerConnectionId = 0;
         }
     }
     
     /// <summary>
     /// Override this to handle projectile movement.
-    /// MIRROR: Movement can be handled by NetworkTransform, or manual sync for prediction
+    /// FISHNET: Movement can be handled by NetworkTransform, or manual sync for prediction
     /// </summary>
     protected virtual void UpdateMovement()
     {
@@ -79,22 +88,41 @@ public class NetworkProjectile : MonoBehaviour
     
     /// <summary>
     /// Apply damage to a target. Override for custom damage logic.
-    /// MIRROR: This should only run on server (if (isServer))
+    /// FISHNET: This should only run on server (if (IsServer))
     /// </summary>
     protected virtual void ApplyDamage(GameObject target, float amount)
     {
-        // MIRROR: Wrap in if (isServer)
+        // FISHNET: Wrap in if (IsServer)
         // {
         //     var health = target.GetComponent<Health>();
         //     health?.TakeDamage(amount);
         // }
         
-        // Try HealthSystem first (primary damage component)
-        var hp = target.GetComponent<HealthSystem>();
-        if (hp != null)
+        if (_damageService != null)
         {
-            hp.TakeDamage(amount);
+            _damageService.DealDamage(target, amount, gameObject);
             return;
+        }
+
+        // Fallback to direct HealthSystem for singleplayer
+        var hp = target.GetComponent<HealthSystem>();
+        if (hp != null) hp.TakeDamage(amount);
+    }
+
+    protected bool CanSimulateLocally()
+    {
+        return _netTransform == null || _netTransform.CanSimulate;
+    }
+
+    protected void ApplyPositionAndRotation(Vector3 position, Quaternion rotation)
+    {
+        if (_netTransform != null)
+        {
+            _netTransform.ApplyPositionAndRotation(position, rotation);
+        }
+        else
+        {
+            transform.SetPositionAndRotation(position, rotation);
         }
     }
     
