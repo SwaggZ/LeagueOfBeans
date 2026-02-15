@@ -18,6 +18,55 @@ public class SetupMenuNetworking
 {
     private static string[] CHARACTER_IDS = { "Ahri", "Ashe", "Galio", "Caitlyn", "Aphelios", "Jhin", "Lux" };
 
+    private static void VerifyNetworkManagerComponents(NetworkManager nm)
+    {
+        if (nm == null) return;
+
+        Debug.Log("[SetupMenuNetworking] Verifying and adding FishNet components...");
+
+        // Add required FishNet components if missing
+        System.Type[] requiredComponents = new System.Type[] {
+            typeof(FishNet.Managing.Transporting.TransportManager),
+            typeof(FishNet.Managing.Server.ServerManager),
+            typeof(FishNet.Managing.Client.ClientManager),
+            typeof(FishNet.Managing.Timing.TimeManager),
+            typeof(FishNet.Managing.Scened.SceneManager),
+            typeof(FishNet.Managing.Observing.ObserverManager),
+        };
+
+        int added = 0;
+        foreach (var compType in requiredComponents)
+        {
+            var comp = nm.GetComponent(compType);
+            if (comp == null)
+            {
+                nm.gameObject.AddComponent(compType);
+                added++;
+                Debug.Log($"[SetupMenuNetworking] Added {compType.Name}");
+            }
+        }
+
+        // Add Transport (Tugboat) if missing
+        var transport = nm.GetComponent<FishNet.Transporting.Tugboat.Tugboat>();
+        if (transport == null)
+        {
+            nm.gameObject.AddComponent<FishNet.Transporting.Tugboat.Tugboat>();
+            added++;
+            Debug.Log("[SetupMenuNetworking] Added Tugboat Transport");
+        }
+
+        if (added > 0)
+        {
+            Debug.Log($"[SetupMenuNetworking] ✓ Added {added} missing FishNet components");
+        }
+        else
+        {
+            Debug.Log("[SetupMenuNetworking] ✓ All required FishNet components already present");
+        }
+        
+        EditorUtility.SetDirty(nm.gameObject);
+    }
+
     [MenuItem("Tools/Setup Menu Networking (Menu Scene)")]
     public static void SetupMenu()
     {
@@ -42,6 +91,9 @@ public class SetupMenuNetworking
         {
             Debug.Log("[SetupMenuNetworking] Found existing NetworkManager in Menu scene");
         }
+        
+        // Add all required FishNet components
+        VerifyNetworkManagerComponents(nm);
 
         // Step 2: Add NetworkGameSession on a separate GameObject (NOT on NetworkManager)
         // NetworkBehaviour auto-adds NetworkObject, which is forbidden on NetworkManager
@@ -57,6 +109,70 @@ public class SetupMenuNetworking
         {
             Debug.Log("[SetupMenuNetworking] NetworkGameSession already exists");
         }
+        
+        // Step 2.5: Add NetworkSessionBridge (NetworkBehaviour that can use RPCs)
+        NetworkSessionBridge bridge = Object.FindObjectOfType<NetworkSessionBridge>();
+        if (bridge == null)
+        {
+            GameObject bridgeGo = new GameObject("NetworkSessionBridge");
+            bridgeGo.transform.SetParent(nm.transform);
+            bridge = bridgeGo.AddComponent<NetworkSessionBridge>();
+            // NetworkSessionBridge will auto-add NetworkObject component
+            Debug.Log("[SetupMenuNetworking] Created NetworkSessionBridge on separate GameObject");
+        }
+        else
+        {
+            Debug.Log("[SetupMenuNetworking] NetworkSessionBridge already exists");
+        }
+
+        // Step 2.6: Add FishNetNetworkController (orchestrates host/join)
+        FishNetNetworkController controller = Object.FindObjectOfType<FishNetNetworkController>();
+        if (controller == null)
+        {
+            GameObject controllerGo = new GameObject("FishNetNetworkController");
+            controllerGo.transform.SetParent(nm.transform);
+            controller = controllerGo.AddComponent<FishNetNetworkController>();
+            Debug.Log("[SetupMenuNetworking] Created FishNetNetworkController");
+        }
+        else
+        {
+            Debug.Log("[SetupMenuNetworking] FishNetNetworkController already exists");
+        }
+
+        // Step 2.7: Add SessionContext (stores server settings)
+        SessionContext sessionContext = Object.FindObjectOfType<SessionContext>();
+        if (sessionContext == null)
+        {
+            GameObject sessionGo = new GameObject("SessionContext");
+            sessionGo.transform.SetParent(nm.transform);
+            sessionContext = sessionGo.AddComponent<SessionContext>();
+            Debug.Log("[SetupMenuNetworking] Created SessionContext");
+        }
+        else
+        {
+            Debug.Log("[SetupMenuNetworking] SessionContext already exists");
+        }
+
+        // Step 2.8: Add NetworkSessionAuthenticator (handles passwords)
+        NetworkSessionAuthenticator auth = nm.GetComponent<NetworkSessionAuthenticator>();
+        if (auth == null)
+        {
+            auth = nm.gameObject.AddComponent<NetworkSessionAuthenticator>();
+            Debug.Log("[SetupMenuNetworking] Added NetworkSessionAuthenticator to NetworkManager");
+        }
+        else
+        {
+            Debug.Log("[SetupMenuNetworking] NetworkSessionAuthenticator already exists");
+        }
+
+        // Step 2.9: Wire up FishNetNetworkController references using reflection
+        // (Unity doesn't serialize public fields immediately, so we use SerializedObject)
+        var controllerSO = new SerializedObject(controller);
+        controllerSO.FindProperty("networkManager").objectReferenceValue = nm;
+        controllerSO.FindProperty("sessionContext").objectReferenceValue = sessionContext;
+        controllerSO.FindProperty("authenticator").objectReferenceValue = auth;
+        controllerSO.ApplyModifiedProperties();
+        Debug.Log("[SetupMenuNetworking] Wired up FishNetNetworkController references");
 
         // Step 3: Configure character prefabs
         if (ngs.characterPrefabs == null || ngs.characterPrefabs.Count == 0)
@@ -90,7 +206,9 @@ public class SetupMenuNetworking
 
         EditorUtility.DisplayDialog("Success",
             $"✓ Menu scene networking configured\n" +
-            $"✓ NetworkManager and NetworkGameSession ready\n" +
+            $"✓ NetworkManager with all FishNet components\n" +
+            $"✓ NetworkGameSession, NetworkSessionBridge, FishNetNetworkController ready\n" +
+            $"✓ SessionContext and NetworkSessionAuthenticator configured\n" +
             $"✓ {ngs.characterPrefabs.Count} characters registered\n\n" +
             $"NetworkManager will persist to SampleScene via DontDestroyOnLoad",
             "OK");

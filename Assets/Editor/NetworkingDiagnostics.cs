@@ -22,6 +22,7 @@ public class NetworkingDiagnostics
 
         CheckNetworkManager();
         CheckNetworkGameSession();
+        CheckNetworkSessionBridge();
         CheckCharacterSelection();
         CheckSpawnPoints();
         CheckCharacterPrefabs();
@@ -96,6 +97,37 @@ public class NetworkingDiagnostics
             Debug.LogWarning("⚠ Multiple NetworkGameSession instances - this might cause issues!");
     }
 
+    private static void CheckNetworkSessionBridge()
+    {
+        Debug.Log("\n--- NetworkSessionBridge Check ---");
+
+        var bridges = Object.FindObjectsOfType<NetworkSessionBridge>();
+        Debug.Log($"Found {bridges.Length} NetworkSessionBridge instance(s)");
+
+        if (bridges.Length == 0)
+        {
+            Debug.LogError("❌ NO NetworkSessionBridge found! This is required for networked character selection.");
+            Debug.LogError("   Run Tools → Setup Menu Networking to create it.");
+        }
+        else
+        {
+            foreach (var bridge in bridges)
+            {
+                Debug.Log($"  • ✓ On: {bridge.gameObject.name}");
+                
+                // Check if it has NetworkObject
+                var netObj = bridge.GetComponent<FishNet.Object.NetworkObject>();
+                if (netObj != null)
+                    Debug.Log($"    - ✓ Has NetworkObject component");
+                else
+                    Debug.LogError($"    - ❌ Missing NetworkObject component!");
+            }
+            
+            if (bridges.Length > 1)
+                Debug.LogWarning("⚠ Multiple NetworkSessionBridge instances - only one should exist!");
+        }
+    }
+
     private static void CheckCharacterSelection()
     {
         Debug.Log("\n--- CharacterSelection Check ---");
@@ -123,6 +155,12 @@ public class NetworkingDiagnostics
             Debug.Log($"    - NetworkGameSession: ✓ Found and assigned");
         else
             Debug.LogWarning("    - NetworkGameSession: ❌ NOT assigned (will auto-detect at runtime)");
+            
+        var bridge = selector.networkSessionBridge;
+        if (bridge != null)
+            Debug.Log($"    - NetworkSessionBridge: ✓ Found and assigned");
+        else
+            Debug.LogWarning("    - NetworkSessionBridge: ❌ NOT assigned (will auto-detect at runtime)");
     }
 
     private static void CheckSpawnPoints()

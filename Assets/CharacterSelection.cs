@@ -80,6 +80,9 @@ public class CharacterSelection : MonoBehaviour
                 Debug.LogWarning("[Selection] Could not auto-detect NetworkGameSession at Awake");
         }
         
+        // Note: We now use FishNet Broadcasts instead of NetworkSessionBridge
+        Debug.Log("[Selection] Using FishNet Broadcasts for client-server communication");
+        
         // Auto-fill gameplayPrefab from PreviewBinding if missing, then prefer gameplay prefab name for id
         for (int i = 0; i < characters.Count; i++)
         {
@@ -299,34 +302,79 @@ public class CharacterSelection : MonoBehaviour
             var nm = FindObjectOfType<NetworkManager>();
             Debug.Log($"[Selection] NetworkManager={nm?.name}, IsClientStarted={nm?.IsClientStarted}, IsServerStarted={nm?.IsServerStarted}");
             
+            if (nm == null || !nm.IsClientStarted)
+            {
+                Debug.LogError("[Selection] NetworkManager not found or client not started!");
+                return;
+            }
+            
             string characterId = !string.IsNullOrEmpty(e.id) ? e.id : e.gameplayPrefab.name;
             
-            if (_isRespawnMode)
+            // Check if we're hosting (both server and client on same instance)
+            bool isHost = nm.IsServerStarted && nm.IsClientStarted;
+            
+            // If we're the host, call server methods directly. Otherwise use broadcasts.
+            if (isHost)
             {
-                Debug.Log($"[Selection] RESPAWN MODE: Requesting respawn with '{characterId}'");
-                // Update selection for this client
-                networkSession.ClientSubmitSelection(characterId);
-                // Call respawn on server
-                networkSession.ClientRequestRespawn();
-                _isRespawnMode = false; // Reset after request
+                Debug.Log($"[Selection] We are HOST - calling server methods directly on NetworkGameSession");
+                
+                // Get the host's client connection (ClientId 0 is always the host)
+                var hostConnection = nm.ServerManager.Clients.Count > 0 
+                    ? nm.ServerManager.Clients[0] 
+                    : null;
+                
+                if (hostConnection == null)
+                {
+                    Debug.LogError("[Selection] Could not find host connection!");
+                    return;
+                }
+                
+                Debug.Log($"[Selection] Using host connection: ClientId={hostConnection.ClientId}");
+                
+                if (_isRespawnMode)
+                {
+                    Debug.Log($"[Selection] RESPAWN MODE: Requesting respawn with '{characterId}'");
+                    networkSession.SubmitSelectionServerRpc(characterId, hostConnection);
+                    networkSession.RequestRespawnServerRpc(hostConnection);
+                    _isRespawnMode = false;
+                }
+                else
+                {
+                    Debug.Log($"[Selection] INITIAL SPAWN: Submitting selection '{characterId}' and marking ready");
+                    networkSession.SubmitSelectionServerRpc(characterId, hostConnection);
+                    networkSession.SetReadyServerRpc(true, hostConnection);
+                    Debug.Log("[Selection] Selection and ready submitted directly to server");
+                }
             }
             else
             {
-                Debug.Log($"[Selection] INITIAL SPAWN: Submitting selection '{characterId}' and marking ready");
-                networkSession.ClientSubmitSelection(characterId);
-                networkSession.ClientSetReady(true);
-                Debug.Log("[Selection] Selection and ready submitted to network");
+                Debug.Log($"[Selection] We are CLIENT - using FishNet Broadcasts");
+                
+                if (_isRespawnMode)
+                {
+                    Debug.Log($"[Selection] RESPAWN MODE: Requesting respawn with '{characterId}'");
+                    nm.ClientManager.Broadcast(new SelectionBroadcast { CharacterId = characterId });
+                    nm.ClientManager.Broadcast(new RespawnBroadcast());
+                    _isRespawnMode = false;
+                }
+                else
+                {
+                    Debug.Log($"[Selection] INITIAL SPAWN: Submitting selection '{characterId}' and marking ready");
+                    nm.ClientManager.Broadcast(new SelectionBroadcast { CharacterId = characterId });
+                    nm.ClientManager.Broadcast(new ReadyBroadcast { IsReady = true });
+                    Debug.Log("[Selection] Selection and ready submitted via broadcasts");
+                }
             }
             
-            // Hide selection UI after submitting
-            HideSelectionUI();
+            // DON'T hide UI here - wait for server to spawn player
+            // UI will be hidden in NetworkPlayerController.OnStartClient() when spawn actually happens
             return;
         }
 
         Debug.LogError("[Selection] StartGame: Could not find NetworkGameSession! Make sure NetworkGameSession exists in scene.");
     }
     
-    private void HideSelectionUI()
+    public void HideSelectionUI()
     {
         Debug.Log("[Selection] Hiding selection UI and camera");
         
@@ -421,7 +469,7 @@ public class CharacterSelection : MonoBehaviour
         int idx = Mathf.Clamp(selectedIndex, 0, characters.Count - 1);
         return characters[idx];
     }
-
+    
     private void DumpPreviewStates()
     {
         if (characters == null) return;

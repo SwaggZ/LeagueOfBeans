@@ -816,6 +816,7 @@ MonoBehaviour:
   spawnPointTag: PlayerSpawn
   selectedIndex: 0
   networkSession: {fileID: 0}
+  networkSessionBridge: {fileID: 0}
 --- !u!1 &268063718
 GameObject:
   m_ObjectHideFlags: 0
@@ -4059,7 +4060,7 @@ MonoBehaviour:
   <PrefabId>k__BackingField: 65535
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 0
-  SceneId: 4160483000
+  SceneId: 4151438010
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 0}
@@ -4077,9 +4078,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9008046c24486784e8868991e00d8c76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 1455535232}
-  _networkObjectCache: {fileID: 0}
   characterPrefabs:
   - id: 0
     prefab: {fileID: 6251159111481128476, guid: aa18dc0e16e06034280155d3bcba447a, type: 3}

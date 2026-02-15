@@ -97,6 +97,9 @@ public class NetworkPlayerController : NetworkBehaviour
             LocalPlayerRef.Register(gameObject, true);
             Debug.Log($"[NetworkPlayerController] Registered {gameObject.name} as local player");
             
+            // Hide character selection UI now that we've spawned
+            HideCharacterSelectionUI();
+            
             // Create UI managers for local player only
             EnsureCooldownUIManager();
             EnsureModifiersUIManager();
@@ -176,6 +179,20 @@ public class NetworkPlayerController : NetworkBehaviour
         else
         {
             Debug.Log("[NetworkPlayerController] ReactiveCrosshair already exists");
+        }
+    }
+    
+    private void HideCharacterSelectionUI()
+    {
+        var characterSelection = FindObjectOfType<CharacterSelection>(true);
+        if (characterSelection != null)
+        {
+            Debug.Log("[NetworkPlayerController] Hiding character selection UI now that player has spawned");
+            characterSelection.HideSelectionUI();
+        }
+        else
+        {
+            Debug.LogWarning("[NetworkPlayerController] CharacterSelection not found, cannot hide UI");
         }
     }
 

@@ -1,10 +1,27 @@
 using System.Collections.Generic;
+using FishNet.Broadcast;
 using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
+
+// Broadcast messages for client-to-server communication (no NetworkObject required!)
+public struct SelectionBroadcast : IBroadcast
+{
+    public string CharacterId;
+}
+
+public struct ReadyBroadcast : IBroadcast
+{
+    public bool IsReady;
+}
+
+public struct RespawnBroadcast : IBroadcast
+{
+    // Empty - just signals respawn request
+}
 
 /// <summary>
 /// Tracks character selections and spawns players in gameplay.
@@ -130,7 +147,15 @@ public class NetworkGameSession : MonoBehaviour
     {
         _isServer = (args.ConnectionState == FishNet.Transporting.LocalConnectionState.Started);
         if (_isServer)
+        {
             Debug.Log("[NetworkGameSession] Server started");
+            RegisterBroadcastHandlers();
+        }
+        else if (args.ConnectionState == FishNet.Transporting.LocalConnectionState.Stopped)
+        {
+            Debug.Log("[NetworkGameSession] Server stopped");
+            UnregisterBroadcastHandlers();
+        }
     }
 
     private void OnClientConnectionState(FishNet.Transporting.ClientConnectionStateArgs args)
@@ -138,6 +163,46 @@ public class NetworkGameSession : MonoBehaviour
         _isClient = (args.ConnectionState == FishNet.Transporting.LocalConnectionState.Started);
         if (_isClient)
             Debug.Log("[NetworkGameSession] Client started");
+    }
+    
+    private void RegisterBroadcastHandlers()
+    {
+        if (_cachedNetworkManager == null) return;
+        
+        Debug.Log("[NetworkGameSession] Registering broadcast handlers...");
+        _cachedNetworkManager.ServerManager.RegisterBroadcast<SelectionBroadcast>(OnSelectionBroadcast);
+        _cachedNetworkManager.ServerManager.RegisterBroadcast<ReadyBroadcast>(OnReadyBroadcast);
+        _cachedNetworkManager.ServerManager.RegisterBroadcast<RespawnBroadcast>(OnRespawnBroadcast);
+        Debug.Log("[NetworkGameSession] Broadcast handlers registered!");
+    }
+    
+    private void UnregisterBroadcastHandlers()
+    {
+        if (_cachedNetworkManager == null) return;
+        
+        Debug.Log("[NetworkGameSession] Unregistering broadcast handlers...");
+        _cachedNetworkManager.ServerManager.UnregisterBroadcast<SelectionBroadcast>(OnSelectionBroadcast);
+        _cachedNetworkManager.ServerManager.UnregisterBroadcast<ReadyBroadcast>(OnReadyBroadcast);
+        _cachedNetworkManager.ServerManager.UnregisterBroadcast<RespawnBroadcast>(OnRespawnBroadcast);
+    }
+    
+    // Broadcast handlers - these are called when the server receives broadcasts from clients
+    private void OnSelectionBroadcast(NetworkConnection conn, SelectionBroadcast msg)
+    {
+        Debug.Log($"[NetworkGameSession] Received SelectionBroadcast from client {conn.ClientId}: {msg.CharacterId}");
+        SubmitSelectionServerRpc(msg.CharacterId, conn);
+    }
+    
+    private void OnReadyBroadcast(NetworkConnection conn, ReadyBroadcast msg)
+    {
+        Debug.Log($"[NetworkGameSession] Received ReadyBroadcast from client {conn.ClientId}: ready={msg.IsReady}");
+        SetReadyServerRpc(msg.IsReady, conn);
+    }
+    
+    private void OnRespawnBroadcast(NetworkConnection conn, RespawnBroadcast msg)
+    {
+        Debug.Log($"[NetworkGameSession] Received RespawnBroadcast from client {conn.ClientId}");
+        RequestRespawnServerRpc(conn);
     }
 
     public void SubmitSelectionServerRpc(string characterId, NetworkConnection conn = null)
@@ -159,14 +224,11 @@ public class NetworkGameSession : MonoBehaviour
         selected[conn.ClientId] = characterId ?? string.Empty;
         ready[conn.ClientId] = false;
 
-        bool allSelected = AllPlayersSelected();
-        bool allReady = AllPlayersReady();
-        Debug.Log($"[NetworkGameSession] State after selection: AllSelected={allSelected}, AllReady={allReady}, autoStart={autoStartWhenAllSelected}, requireReady={requireReadyToStart}, gameplayStarted={_gameplayStarted}");
-
-        if (autoStartWhenAllSelected && allSelected && (!requireReadyToStart || allReady) && !_gameplayStarted)
+        // Mark gameplay as started if this is the first player
+        if (!_gameplayStarted)
         {
-            Debug.Log("[NetworkGameSession] Conditions met, starting gameplay!");
-            StartGameplay();
+            _gameplayStarted = true;
+            Debug.Log("[NetworkGameSession] First player submitted selection, gameplay started!");
         }
     }
 
@@ -188,14 +250,11 @@ public class NetworkGameSession : MonoBehaviour
         Debug.Log($"[NetworkGameSession] SetReadyServerRpc: client {conn.ClientId} ready={isReady}");
         ready[conn.ClientId] = isReady;
 
-        bool allSelected = AllPlayersSelected();
-        bool allReady = AllPlayersReady();
-        Debug.Log($"[NetworkGameSession] State: AllSelected={allSelected}, AllReady={allReady}, autoStart={autoStartWhenAllSelected}, requireReady={requireReadyToStart}, gameplayStarted={_gameplayStarted}");
-
-        if (autoStartWhenAllSelected && allSelected && (!requireReadyToStart || allReady) && !_gameplayStarted)
+        // If player is ready and has a selection, spawn them immediately
+        if (isReady && selected.ContainsKey(conn.ClientId) && !_spawnedClients.Contains(conn.ClientId))
         {
-            Debug.Log("[NetworkGameSession] Conditions met, starting gameplay!");
-            StartGameplay();
+            Debug.Log($"[NetworkGameSession] Client {conn.ClientId} is ready with selection '{selected[conn.ClientId]}'. Spawning immediately...");
+            SpawnPlayerForConnection(conn, selected[conn.ClientId]);
         }
     }
 

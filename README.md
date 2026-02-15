@@ -10,6 +10,19 @@ Fast-Paced FPS Action: Experience the excitement of intense first-person shooter
 
 Open Source: This project is open source, allowing the community to contribute, modify, and enhance the game.
 
+## Recent Updates
+
+### Multiplayer Character Selection Fix (February 2026)
+Fixed critical issue where players would get stuck in character selection screen during multiplayer games. 
+- **Problem:** Character selections from clients weren't reaching the server
+- **Solution:** Implemented proper FishNet RPC bridge (`NetworkSessionBridge`)
+- **Docs:** See `CHARACTER_SELECTION_FIX.md` for details and `QUICK_FIX_TEST.md` for testing
+
+### Setup Instructions
+For networking setup and configuration, see:
+- `NETWORKING_SETUP.md` - Complete networking setup guide
+- Tools menu in Unity Editor for automated setup
+
 Disclaimer
 League of Beans is a fan project created by Dev Dambel and is not officially licensed by Riot Games. All references to League of Legends, including characters and lore, are used in a transformative manner to pay homage to the original work.
 

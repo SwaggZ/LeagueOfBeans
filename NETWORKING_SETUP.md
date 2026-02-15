@@ -3,14 +3,16 @@
 ## Current Status
 - ✅ **Code**: All networking code is configured and ready
 - ✅ **Setup Tools**: Comprehensive editor tools created
+- ✅ **RPC Bridge**: NetworkSessionBridge implements proper FishNet RPCs
 - ❌ **Infrastructure**: Missing NetworkGameSession in proper location
 - ⚠️ **Next Action**: Run setup tools in correct order
 
-## Root Cause of Current Issue
-The error `"[Selection] StartGame: Could not find NetworkGameSession!"` occurs because:
-1. Menu scene has a NetworkManager that persists to SampleScene
-2. **BUT** that NetworkManager is missing the `NetworkGameSession` component
-3. When you click START, the code can't find NetworkGameSession to submit selection
+## Root Cause of Previous Issue (FIXED)
+The error `"[Selection] StartGame: Could not find NetworkGameSession!"` and players getting stuck occurred because:
+1. NetworkGameSession was a regular MonoBehaviour, not a NetworkBehaviour
+2. The "ServerRpc" methods were not actual FishNet RPCs - they just had misleading names
+3. When clients called these methods, they executed locally and immediately returned because `_isServer` was false
+4. **FIX**: Created NetworkSessionBridge - a proper NetworkBehaviour with actual [ServerRpc] attributes that forwards calls to NetworkGameSession
 
 ## Complete Setup Process (Step by Step)
 
@@ -26,9 +28,10 @@ This creates the persistent NetworkManager with the NetworkGameSession component
 
 **What this does:**
 - Creates NetworkManager if it doesn't exist
-- Adds NetworkGameSession component to NetworkManager
+- Adds NetworkGameSession component (on child GameObject)
+- **Adds NetworkSessionBridge component (on child GameObject with NetworkObject)**
 - Populates character prefabs list (Ahri, Ashe, Galio, Caitlyn, Aphelios, Jhin, Lux)
-- NetworkManager automatically persists to other scenes via DontDestroyOnLoad
+- NetworkManager and children automatically persist to other scenes via DontDestroyOnLoad
 
 ### Step 2: Setup Selection Screen in SampleScene (3 minutes)
 This creates the character selection UI that appears when the game loads.
