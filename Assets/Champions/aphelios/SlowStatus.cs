@@ -27,9 +27,9 @@ public class SlowStatus : MonoBehaviour
         if (_co != null) StopCoroutine(_co);
         _co = StartCoroutine(Run(duration));
         UpdateSpeed();
-        var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        var iconLibrary = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
         Sprite icon = iconLibrary != null ? iconLibrary.SLOWNESS : null;
-        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        var modifiersUi = FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         if (CompareTag("Player") && modifiersUi != null)
         {
             modifiersUi.AddOrUpdate("StatusSlow", icon, "Slowed", Mathf.Max(0.01f, duration), 0);
@@ -51,7 +51,7 @@ public class SlowStatus : MonoBehaviour
         _activePct = 0f;
         UpdateSpeed();
         _co = null;
-        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        var modifiersUi = FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         if (CompareTag("Player") && modifiersUi != null)
         {
             modifiersUi.Remove("StatusSlow");

@@ -23,13 +23,13 @@ public static class ModifierUtils
         if (target == null || string.IsNullOrEmpty(id)) return;
 
         Sprite resolvedIcon = icon;
-        var iconLibrary = Object.FindObjectOfType<ModifiersIconLibrary>(true);
+        var iconLibrary = Object.FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
         if (resolvedIcon == null && iconLibrary != null)
         {
             resolvedIcon = iconLibrary.Resolve(id, label);
         }
 
-        var modifiersUi = Object.FindObjectOfType<ModifiersUIManager>(true);
+        var modifiersUi = Object.FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         if (includePlayerHud && target.CompareTag("Player") && modifiersUi != null)
         {
             modifiersUi.AddOrUpdate(id, resolvedIcon, label, durationSeconds, stacks);
@@ -49,7 +49,7 @@ public static class ModifierUtils
     {
         if (target == null || string.IsNullOrEmpty(id)) return;
 
-        var modifiersUi = Object.FindObjectOfType<ModifiersUIManager>(true);
+        var modifiersUi = Object.FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         if (removePlayerHud && target.CompareTag("Player") && modifiersUi != null)
         {
             modifiersUi.Remove(id);

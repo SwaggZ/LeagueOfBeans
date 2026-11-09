@@ -33,9 +33,9 @@ public class ServerBrowserController : MonoBehaviour
 
     private void Awake()
     {
-        if (networkController == null) networkController = FindObjectOfType<FishNetNetworkController>(true);
-        if (sessionContext == null) sessionContext = FindObjectOfType<SessionContext>(true);
-        if (lanListener == null) lanListener = FindObjectOfType<LanServerListener>(true);
+        if (networkController == null) networkController = FindFirstObjectByType<FishNetNetworkController>(FindObjectsInactive.Include);
+        if (sessionContext == null) sessionContext = FindFirstObjectByType<SessionContext>(FindObjectsInactive.Include);
+        if (lanListener == null) lanListener = FindFirstObjectByType<LanServerListener>(FindObjectsInactive.Include);
     }
 
     private void OnEnable()

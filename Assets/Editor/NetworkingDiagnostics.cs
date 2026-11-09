@@ -22,7 +22,6 @@ public class NetworkingDiagnostics
 
         CheckNetworkManager();
         CheckNetworkGameSession();
-        CheckNetworkSessionBridge();
         CheckCharacterSelection();
         CheckSpawnPoints();
         CheckCharacterPrefabs();
@@ -38,14 +37,14 @@ public class NetworkingDiagnostics
     {
         Debug.Log("\n--- NetworkManager Check ---");
         
-        var allManagers = Object.FindObjectsOfType<NetworkManager>();
+        var allManagers = Object.FindObjectsByType<NetworkManager>(FindObjectsSortMode.None);
         Debug.Log($"Found {allManagers.Length} NetworkManager instance(s)");
 
         foreach (var nm in allManagers)
         {
             Debug.Log($"  • {nm.gameObject.name} (active: {nm.gameObject.activeSelf})");
-            Debug.Log($"    - IsServer: {nm.IsServer}");
-            Debug.Log($"    - IsClient: {nm.IsClient}");
+            Debug.Log($"    - IsServer: {nm.IsServerStarted}");
+            Debug.Log($"    - IsClient: {nm.IsClientStarted}");
             Debug.Log($"    - Clients: {(nm.IsServerStarted ? nm.ServerManager.Clients.Count : "N/A")}");
             
             // Check persistence (if in DontDestroyOnLoad scene)
@@ -65,7 +64,7 @@ public class NetworkingDiagnostics
     {
         Debug.Log("\n--- NetworkGameSession Check ---");
 
-        var sessions = Object.FindObjectsOfType<NetworkGameSession>();
+        var sessions = Object.FindObjectsByType<NetworkGameSession>(FindObjectsSortMode.None);
         Debug.Log($"Found {sessions.Length} NetworkGameSession instance(s)");
 
         foreach (var session in sessions)
@@ -97,42 +96,11 @@ public class NetworkingDiagnostics
             Debug.LogWarning("⚠ Multiple NetworkGameSession instances - this might cause issues!");
     }
 
-    private static void CheckNetworkSessionBridge()
-    {
-        Debug.Log("\n--- NetworkSessionBridge Check ---");
-
-        var bridges = Object.FindObjectsOfType<NetworkSessionBridge>();
-        Debug.Log($"Found {bridges.Length} NetworkSessionBridge instance(s)");
-
-        if (bridges.Length == 0)
-        {
-            Debug.LogError("❌ NO NetworkSessionBridge found! This is required for networked character selection.");
-            Debug.LogError("   Run Tools → Setup Menu Networking to create it.");
-        }
-        else
-        {
-            foreach (var bridge in bridges)
-            {
-                Debug.Log($"  • ✓ On: {bridge.gameObject.name}");
-                
-                // Check if it has NetworkObject
-                var netObj = bridge.GetComponent<FishNet.Object.NetworkObject>();
-                if (netObj != null)
-                    Debug.Log($"    - ✓ Has NetworkObject component");
-                else
-                    Debug.LogError($"    - ❌ Missing NetworkObject component!");
-            }
-            
-            if (bridges.Length > 1)
-                Debug.LogWarning("⚠ Multiple NetworkSessionBridge instances - only one should exist!");
-        }
-    }
-
     private static void CheckCharacterSelection()
     {
         Debug.Log("\n--- CharacterSelection Check ---");
 
-        var selector = Object.FindObjectOfType<CharacterSelection>();
+        var selector = Object.FindFirstObjectByType<CharacterSelection>();
         if (selector == null)
         {
             Debug.LogWarning("❌ No CharacterSelection found in scene");
@@ -155,19 +123,16 @@ public class NetworkingDiagnostics
             Debug.Log($"    - NetworkGameSession: ✓ Found and assigned");
         else
             Debug.LogWarning("    - NetworkGameSession: ❌ NOT assigned (will auto-detect at runtime)");
-            
-        var bridge = selector.networkSessionBridge;
-        if (bridge != null)
-            Debug.Log($"    - NetworkSessionBridge: ✓ Found and assigned");
-        else
-            Debug.LogWarning("    - NetworkSessionBridge: ❌ NOT assigned (will auto-detect at runtime)");
+
+        // Selection/ready requests now travel via FishNet broadcasts (see NetworkGameSession),
+        // so no extra RPC component is needed on CharacterSelection.
     }
 
     private static void CheckSpawnPoints()
     {
         Debug.Log("\n--- SpawnPoint Check ---");
 
-        var spawnMarkers = Object.FindObjectsOfType<SpawnPointMarker>();
+        var spawnMarkers = Object.FindObjectsByType<SpawnPointMarker>(FindObjectsSortMode.None);
         Debug.Log($"Found {spawnMarkers.Length} SpawnPointMarker(s)");
 
         if (spawnMarkers.Length == 0)
@@ -242,10 +207,10 @@ public class NetworkingDiagnostics
 
     private static void ShowSummary(string sceneName)
     {
-        var nm = Object.FindObjectOfType<NetworkManager>();
-        var ngs = Object.FindObjectOfType<NetworkGameSession>();
-        var selector = Object.FindObjectOfType<CharacterSelection>();
-        var spawnMarkers = Object.FindObjectsOfType<SpawnPointMarker>();
+        var nm = Object.FindFirstObjectByType<NetworkManager>();
+        var ngs = Object.FindFirstObjectByType<NetworkGameSession>();
+        var selector = Object.FindFirstObjectByType<CharacterSelection>();
+        var spawnMarkers = Object.FindObjectsByType<SpawnPointMarker>(FindObjectsSortMode.None);
 
         string summary = $"Scene: {sceneName}\n\n";
 

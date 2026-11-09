@@ -37,7 +37,7 @@ public class ReactiveCrosshair : MonoBehaviour
         EnsureCanvasAndUI();
         if (playerRoot == null)
         {
-            var reg = FindObjectOfType<PlayerRegistration>(true);
+            var reg = FindFirstObjectByType<PlayerRegistration>(FindObjectsInactive.Include);
             if (reg != null)
             {
                 playerRoot = reg.transform;
@@ -80,7 +80,7 @@ public class ReactiveCrosshair : MonoBehaviour
         if (cc != null) return cc.velocity.magnitude;
         // Try Rigidbody
         var rb = playerRoot.GetComponent<Rigidbody>();
-        if (rb != null) return rb.velocity.magnitude;
+        if (rb != null) return rb.linearVelocity.magnitude;
         // As a last resort, sample change in position (very rough)
         return 0f;
     }

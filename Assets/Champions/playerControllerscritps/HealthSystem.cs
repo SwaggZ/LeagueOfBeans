@@ -122,7 +122,7 @@ public class HealthSystem : MonoBehaviour
     private void ShowCharacterSelectionForRespawn()
     {
         // Find CharacterSelection in the scene (it's DontDestroyOnLoad, so it should still exist)
-        var characterSelection = FindObjectOfType<CharacterSelection>();
+        var characterSelection = FindFirstObjectByType<CharacterSelection>();
         if (characterSelection != null)
         {
             Debug.Log("[HealthSystem] Found CharacterSelection, showing UI for respawn.");
@@ -130,13 +130,13 @@ public class HealthSystem : MonoBehaviour
             characterSelection.ShowSelectionUI();
             
             // Hide both HUDs during selection
-            var cooldownUI = FindObjectOfType<CooldownUIManager>();
+            var cooldownUI = FindFirstObjectByType<CooldownUIManager>();
             if (cooldownUI != null)
             {
                 cooldownUI.HideHUD();
             }
             
-            var modifiersUI = FindObjectOfType<ModifiersUIManager>();
+            var modifiersUI = FindFirstObjectByType<ModifiersUIManager>();
             if (modifiersUI != null)
             {
                 modifiersUI.HideHUD();

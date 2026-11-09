@@ -30,7 +30,7 @@ public class SelectionSpawnRequest : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        var networkManager = FindObjectOfType<NetworkManager>(true);
+        var networkManager = FindFirstObjectByType<NetworkManager>(FindObjectsInactive.Include);
         if (networkManager != null && (networkManager.IsClientStarted || networkManager.IsServerStarted))
         {
             Cleanup();
@@ -48,7 +48,7 @@ public class SelectionSpawnRequest : MonoBehaviour
         Transform spawn = spawnPointOverride;
         if (spawn == null)
         {
-            var markers = FindObjectsOfType<SpawnPointMarker>(true);
+            var markers = FindObjectsByType<SpawnPointMarker>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var marker in markers)
             {
                 if (marker == null) continue;
@@ -79,31 +79,31 @@ public class SelectionSpawnRequest : MonoBehaviour
         Vector3 pos = spawn != null ? spawn.position : Vector3.zero;
         Quaternion rot = spawn != null ? spawn.rotation : Quaternion.identity;
 
-        var spawner = spawnService != null ? spawnService : FindObjectOfType<SpawnService>(true);
+        var spawner = spawnService != null ? spawnService : FindFirstObjectByType<SpawnService>(FindObjectsInactive.Include);
         var player = spawner != null
             ? spawner.Spawn(prefab, pos, rot)
             : Instantiate(prefab, pos, rot);
         Debug.Log($"[SelectionSpawnRequest] Spawned '{prefab.name}' at {pos} in scene '{scene.name}'");
 
         // Ensure a cooldown HUD exists in gameplay scenes
-        var cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        var cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         if (cooldownUi == null)
         {
             new GameObject("CooldownUIManager").AddComponent<CooldownUIManager>();
         }
 
         // Ensure modifiers HUD exists
-        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        var modifiersUi = FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         if (modifiersUi == null)
         {
             new GameObject("ModifiersUIManager").AddComponent<ModifiersUIManager>();
         }
 
         // Ensure ModifiersIconLibrary exists so modifiers pull icons from it
-        var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        var iconLibrary = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
         if (iconLibrary == null)
         {
-            var libInScene = FindObjectOfType<ModifiersIconLibrary>(true);
+            var libInScene = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
             if (libInScene == null)
             {
                 Debug.LogWarning("[SelectionSpawnRequest] No ModifiersIconLibrary found. Creating an empty one; assign sprites in your persistent scene to avoid NO IMG placeholders.");
@@ -142,14 +142,14 @@ public class SelectionSpawnRequest : MonoBehaviour
 
         // Apply ability icon loadout from the spawned character if present
         var loadout = player.GetComponentInChildren<AbilityIconLoadout>(true);
-        cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         if (loadout != null && cooldownUi != null)
         {
             loadout.ApplyToHUD();
         }
 
         // Ensure a reactive crosshair exists in the gameplay scene
-        if (FindObjectOfType<ReactiveCrosshair>(true) == null)
+        if (FindFirstObjectByType<ReactiveCrosshair>(FindObjectsInactive.Include) == null)
         {
             var crossGO = new GameObject("ReactiveCrosshairHost");
             var cross = crossGO.AddComponent<ReactiveCrosshair>();
@@ -174,7 +174,7 @@ public class SelectionSpawnRequest : MonoBehaviour
         }
         activeListener.enabled = true;
 
-        var all = Object.FindObjectsOfType<AudioListener>(true);
+        var all = Object.FindObjectsByType<AudioListener>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var al in all)
         {
             if (al == null) continue;

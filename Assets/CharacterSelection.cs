@@ -73,7 +73,7 @@ public class CharacterSelection : MonoBehaviour
         if (networkSession == null)
         {
             // Try direct find first
-            networkSession = FindObjectOfType<NetworkGameSession>();
+            networkSession = FindFirstObjectByType<NetworkGameSession>();
             if (networkSession != null)
                 Debug.Log("[Selection] Auto-detected NetworkGameSession");
             else
@@ -267,23 +267,23 @@ public class CharacterSelection : MonoBehaviour
         if (networkSession == null)
         {
             Debug.Log("[Selection] networkSession is null, searching...");
-            networkSession = FindObjectOfType<NetworkGameSession>();
+            networkSession = FindFirstObjectByType<NetworkGameSession>();
             if (networkSession != null) Debug.Log("[Selection] Found NetworkGameSession via FindObjectOfType");
         }
         
         if (networkSession == null)
         {
-            Debug.Log("[Selection] Still null, trying FindObjectOfType(true)...");
-            networkSession = FindObjectOfType<NetworkGameSession>(true);
-            if (networkSession != null) Debug.Log("[Selection] Found NetworkGameSession via FindObjectOfType(true)");
+            Debug.Log("[Selection] Still null, trying FindFirstObjectByType(Include)...");
+            networkSession = FindFirstObjectByType<NetworkGameSession>(FindObjectsInactive.Include);
+            if (networkSession != null) Debug.Log("[Selection] Found NetworkGameSession via FindFirstObjectByType(Include)");
         }
         
         if (networkSession == null)
         {
             Debug.Log("[Selection] Still null, checking NetworkManager...");
-            var nm = FindObjectOfType<NetworkManager>();
+            var nm = FindFirstObjectByType<NetworkManager>();
             if (nm == null)
-                nm = FindObjectOfType<NetworkManager>(true);
+                nm = FindFirstObjectByType<NetworkManager>(FindObjectsInactive.Include);
             if (nm != null)
             {
                 Debug.Log($"[Selection] Found NetworkManager: {nm.name}");
@@ -299,7 +299,7 @@ public class CharacterSelection : MonoBehaviour
 
         if (networkSession != null)
         {
-            var nm = FindObjectOfType<NetworkManager>();
+            var nm = FindFirstObjectByType<NetworkManager>();
             Debug.Log($"[Selection] NetworkManager={nm?.name}, IsClientStarted={nm?.IsClientStarted}, IsServerStarted={nm?.IsServerStarted}");
             
             if (nm == null || !nm.IsClientStarted)

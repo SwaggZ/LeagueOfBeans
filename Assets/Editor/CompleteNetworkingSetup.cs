@@ -28,7 +28,7 @@ public class CompleteNetworkingSetup
         Debug.Log($"[CompleteNetworkingSetup] Starting complete setup in scene: {activeScene.name}");
 
         // Step 1: Find or create NetworkManager
-        NetworkManager nm = Object.FindObjectOfType<NetworkManager>();
+        NetworkManager nm = Object.FindFirstObjectByType<NetworkManager>();
         if (nm == null)
         {
             GameObject nmGo = new GameObject("NetworkManager");
@@ -42,7 +42,7 @@ public class CompleteNetworkingSetup
 
         // Step 2: Add NetworkGameSession on a separate GameObject (NOT on NetworkManager)
         // NetworkBehaviour auto-adds NetworkObject, which is forbidden on NetworkManager
-        NetworkGameSession ngs = Object.FindObjectOfType<NetworkGameSession>();
+        NetworkGameSession ngs = Object.FindFirstObjectByType<NetworkGameSession>();
         if (ngs == null)
         {
             GameObject ngsGo = new GameObject("NetworkGameSession");
@@ -94,7 +94,7 @@ public class CompleteNetworkingSetup
         }
 
         // Step 4: Configure spawn points
-        var spawnMarkers = Object.FindObjectsOfType<SpawnPointMarker>();
+        var spawnMarkers = Object.FindObjectsByType<SpawnPointMarker>(FindObjectsSortMode.None);
         if (spawnMarkers.Length == 0)
         {
             EditorUtility.DisplayDialog("Warning", "No SpawnPointMarker components found in scene! Use Tools → Create Spawn Points to add them.", "OK");

@@ -22,8 +22,8 @@ public class LanServerBroadcaster : MonoBehaviour
 
     private void Awake()
     {
-        if (networkManager == null) networkManager = FindObjectOfType<NetworkManager>(true);
-        if (sessionContext == null) sessionContext = FindObjectOfType<SessionContext>(true);
+        if (networkManager == null) networkManager = FindFirstObjectByType<NetworkManager>(FindObjectsInactive.Include);
+        if (sessionContext == null) sessionContext = FindFirstObjectByType<SessionContext>(FindObjectsInactive.Include);
     }
 
     private void OnEnable()

@@ -116,7 +116,7 @@ public class NetworkGameSession : MonoBehaviour
         {
             _cachedNetworkManager = GetComponentInParent<NetworkManager>();
             if (_cachedNetworkManager == null)
-                _cachedNetworkManager = FindObjectOfType<NetworkManager>();
+                _cachedNetworkManager = FindFirstObjectByType<NetworkManager>();
             
             if (_cachedNetworkManager != null)
             {
@@ -187,19 +187,19 @@ public class NetworkGameSession : MonoBehaviour
     }
     
     // Broadcast handlers - these are called when the server receives broadcasts from clients
-    private void OnSelectionBroadcast(NetworkConnection conn, SelectionBroadcast msg)
+    private void OnSelectionBroadcast(NetworkConnection conn, SelectionBroadcast msg, FishNet.Transporting.Channel channel)
     {
         Debug.Log($"[NetworkGameSession] Received SelectionBroadcast from client {conn.ClientId}: {msg.CharacterId}");
         SubmitSelectionServerRpc(msg.CharacterId, conn);
     }
     
-    private void OnReadyBroadcast(NetworkConnection conn, ReadyBroadcast msg)
+    private void OnReadyBroadcast(NetworkConnection conn, ReadyBroadcast msg, FishNet.Transporting.Channel channel)
     {
         Debug.Log($"[NetworkGameSession] Received ReadyBroadcast from client {conn.ClientId}: ready={msg.IsReady}");
         SetReadyServerRpc(msg.IsReady, conn);
     }
     
-    private void OnRespawnBroadcast(NetworkConnection conn, RespawnBroadcast msg)
+    private void OnRespawnBroadcast(NetworkConnection conn, RespawnBroadcast msg, FishNet.Transporting.Channel channel)
     {
         Debug.Log($"[NetworkGameSession] Received RespawnBroadcast from client {conn.ClientId}");
         RequestRespawnServerRpc(conn);
@@ -289,7 +289,7 @@ public class NetworkGameSession : MonoBehaviour
     public void ClientSubmitSelection(string characterId)
     {
         if (_cachedNetworkManager == null)
-            _cachedNetworkManager = GetComponentInParent<NetworkManager>() ?? FindObjectOfType<NetworkManager>();
+            _cachedNetworkManager = GetComponentInParent<NetworkManager>() ?? FindFirstObjectByType<NetworkManager>();
             
         if (_cachedNetworkManager == null)
         {
@@ -311,10 +311,12 @@ public class NetworkGameSession : MonoBehaviour
             return;
         }
         
-        Debug.Log($"[NetworkGameSession] ClientSubmitSelection calling RPC with ID: {characterId}, clientId: {conn.ClientId}");
+        Debug.Log($"[NetworkGameSession] ClientSubmitSelection sending ID: {characterId}, clientId: {conn.ClientId}");
         try
         {
-            SubmitSelectionServerRpc(characterId, conn);
+            // Remote clients must go through a broadcast; a direct call only works on the server/host.
+            if (_isServer) SubmitSelectionServerRpc(characterId, conn);
+            else _cachedNetworkManager.ClientManager.Broadcast(new SelectionBroadcast { CharacterId = characterId });
         }
         catch (System.Exception ex)
         {
@@ -325,7 +327,7 @@ public class NetworkGameSession : MonoBehaviour
     public void ClientRequestStart()
     {
         if (_cachedNetworkManager == null)
-            _cachedNetworkManager = GetComponentInParent<NetworkManager>() ?? FindObjectOfType<NetworkManager>();
+            _cachedNetworkManager = GetComponentInParent<NetworkManager>() ?? FindFirstObjectByType<NetworkManager>();
             
         if (_cachedNetworkManager == null)
         {
@@ -345,7 +347,7 @@ public class NetworkGameSession : MonoBehaviour
     public void ClientSetReady(bool isReady)
     {
         if (_cachedNetworkManager == null)
-            _cachedNetworkManager = GetComponentInParent<NetworkManager>() ?? FindObjectOfType<NetworkManager>();
+            _cachedNetworkManager = GetComponentInParent<NetworkManager>() ?? FindFirstObjectByType<NetworkManager>();
             
         if (_cachedNetworkManager == null)
         {
@@ -366,10 +368,11 @@ public class NetworkGameSession : MonoBehaviour
             return;
         }
         
-        Debug.Log($"[NetworkGameSession] ClientSetReady calling RPC with: {isReady}");
+        Debug.Log($"[NetworkGameSession] ClientSetReady sending: {isReady}");
         try
         {
-            SetReadyServerRpc(isReady, conn);
+            if (_isServer) SetReadyServerRpc(isReady, conn);
+            else _cachedNetworkManager.ClientManager.Broadcast(new ReadyBroadcast { IsReady = isReady });
         }
         catch (System.Exception ex)
         {
@@ -383,7 +386,7 @@ public class NetworkGameSession : MonoBehaviour
     public void ClientRequestRespawn()
     {
         if (_cachedNetworkManager == null)
-            _cachedNetworkManager = GetComponentInParent<NetworkManager>() ?? FindObjectOfType<NetworkManager>();
+            _cachedNetworkManager = GetComponentInParent<NetworkManager>() ?? FindFirstObjectByType<NetworkManager>();
             
         if (_cachedNetworkManager == null)
         {
@@ -576,7 +579,7 @@ public class NetworkGameSession : MonoBehaviour
 
     private Transform SelectSpawnPoint()
     {
-        var spawnPoints = FindObjectsOfType<SpawnPointMarker>(true);
+        var spawnPoints = FindObjectsByType<SpawnPointMarker>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         Debug.Log($"[NetworkGameSession] Found {spawnPoints.Length} SpawnPointMarker(s)");
 
         List<Transform> candidates = new List<Transform>();

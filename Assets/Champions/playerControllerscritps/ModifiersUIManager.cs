@@ -216,7 +216,7 @@ public class ModifiersUIManager : MonoBehaviour
 
         if (icon == null)
         {
-            var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+            var iconLibrary = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
             if (iconLibrary != null)
             {
                 icon = iconLibrary.Resolve(id, label);
@@ -231,7 +231,7 @@ public class ModifiersUIManager : MonoBehaviour
         }
         if (icon == null)
         {
-            var lib = FindObjectOfType<ModifiersIconLibrary>(true);
+            var lib = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
             if (lib != null)
             {
                 icon = lib.Resolve(id, label);

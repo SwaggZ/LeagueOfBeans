@@ -23,7 +23,7 @@ public class CleanupSampleScene
         Debug.Log("[CleanupSampleScene] Removing NetworkManager from SampleScene...");
 
         // Find and destroy NetworkManager in this scene
-        var networkManagers = Object.FindObjectsOfType<NetworkManager>();
+        var networkManagers = Object.FindObjectsByType<NetworkManager>(FindObjectsSortMode.None);
         int removed = 0;
 
         foreach (var nm in networkManagers)
@@ -37,8 +37,8 @@ public class CleanupSampleScene
             }
         }
 
-        // Also remove any orphaned NetworkGameSession or NetworkSessionBridge
-        var networkSessions = Object.FindObjectsOfType<NetworkGameSession>();
+        // Also remove any orphaned NetworkGameSession
+        var networkSessions = Object.FindObjectsByType<NetworkGameSession>(FindObjectsSortMode.None);
         foreach (var ngs in networkSessions)
         {
             if (ngs.gameObject.scene == activeScene)
@@ -49,16 +49,6 @@ public class CleanupSampleScene
             }
         }
 
-        var bridges = Object.FindObjectsOfType<NetworkSessionBridge>();
-        foreach (var bridge in bridges)
-        {
-            if (bridge.gameObject.scene == activeScene)
-            {
-                Debug.Log($"[CleanupSampleScene] Removing NetworkSessionBridge: {bridge.gameObject.name}");
-                Object.DestroyImmediate(bridge.gameObject);
-                removed++;
-            }
-        }
 
         if (removed > 0)
         {

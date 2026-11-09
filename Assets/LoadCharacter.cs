@@ -14,7 +14,7 @@ public class LoadCharacter : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        var networkManager = FindObjectOfType<NetworkManager>(true);
+        var networkManager = FindFirstObjectByType<NetworkManager>(FindObjectsInactive.Include);
         if (networkManager != null && (networkManager.IsClientStarted || networkManager.IsServerStarted))
         {
             Debug.Log("[LoadCharacter] FishNet active. Skipping legacy spawn.");
@@ -22,15 +22,15 @@ public class LoadCharacter : MonoBehaviour
         }
 
         // Legacy spawner: skip if new selection flow is active or a player already exists
-        if (FindObjectOfType<SelectionSpawnRequest>(true) != null)
+        if (FindFirstObjectByType<SelectionSpawnRequest>(FindObjectsInactive.Include) != null)
         {
             Debug.Log("[LoadCharacter] SelectionSpawnRequest detected. Skipping legacy spawn.");
             return;
         }
-        var existingPlayer = FindObjectOfType<PlayerRegistration>(true);
+        var existingPlayer = FindFirstObjectByType<PlayerRegistration>(FindObjectsInactive.Include);
         if (existingPlayer == null)
         {
-            var existingControl = FindObjectOfType<CharacterControl>(true);
+            var existingControl = FindFirstObjectByType<CharacterControl>(FindObjectsInactive.Include);
             if (existingControl != null) existingPlayer = existingControl.GetComponent<PlayerRegistration>();
         }
         if (existingPlayer != null)
@@ -54,7 +54,7 @@ public class LoadCharacter : MonoBehaviour
         }
 
         Vector3 pos = spawnPoint != null ? spawnPoint.position : Vector3.zero;
-        var spawner = spawnService != null ? spawnService : FindObjectOfType<SpawnService>(true);
+        var spawner = spawnService != null ? spawnService : FindFirstObjectByType<SpawnService>(FindObjectsInactive.Include);
         var clone = spawner != null
             ? spawner.Spawn(prefab, pos, Quaternion.identity)
             : Instantiate(prefab, pos, Quaternion.identity);

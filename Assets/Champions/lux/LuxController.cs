@@ -68,7 +68,7 @@ public class LuxController : MonoBehaviour
             if (c != null) cam = c.gameObject;
         }
         if (firePoint == null) firePoint = transform;
-        _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
     }
 
     void Start()
@@ -271,7 +271,7 @@ public class LuxController : MonoBehaviour
     {
         if (_cooldownUi == null)
         {
-            _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+            _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         }
         return _cooldownUi;
     }

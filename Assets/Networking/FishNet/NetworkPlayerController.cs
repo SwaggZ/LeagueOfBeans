@@ -113,7 +113,7 @@ public class NetworkPlayerController : NetworkBehaviour
     
     private void EnsureCooldownUIManager()
     {
-        var cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        var cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         if (cooldownUi == null)
         {
             Debug.Log("[NetworkPlayerController] Creating CooldownUIManager for local player");
@@ -134,14 +134,14 @@ public class NetworkPlayerController : NetworkBehaviour
         // Wait for SelectionCanvas to be disabled
         yield return new WaitForSeconds(0.1f);
         
-        var cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        var cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         if (cooldownUi != null)
         {
             Debug.Log("[NetworkPlayerController] Force-showing CooldownUIManager after spawn delay");
             cooldownUi.ForceShowHUD();
         }
         
-        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        var modifiersUi = FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         if (modifiersUi != null)
         {
             Debug.Log("[NetworkPlayerController] Force-showing ModifiersUIManager after spawn delay");
@@ -151,7 +151,7 @@ public class NetworkPlayerController : NetworkBehaviour
     
     private void EnsureModifiersUIManager()
     {
-        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        var modifiersUi = FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         if (modifiersUi == null)
         {
             Debug.Log("[NetworkPlayerController] Creating ModifiersUIManager for local player");
@@ -159,7 +159,7 @@ public class NetworkPlayerController : NetworkBehaviour
         }
         
         // Ensure icon library exists
-        var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        var iconLibrary = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
         if (iconLibrary == null)
         {
             Debug.LogWarning("[NetworkPlayerController] No ModifiersIconLibrary found. Creating empty one.");
@@ -169,7 +169,7 @@ public class NetworkPlayerController : NetworkBehaviour
     
     private void EnsureCrosshair()
     {
-        var crosshair = FindObjectOfType<ReactiveCrosshair>(true);
+        var crosshair = FindFirstObjectByType<ReactiveCrosshair>(FindObjectsInactive.Include);
         if (crosshair == null)
         {
             Debug.Log("[NetworkPlayerController] Creating ReactiveCrosshair for local player");
@@ -184,7 +184,7 @@ public class NetworkPlayerController : NetworkBehaviour
     
     private void HideCharacterSelectionUI()
     {
-        var characterSelection = FindObjectOfType<CharacterSelection>(true);
+        var characterSelection = FindFirstObjectByType<CharacterSelection>(FindObjectsInactive.Include);
         if (characterSelection != null)
         {
             Debug.Log("[NetworkPlayerController] Hiding character selection UI now that player has spawned");

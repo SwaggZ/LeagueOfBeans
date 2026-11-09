@@ -74,7 +74,7 @@ public static class SetupNetworkScenes
         SetSerializedField(broadcaster, "sessionContext", sessionContext);
 
         // Ensure EventSystem exists for UI input
-        var eventSystem = Object.FindObjectOfType<EventSystem>();
+        var eventSystem = Object.FindFirstObjectByType<EventSystem>();
         if (eventSystem == null)
         {
             var eventSystemObj = new GameObject("EventSystem");
@@ -83,13 +83,13 @@ public static class SetupNetworkScenes
         }
 
         var mainMenuPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MainMenuPrefabPath);
-        if (mainMenuPrefab != null && Object.FindObjectOfType<MainMenuController>(true) == null)
+        if (mainMenuPrefab != null && Object.FindFirstObjectByType<MainMenuController>(FindObjectsInactive.Include) == null)
         {
             PrefabUtility.InstantiatePrefab(mainMenuPrefab, scene);
         }
 
         var serverListPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ServerListItemPrefabPath);
-        var serverBrowser = Object.FindObjectOfType<ServerBrowserController>(true);
+        var serverBrowser = Object.FindFirstObjectByType<ServerBrowserController>(FindObjectsInactive.Include);
         if (serverBrowser != null)
         {
             SetSerializedField(serverBrowser, "networkController", controller);
@@ -112,7 +112,7 @@ public static class SetupNetworkScenes
 
         Scene scene = EditorSceneManager.OpenScene(SelectionScenePath, OpenSceneMode.Single);
 
-        var session = Object.FindObjectOfType<NetworkGameSession>(true);
+        var session = Object.FindFirstObjectByType<NetworkGameSession>(FindObjectsInactive.Include);
         if (session == null)
         {
             var go = new GameObject("NetworkGameSession");
@@ -122,7 +122,7 @@ public static class SetupNetworkScenes
         session.autoStartWhenAllSelected = true;
         session.requireReadyToStart = true;
 
-        var selection = Object.FindObjectOfType<CharacterSelection>(true);
+        var selection = Object.FindFirstObjectByType<CharacterSelection>(FindObjectsInactive.Include);
         if (selection != null)
         {
             session.characterPrefabs = new List<NetworkGameSession.CharacterPrefabEntry>();
@@ -140,7 +140,7 @@ public static class SetupNetworkScenes
         }
 
         // Ensure EventSystem exists for lobby UI input
-        var eventSystem = Object.FindObjectOfType<EventSystem>();
+        var eventSystem = Object.FindFirstObjectByType<EventSystem>();
         if (eventSystem == null)
         {
             var eventSystemObj = new GameObject("EventSystem");
@@ -149,7 +149,7 @@ public static class SetupNetworkScenes
         }
 
         var lobbyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(LobbyPanelPrefabPath);
-        if (lobbyPrefab != null && Object.FindObjectOfType<LobbyReadyPanel>(true) == null)
+        if (lobbyPrefab != null && Object.FindFirstObjectByType<LobbyReadyPanel>(FindObjectsInactive.Include) == null)
         {
             PrefabUtility.InstantiatePrefab(lobbyPrefab, scene);
         }

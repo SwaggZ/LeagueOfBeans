@@ -135,11 +135,11 @@ public class LuxWand : MonoBehaviour
         shield.Apply(_shieldAmount, _shieldDuration);
 
         // Show modifier icon
-        var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        var iconLibrary = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
         Sprite icon = iconLibrary != null ? iconLibrary.SHIELD : null;
         
         // Show on player HUD if it's the player
-        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        var modifiersUi = FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         if (target.CompareTag("Player") && modifiersUi != null)
         {
             modifiersUi.AddOrUpdate("LuxShield", icon, $"Shield: {_shieldAmount:F0}", _shieldDuration, 0);

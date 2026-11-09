@@ -45,7 +45,7 @@ public class UpdateSelectionData : EditorWindow
         }
         
         // Find CharacterSelection component
-        CharacterSelection charSelection = GameObject.FindObjectOfType<CharacterSelection>();
+        CharacterSelection charSelection = GameObject.FindFirstObjectByType<CharacterSelection>();
         
         if (charSelection == null)
         {

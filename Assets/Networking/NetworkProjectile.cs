@@ -39,7 +39,7 @@ public class NetworkProjectile : MonoBehaviour
     protected virtual void Awake()
     {
         _netTransform = GetComponent<NetworkTransformProxy>();
-        _damageService = FindObjectOfType<DamageService>(true);
+        _damageService = FindFirstObjectByType<DamageService>(FindObjectsInactive.Include);
     }
     
     /// <summary>

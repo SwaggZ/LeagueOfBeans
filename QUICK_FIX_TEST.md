@@ -1,7 +1,7 @@
 # Quick Fix Verification Guide
 
 ## What Was Fixed
-Players getting stuck in character selection screen when two players connect.
+Players got stuck on the character selection screen when two players connected. Client selections now reach the server through FishNet broadcasts. See `CHARACTER_SELECTION_FIX.md`.
 
 ## Quick Test (5 minutes)
 
@@ -9,14 +9,13 @@ Players getting stuck in character selection screen when two players connect.
 ```
 Unity Editor → Menu.unity → Tools → Setup Menu Networking (Menu Scene)
 ```
-**Expected:** Dialog says "NetworkManager, NetworkGameSession, and NetworkSessionBridge ready"
+**Expected:** Dialog says "NetworkGameSession, FishNetNetworkController ready"
 
 ### 2. Verify in Hierarchy
-Open Menu.unity, check hierarchy:
+Open Menu.unity and check the hierarchy:
 ```
 NetworkManager/
-  ├── NetworkGameSession
-  └── NetworkSessionBridge ← NEW! Should have NetworkObject component
+  └── NetworkGameSession
 ```
 
 ### 3. Test Locally (Single Editor)
@@ -29,7 +28,7 @@ NetworkManager/
 
 ### 4. Test Multiplayer (Built Builds)
 ```
-Build #1: Host Game → Select character → Click START (wait)
+Build #1: Host Game → Select character → Click START
 Build #2: Join Server → Select character → Click START
 → Both should spawn into gameplay ✅
 ```
@@ -37,64 +36,38 @@ Build #2: Join Server → Select character → Click START
 ## What to Look For
 
 ### ✅ Success Indicators
-Console logs:
+Client console:
 ```
-[NetworkSessionBridge] Found NetworkGameSession, bridge ready
-[NetworkSessionBridge] Network started. IsServer=True
-[Selection] Using NetworkSessionBridge for networked calls
-[NetworkSessionBridge] Client sending selection: <CharacterName>
-[NetworkSessionBridge] Server received selection from client X
-[NetworkGameSession] AllPlayersReady → TRUE
-[NetworkGameSession] Conditions met, starting gameplay!
+[Selection] We are CLIENT - using FishNet Broadcasts
+[Selection] Selection and ready submitted via broadcasts
+```
+Host/server console:
+```
+[NetworkGameSession] Broadcast handlers registered!
+[NetworkGameSession] Received SelectionBroadcast from client X: <CharacterName>
+[NetworkGameSession] Received ReadyBroadcast from client X: ready=True
+[NetworkGameSession] Client X is ready with selection '<CharacterName>'. Spawning immediately...
 ```
 
-### ❌ Failure Indicators  
+### ❌ Failure Indicators
 ```
-[Selection] NetworkSessionBridge not found (using direct calls)
-[NetworkSessionBridge] NetworkObject not spawned! Cannot send RPC
 [Selection] StartGame: Could not find NetworkGameSession
+[NetworkGameSession] SubmitSelectionServerRpc called on non-server!
 ```
-
-## Console Command for Debug
-When stuck, check console for:
-1. `[NetworkSessionBridge]` messages - Are RPCs being sent/received?
-2. `[NetworkGameSession] State:` - Are both clients marked ready?
-3. `AllPlayersReady` - Did the check pass?
+The second line means something called the server method directly on a remote client instead of sending a broadcast.
 
 ## If Still Broken
 
-### Check 1: Bridge Exists?
+### Check 1: Setup Integrity
 ```
 Tools → Check Network Setup Integrity
-Look for: "✓ NetworkSessionBridge found"
 ```
 
-### Check 2: NetworkObject Spawned?
-When playing, check console for:
-```
-[NetworkSessionBridge] NetworkObject ID: X, IsSpawned: True
-```
-If `IsSpawned: False` → Bridge not network-ready
+### Check 2: Server Registered Handlers?
+The host console must show `Broadcast handlers registered!` after hosting. If it doesn't, `NetworkGameSession` isn't under the persisted NetworkManager.
 
-### Check 3: Server Started?
-Check console for:
-```
-[NetworkManager] Server started
-[NetworkSessionBridge] Network started. IsServer=True
-```
-
-### Common Issues
-
-**Issue:** "NetworkSessionBridge not found"
-- **Fix:** Run setup tool, verify bridge GameObject exists
-
-**Issue:** "NetworkObject not spawned"
-- **Fix:** Ensure NetworkManager starts server before clients send selections
-- **Advanced Fix:** May need to configure bridge as Global network object
-
-**Issue:** "Selection sent but server never receives"
-- **Fix:** Verify both client and server show NetworkSessionBridge logs
-- **Check:** NetworkManager is same instance on both (persisted from Menu)
+### Check 3: Same NetworkManager
+The NetworkManager must be the one carried over from Menu.unity via DontDestroyOnLoad, not a second one placed in SampleScene.
 
 ## Need More Help?
 See full documentation: `CHARACTER_SELECTION_FIX.md`

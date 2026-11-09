@@ -52,8 +52,8 @@ public class OrbMovement : MonoBehaviour
             Debug.LogError("OrbMovement.cs: Orb has no Collider!");
 
         _netTransform = GetComponent<NetworkTransformProxy>();
-        _damageService = FindObjectOfType<DamageService>(true);
-        _spawnService = FindObjectOfType<SpawnService>(true);
+        _damageService = FindFirstObjectByType<DamageService>(FindObjectsInactive.Include);
+        _spawnService = FindFirstObjectByType<SpawnService>(FindObjectsInactive.Include);
     }
 
     void Start()
@@ -69,7 +69,7 @@ public class OrbMovement : MonoBehaviour
             }
             else
             {
-                var reg = FindObjectOfType<PlayerRegistration>(true);
+                var reg = FindFirstObjectByType<PlayerRegistration>(FindObjectsInactive.Include);
                 if (reg != null) player = reg.transform;
                 if (player == null)
                 {

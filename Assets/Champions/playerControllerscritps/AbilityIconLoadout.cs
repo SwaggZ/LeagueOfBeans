@@ -23,7 +23,7 @@ public class AbilityIconLoadout : MonoBehaviour
 
     public void ApplyToHUD()
     {
-        var cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        var cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         if (cooldownUi == null) return;
 
         var list = new List<CooldownUIManager.AbilityEntry>

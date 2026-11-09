@@ -23,7 +23,7 @@ public class AddNetworkGameSession
         Debug.Log($"[AddNetworkGameSession] Adding to scene: {activeScene.name}");
 
         // Try to find NetworkManager first
-        NetworkManager nm = Object.FindObjectOfType<NetworkManager>();
+        NetworkManager nm = Object.FindFirstObjectByType<NetworkManager>();
         if (nm == null)
         {
             EditorUtility.DisplayDialog("Error", "NetworkManager not found in scene! Make sure it exists before adding NetworkGameSession.", "OK");

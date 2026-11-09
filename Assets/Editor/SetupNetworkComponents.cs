@@ -23,7 +23,7 @@ public class SetupNetworkComponents
         Debug.Log($"[SetupNetworkComponents] Setting up in scene: {activeScene.name}");
 
         // Check if NetworkManager already exists
-        NetworkManager nm = Object.FindObjectOfType<NetworkManager>();
+        NetworkManager nm = Object.FindFirstObjectByType<NetworkManager>();
         if (nm == null)
         {
             // Create NetworkManager GameObject
