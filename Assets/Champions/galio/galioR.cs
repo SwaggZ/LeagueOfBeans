@@ -33,7 +33,7 @@ public class galioR : MonoBehaviour, IIncomingDamageModifier
     void Update()
     {
         // Check for ability activation on 'E'
-        if (Input.GetKeyDown(KeyCode.E) && !isOnCooldown)
+        if (Input.GetKeyDown(KeyCode.E) && !isOnCooldown && !isUltActive)
         {
             StartCoroutine(CastAbility());
         }

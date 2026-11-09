@@ -13,10 +13,14 @@ public enum AbilityKey
     Ctrl
 }
 
-// Drop this anywhere in the scene (or it will auto-create itself on first access).
-// Shows 5 ability slots (LMB, RMB, Q, E, CTRL) with icons, cooldown radial and timer text.
-// Use: CooldownUIManager.Instance.SetAbilityIcon(AbilityKey.One, mySprite);
-//      CooldownUIManager.Instance.StartCooldown(AbilityKey.One, durationSeconds);
+// Ability bar HUD: 5 slots (LMB, RMB, Q, E, CTRL) with icon, key badge, radial cooldown and timer.
+//
+// There is exactly one global HUD manager (CooldownUIManager.Instance), living on its own root object.
+// A CooldownUIManager placed on a champion prefab is a *loadout carrier*: it only stores that champion's
+// icons (defaultAbilities / defaultDash) and forwards any API call to the global HUD. The local player's
+// loadout is applied on spawn via CooldownUIManager.ApplyLoadoutFrom(character).
+//
+// Use: CooldownUIManager.Instance.StartCooldown(AbilityKey.One, durationSeconds);
 [DisallowMultipleComponent]
 public class CooldownUIManager : MonoBehaviour
 {
@@ -25,10 +29,11 @@ public class CooldownUIManager : MonoBehaviour
     [Header("Layout")]
     public Vector2 anchorPos = new Vector2(0.5f, 0f); // bottom-center
     public Vector2 anchoredOffset = new Vector2(0f, 24f);
-    public float slotSize = 52f;
+    public float slotSize = 88f;
     public float spacing = 6f;
 
-    [Header("Appearance")]
+    // Legacy appearance fields: kept so existing prefab data still deserializes. The HUD look is defined below.
+    [Header("Appearance (legacy, unused)")]
     public Color slotBorderColor = new Color(1f, 1f, 1f, 0.9f);
     public Color missingIconColor = new Color(0.7f, 0.7f, 0.7f, 1f);
     public string missingIconText = "NO IMG";
@@ -36,34 +41,13 @@ public class CooldownUIManager : MonoBehaviour
     public Color keyLabelColor = new Color(0.9f, 0.9f, 0.9f, 0.95f);
     public Color timerTextColor = new Color(1f, 1f, 1f, 0.95f);
 
-    [Header("Default Loadout (Optional)")]
-    [Tooltip("If provided, these icons/presence will be applied on Awake. You can also call ApplyLoadout at runtime per character.")]
+    [Header("Default Loadout (champion prefabs)")]
+    [Tooltip("Icons/presence for this champion. Applied to the global HUD when the local player spawns as this champion.")]
     public List<AbilityEntry> defaultAbilities = new List<AbilityEntry>();
     public AbilityEntry defaultDash; // Applied to CTRL (CTRL is Dash)
 
-    private Canvas _canvas;
-    private RectTransform _rootRT;
-    private RectTransform _barRT;
-
-    private class Slot
-    {
-        public RectTransform root;
-        public Image border;
-        public Image icon;
-        public Text keyLabel;
-        public Image cooldownMask;
-        public Text timerLabel;
-        public bool hasIcon;
-        public float cooldownEnd;
-        public float cooldownDuration;
-    }
-
-    private Dictionary<AbilityKey, Slot> _slots = new Dictionary<AbilityKey, Slot>();
-    private static Sprite _uiSprite;
-    private static Font _defaultFont;
-
     [Header("Advanced")]
-    [Tooltip("If true, the manager will NOT relocate to a dedicated root host even when attached to a character or child object. Not recommended unless you know you want per-character HUD lifetimes.")]
+    [Tooltip("If true, a manager on a non-root, non-character object still becomes the global HUD. Ignored on champions (always a loadout carrier).")]
     public bool forceStayOnThisObject = false;
 
     [Serializable]
@@ -74,41 +58,72 @@ public class CooldownUIManager : MonoBehaviour
         public bool present = true; // set false if character doesn't have this ability
     }
 
+    // ---- Look ----
+    static readonly Color FrameReady    = UIStyle.Gold;
+    static readonly Color FrameCooldown = UIStyle.GoldDim;
+    static readonly Color SlotBack      = new Color(0.04f, 0.07f, 0.09f, 0.92f);
+    static readonly Color PanelBack     = new Color(0.02f, 0.04f, 0.06f, 0.78f);
+    static readonly Color PanelEdge     = new Color(0.78f, 0.67f, 0.43f, 0.55f);
+    static readonly Color SweepColor    = new Color(0f, 0.02f, 0.05f, 0.72f);
+    static readonly Color BadgeBack     = new Color(0.03f, 0.05f, 0.07f, 0.96f);
+    static readonly Color BadgeText     = new Color(0.94f, 0.90f, 0.80f, 1f);
+    static readonly Color EmptyIcon     = new Color(0.16f, 0.20f, 0.24f, 1f);
+    static readonly Color FlashColor    = new Color(1f, 0.95f, 0.75f, 1f);
+    const float FlashTime = 0.35f;
+
+    static readonly AbilityKey[] Order = { AbilityKey.LeftClick, AbilityKey.RightClick, AbilityKey.One, AbilityKey.Two, AbilityKey.Ctrl };
+
+    private bool _isCarrier;
+    private RectTransform _rootRT;
+    private RectTransform _barRT;
+    private Image _panel;
+
+    private class Slot
+    {
+        public AbilityKey key;
+        public string label;
+        public RectTransform root;
+        public Image frame;
+        public Image icon;
+        public Image sweep;
+        public Image flash;
+        public Text timer;
+        public Text emptyLabel;
+        public Image badge;
+        public Image badgeEdge;
+        public Text badgeText;
+        public bool present;
+        public float cooldownEnd;
+        public float cooldownDuration;
+        public bool wasCooling;
+        public float flashUntil;
+    }
+
+    private readonly Dictionary<AbilityKey, Slot> _slots = new Dictionary<AbilityKey, Slot>();
+    private static Sprite _roundSprite;
+    private static Sprite _whiteSprite;
+    private static Font _font;
+
+    // ------------------------------------------------------------------ lifecycle
+
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            // If another manager already exists, remove only this component.
-            // Never destroy the entire GameObject (could be a character preview in selection).
-            Debug.Log("[CooldownUIManager] Duplicate detected on '" + gameObject.name + "'. Removing this component and keeping existing global manager.");
-            Destroy(this);
-            return;
-        }
-        // If this component was added to a character or any non-root object in a scene (like Character Select),
-        // do NOT mark that object as DontDestroyOnLoad. Instead, spawn a dedicated root host for the manager.
         bool attachedToCharacter = GetComponent<CharacterControl>() != null || GetComponentInParent<CharacterControl>() != null;
         bool isRoot = transform.parent == null;
 
-        if (!forceStayOnThisObject && (!isRoot || attachedToCharacter))
+        // A HUD on a champion would die with that champion (and remote champions would hijack it), so a
+        // manager on a character is always a loadout carrier. forceStayOnThisObject only applies to
+        // non-character child objects.
+        if (attachedToCharacter || (!isRoot && !forceStayOnThisObject))
         {
-            Debug.Log("[CooldownUIManager] Relocating from '" + gameObject.name + "' to a dedicated root host GameObject.");
-            GameObject host = new GameObject("CooldownUIManager");
-            var mgr = host.AddComponent<CooldownUIManager>();
-            // Copy a few configurable fields if desired
-            mgr.anchorPos = this.anchorPos;
-            mgr.anchoredOffset = this.anchoredOffset;
-            mgr.slotSize = this.slotSize;
-            mgr.spacing = this.spacing;
-            mgr.slotBorderColor = this.slotBorderColor;
-            mgr.missingIconColor = this.missingIconColor;
-            mgr.missingIconText = this.missingIconText;
-            mgr.cooldownMaskColor = this.cooldownMaskColor;
-            mgr.keyLabelColor = this.keyLabelColor;
-            mgr.timerTextColor = this.timerTextColor;
-            mgr.defaultAbilities = new List<AbilityEntry>(this.defaultAbilities);
-            mgr.defaultDash = this.defaultDash;
+            // Loadout carrier: never builds UI, forwards API calls to the global HUD.
+            _isCarrier = true;
+            EnsureInstance();
+            return;
+        }
 
-            // Disable/destroy this component so it doesn't try to initialize on the character
+        if (Instance != null && Instance != this)
+        {
             Destroy(this);
             return;
         }
@@ -119,430 +134,413 @@ public class CooldownUIManager : MonoBehaviour
         EnsureResources();
         BuildUI();
 
-        // Hide in Character Selection scene(s)
         SceneManager.sceneLoaded += OnSceneLoaded;
         UpdateVisibilityForScene();
 
-        // Apply default loadout if configured
         if (defaultAbilities != null && defaultAbilities.Count > 0)
-        {
             ApplyLoadout(defaultAbilities, defaultDash);
-        }
     }
 
     private void OnDestroy()
     {
+        if (_isCarrier) return;
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        if (Instance == this) Instance = null;
     }
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    /// <summary>Returns the global HUD manager, creating it if needed.</summary>
+    public static CooldownUIManager EnsureInstance()
     {
-        UpdateVisibilityForScene();
+        if (Instance == null)
+        {
+            var host = new GameObject("CooldownUIManager");
+            host.AddComponent<CooldownUIManager>(); // root object -> becomes Instance in Awake
+        }
+        return Instance;
     }
+
+    /// <summary>
+    /// Applies the ability loadout of a spawned champion to the HUD and clears all running timers.
+    /// Prefers an AbilityIconLoadout component; falls back to the champion's CooldownUIManager carrier.
+    /// </summary>
+    public static void ApplyLoadoutFrom(GameObject character)
+    {
+        if (character == null) return;
+        var hud = EnsureInstance();
+        if (hud == null) return;
+
+        var iconLoadout = character.GetComponentInChildren<AbilityIconLoadout>(true);
+        if (iconLoadout != null)
+        {
+            iconLoadout.ApplyToHUD();
+            return;
+        }
+
+        foreach (var carrier in character.GetComponentsInChildren<CooldownUIManager>(true))
+        {
+            if (carrier == hud) continue;
+            hud.ApplyLoadout(carrier.defaultAbilities, carrier.defaultDash);
+            return;
+        }
+
+        hud.ResetAllCooldowns();
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => UpdateVisibilityForScene();
 
     private void UpdateVisibilityForScene()
     {
-        // Check if SelectionCanvas is actually active, not just if CharacterSelection exists
         GameObject selectionCanvas = GameObject.Find("SelectionCanvas");
         bool inSelection = (selectionCanvas != null && selectionCanvas.activeInHierarchy)
                            || SceneManager.GetActiveScene().name.ToLower().Contains("select");
-        if (_rootRT != null)
-        {
-            _rootRT.gameObject.SetActive(!inSelection);
-        }
+        if (_rootRT != null) _rootRT.gameObject.SetActive(!inSelection);
 
-        // Ensure the cursor is free/visible in selection scenes
         if (inSelection)
         {
-            try
-            {
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None;
-            }
-            catch { }
+            try { Cursor.visible = true; Cursor.lockState = CursorLockMode.None; } catch { }
         }
     }
 
-    private void EnsureResources()
-    {
-        if (_uiSprite == null)
-        {
-            // Create a simple 1x1 white sprite to avoid relying on built-in UI resources
-            var tex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-            tex.SetPixel(0, 0, Color.white);
-            tex.Apply();
-            _uiSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 100f);
-            _uiSprite.name = "CooldownUI_WhiteSprite";
-        }
+    // ------------------------------------------------------------------ resources
 
-        if (_defaultFont == null)
+    private static void EnsureResources()
+    {
+        _whiteSprite = UIStyle.White;
+        _roundSprite = UIStyle.Rounded;
+
+        if (_font == null)
         {
-            _defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (_defaultFont == null)
+            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (_font == null)
             {
-                try
-                {
-                    _defaultFont = Font.CreateDynamicFontFromOSFont(new[] { "Arial", "Helvetica", "Liberation Sans" }, 14);
-                }
-                catch { }
+                try { _font = Font.CreateDynamicFontFromOSFont(new[] { "Arial", "Helvetica", "Liberation Sans" }, 14); } catch { }
             }
         }
+    }
+
+    // ------------------------------------------------------------------ build
+
+    private static RectTransform NewRect(string name, Transform parent)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        var rt = go.GetComponent<RectTransform>();
+        rt.SetParent(parent, false);
+        return rt;
+    }
+
+    private static void Stretch(RectTransform rt, float inset = 0f)
+    {
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = new Vector2(inset, inset);
+        rt.offsetMax = new Vector2(-inset, -inset);
+    }
+
+    private static Image AddImage(RectTransform rt, Sprite sprite, Color color, bool sliced = true)
+    {
+        var img = rt.gameObject.AddComponent<Image>();
+        img.sprite = sprite;
+        img.type = sliced ? Image.Type.Sliced : Image.Type.Simple;
+        img.color = color;
+        img.raycastTarget = false;
+        return img;
+    }
+
+    private static Text AddText(RectTransform rt, int size, Color color, FontStyle style, TextAnchor anchor)
+    {
+        var t = rt.gameObject.AddComponent<Text>();
+        t.font = _font;
+        t.fontSize = size;
+        t.fontStyle = style;
+        t.color = color;
+        t.alignment = anchor;
+        t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
+        t.raycastTarget = false;
+        var outline = rt.gameObject.AddComponent<Outline>();
+        outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+        outline.effectDistance = new Vector2(1.5f, -1.5f);
+        return t;
     }
 
     private void BuildUI()
     {
-        // Canvas root
-        GameObject canvasGO = new GameObject("HUD_Cooldowns", typeof(RectTransform));
-        _rootRT = canvasGO.GetComponent<RectTransform>();
-        // Parent the UI under this manager so lifetime follows the manager
-        _rootRT.SetParent(this.transform, false);
-        _rootRT.anchorMin = new Vector2(0f, 0f);
-        _rootRT.anchorMax = new Vector2(1f, 1f);
-        _rootRT.offsetMin = Vector2.zero;
-        _rootRT.offsetMax = Vector2.zero;
-
-        _canvas = canvasGO.AddComponent<Canvas>();
-        _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        var scaler = canvasGO.AddComponent<CanvasScaler>();
+        _rootRT = NewRect("HUD_Cooldowns", transform);
+        Stretch(_rootRT);
+        var canvas = _rootRT.gameObject.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 10;
+        var scaler = _rootRT.gameObject.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
         scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 1f; // prefer matching height to keep bottom bar consistent
-        canvasGO.AddComponent<GraphicRaycaster>();
+        scaler.matchWidthOrHeight = 1f;
 
-        // No need for DontDestroyOnLoad on the canvas since it's a child of this manager
-
-        // Bar panel
-        GameObject barGO = new GameObject("CooldownBar", typeof(RectTransform));
-        _barRT = barGO.GetComponent<RectTransform>();
-        _barRT.SetParent(_rootRT, false);
-        int slotCount = 5; // LMB, RMB, Q, E, CTRL (CTRL is Dash)
-        _barRT.sizeDelta = new Vector2((slotSize * slotCount) + (spacing * (slotCount - 1)), slotSize);
-        _barRT.anchorMin = anchorPos;
-        _barRT.anchorMax = anchorPos;
+        // Backing panel (resized to fit the visible slots in LayoutBar)
+        _barRT = NewRect("AbilityBar", _rootRT);
+        _barRT.anchorMin = _barRT.anchorMax = anchorPos;
         _barRT.pivot = new Vector2(0.5f, 0f);
         _barRT.anchoredPosition = anchoredOffset;
 
-        // Build fixed order of slots
-        CreateSlot(AbilityKey.LeftClick, "LMB", 0);
-        CreateSlot(AbilityKey.RightClick, "RMB", 1);
-        CreateSlot(AbilityKey.One, "Q", 2);
-        CreateSlot(AbilityKey.Two, "E", 3);
-        CreateSlot(AbilityKey.Ctrl, "CTRL", 4);
+        var edge = NewRect("PanelEdge", _barRT);
+        Stretch(edge, -2f);
+        AddImage(edge, _roundSprite, PanelEdge);
+        var panelRT = NewRect("Panel", _barRT);
+        Stretch(panelRT);
+        _panel = AddImage(panelRT, _roundSprite, PanelBack);
+
+        foreach (var key in Order) CreateSlot(key);
+        LayoutBar();
     }
 
-    private void CreateSlot(AbilityKey key, string label, int index)
+    private static string LabelFor(AbilityKey key) => UIStyle.KeyLabel(key);
+
+    private float SizeFor(AbilityKey key) => key == AbilityKey.Ctrl ? Mathf.Round(Slot0 * 0.8f) : Slot0;
+    private float Slot0 => Mathf.Max(slotSize, 88f);
+
+    private void CreateSlot(AbilityKey key)
     {
-        GameObject slotGO = new GameObject($"Slot_{key}", typeof(RectTransform));
-        RectTransform slotRT = slotGO.GetComponent<RectTransform>();
-        slotRT.SetParent(_barRT, false);
-        slotRT.sizeDelta = new Vector2(slotSize, slotSize);
-        slotRT.anchorMin = new Vector2(0.5f, 0.5f);
-        slotRT.anchorMax = new Vector2(0.5f, 0.5f);
-        slotRT.pivot = new Vector2(0.5f, 0.5f);
-        float startX = -((_barRT.sizeDelta.x - slotSize) * 0.5f);
-        float x = startX + index * (slotSize + spacing) + slotSize * 0.5f;
-        slotRT.anchoredPosition = new Vector2(x, slotSize * 0.5f);
+        float size = SizeFor(key);
+        var s = new Slot { key = key, label = LabelFor(key) };
 
-        // Border/back
-        GameObject borderGO = new GameObject("Border", typeof(RectTransform));
-        RectTransform borderRT = borderGO.GetComponent<RectTransform>();
-        borderRT.SetParent(slotRT, false);
-        borderRT.anchorMin = Vector2.zero;
-        borderRT.anchorMax = Vector2.one;
-        borderRT.offsetMin = Vector2.zero;
-        borderRT.offsetMax = Vector2.zero;
-        Image borderImg = borderGO.AddComponent<Image>();
-        borderImg.sprite = _uiSprite;
-        borderImg.type = Image.Type.Sliced;
-        borderImg.color = slotBorderColor;
+        s.root = NewRect($"Slot_{key}", _barRT);
+        s.root.anchorMin = s.root.anchorMax = new Vector2(0f, 0f);
+        s.root.pivot = new Vector2(0.5f, 0f);
+        s.root.sizeDelta = new Vector2(size, size);
 
-        // Icon
-        GameObject iconGO = new GameObject("Icon", typeof(RectTransform));
-        RectTransform iconRT = iconGO.GetComponent<RectTransform>();
-        iconRT.SetParent(slotRT, false);
-        iconRT.anchorMin = new Vector2(0.1f, 0.1f);
-        iconRT.anchorMax = new Vector2(0.9f, 0.9f);
-        iconRT.offsetMin = Vector2.zero;
-        iconRT.offsetMax = Vector2.zero;
-        Image iconImg = iconGO.AddComponent<Image>();
-        iconImg.sprite = _uiSprite; // placeholder default
-        iconImg.color = missingIconColor;
-        iconImg.type = Image.Type.Sliced;
+        var frameRT = NewRect("Frame", s.root);
+        Stretch(frameRT);
+        s.frame = AddImage(frameRT, _roundSprite, FrameReady);
 
-        // Key label (bottom-left)
-        GameObject keyGO = new GameObject("Key", typeof(RectTransform));
-        RectTransform keyRT = keyGO.GetComponent<RectTransform>();
-        keyRT.SetParent(slotRT, false);
-        keyRT.anchorMin = new Vector2(0f, 0f);
-        keyRT.anchorMax = new Vector2(0f, 0f);
-        keyRT.pivot = new Vector2(0f, 0f);
-        keyRT.anchoredPosition = new Vector2(4f, 4f);
-        keyRT.sizeDelta = new Vector2(slotSize * 0.5f, slotSize * 0.25f);
-        Text keyText = keyGO.AddComponent<Text>();
-        keyText.font = _defaultFont;
-        keyText.fontSize = Mathf.RoundToInt(slotSize * 0.25f);
-        keyText.alignment = TextAnchor.LowerLeft;
-        keyText.color = keyLabelColor;
-        keyText.text = label;
+        var backRT = NewRect("Back", s.root);
+        Stretch(backRT, 3f);
+        AddImage(backRT, _roundSprite, SlotBack);
 
-        // Cooldown mask (radial fill over icon)
-        GameObject maskGO = new GameObject("CooldownMask", typeof(RectTransform));
-        RectTransform maskRT = maskGO.GetComponent<RectTransform>();
-        maskRT.SetParent(iconRT, false);
-        maskRT.anchorMin = Vector2.zero;
-        maskRT.anchorMax = Vector2.one;
-        maskRT.offsetMin = Vector2.zero;
-        maskRT.offsetMax = Vector2.zero;
-        Image maskImg = maskGO.AddComponent<Image>();
-        maskImg.sprite = _uiSprite;
-        maskImg.type = Image.Type.Filled;
-        maskImg.fillMethod = Image.FillMethod.Radial360;
-        maskImg.fillClockwise = false;
-        maskImg.fillOrigin = (int)Image.Origin360.Top;
-        maskImg.color = cooldownMaskColor;
-        maskImg.fillAmount = 0f; // hidden until on cooldown
+        var iconRT = NewRect("Icon", s.root);
+        Stretch(iconRT, 5f);
+        s.icon = AddImage(iconRT, _whiteSprite, EmptyIcon, sliced: false);
+        s.icon.preserveAspect = true;
 
-        // Timer text (centered)
-        GameObject timerGO = new GameObject("Timer", typeof(RectTransform));
-        RectTransform timerRT = timerGO.GetComponent<RectTransform>();
-        timerRT.SetParent(slotRT, false);
-        timerRT.anchorMin = Vector2.zero;
-        timerRT.anchorMax = Vector2.one;
-        timerRT.offsetMin = Vector2.zero;
-        timerRT.offsetMax = Vector2.zero;
-        Text timerText = timerGO.AddComponent<Text>();
-        timerText.font = _defaultFont;
-        timerText.alignment = TextAnchor.MiddleCenter;
-        timerText.fontSize = Mathf.RoundToInt(slotSize * 0.4f);
-        timerText.color = timerTextColor;
-        timerText.text = string.Empty;
+        var emptyRT = NewRect("EmptyLabel", s.root);
+        Stretch(emptyRT);
+        s.emptyLabel = AddText(emptyRT, Mathf.RoundToInt(size * 0.32f), new Color(1f, 1f, 1f, 0.35f), FontStyle.Bold, TextAnchor.MiddleCenter);
+        s.emptyLabel.text = s.label;
 
-        _slots[key] = new Slot
-        {
-            root = slotRT,
-            border = borderImg,
-            icon = iconImg,
-            keyLabel = keyText,
-            cooldownMask = maskImg,
-            timerLabel = timerText,
-            hasIcon = false,
-            cooldownEnd = 0f,
-            cooldownDuration = 0f
-        };
+        var sweepRT = NewRect("Sweep", s.root);
+        Stretch(sweepRT, 5f);
+        s.sweep = AddImage(sweepRT, _whiteSprite, SweepColor, sliced: false);
+        s.sweep.type = Image.Type.Filled;
+        s.sweep.fillMethod = Image.FillMethod.Radial360;
+        s.sweep.fillOrigin = (int)Image.Origin360.Top;
+        s.sweep.fillClockwise = false;
+        s.sweep.fillAmount = 0f;
 
-        // Missing image text overlay if no icon assigned yet
+        var flashRT = NewRect("Flash", s.root);
+        Stretch(flashRT);
+        s.flash = AddImage(flashRT, _roundSprite, new Color(FlashColor.r, FlashColor.g, FlashColor.b, 0f));
+
+        var timerRT = NewRect("Timer", s.root);
+        Stretch(timerRT);
+        s.timer = AddText(timerRT, Mathf.RoundToInt(size * 0.42f), Color.white, FontStyle.Bold, TextAnchor.MiddleCenter);
+        s.timer.text = string.Empty;
+
+        // Key badge, centered on the bottom edge (League-style)
+        float badgeH = Mathf.Round(size * 0.30f);
+        float badgeW = Mathf.Max(badgeH * 1.3f, s.label.Length * badgeH * 0.55f + 10f);
+        var badgeEdge = NewRect("KeyBadgeEdge", s.root);
+        badgeEdge.anchorMin = badgeEdge.anchorMax = new Vector2(0.5f, 0f);
+        badgeEdge.pivot = new Vector2(0.5f, 0.5f);
+        badgeEdge.sizeDelta = new Vector2(badgeW + 3f, badgeH + 3f);
+        badgeEdge.anchoredPosition = new Vector2(0f, 1f);
+        var edgeImg = AddImage(badgeEdge, _roundSprite, FrameReady);
+        var badgeRT = NewRect("KeyBadge", badgeEdge);
+        Stretch(badgeRT, 1.5f);
+        s.badge = AddImage(badgeRT, _roundSprite, BadgeBack);
+        var badgeTextRT = NewRect("Key", badgeRT);
+        Stretch(badgeTextRT);
+        s.badgeText = AddText(badgeTextRT, Mathf.RoundToInt(badgeH * 0.62f), BadgeText, FontStyle.Bold, TextAnchor.MiddleCenter);
+        s.badgeText.text = s.label;
+        s.badgeEdge = edgeImg; // follows the frame colour
+
+        _slots[key] = s;
         SetAbilityIcon(key, null);
-        // Default present state: true for LMB/RMB/1/2, false for optional CTRL (Dash)
-        bool defaultPresent = (key == AbilityKey.LeftClick || key == AbilityKey.RightClick || key == AbilityKey.One || key == AbilityKey.Two);
-        if (key == AbilityKey.Ctrl)
+        SetSlotPresent(key, key != AbilityKey.Ctrl);
+    }
+
+    private void LayoutBar()
+    {
+        if (_barRT == null) return;
+        float gap = Mathf.Max(spacing, 12f);
+        const float padX = 16f, padTop = 12f, padBottom = 22f; // bottom room for key badges
+
+        float width = 0f, height = 0f;
+        int visible = 0;
+        foreach (var key in Order)
         {
-            SetSlotPresent(key, false);
+            if (!_slots.TryGetValue(key, out var s) || !s.present) continue;
+            float size = SizeFor(key);
+            width += (visible > 0 ? gap : 0f) + size;
+            height = Mathf.Max(height, size);
+            visible++;
         }
-        else
+
+        _barRT.gameObject.SetActive(visible > 0);
+        _barRT.sizeDelta = new Vector2(width + padX * 2f, height + padTop + padBottom);
+
+        float x = padX;
+        foreach (var key in Order)
         {
-            SetSlotPresent(key, defaultPresent);
+            if (!_slots.TryGetValue(key, out var s) || !s.present) continue;
+            float size = SizeFor(key);
+            s.root.anchoredPosition = new Vector2(x + size * 0.5f, padBottom + (height - size)); // align tops
+            x += size + gap;
         }
     }
+
+    // ------------------------------------------------------------------ update
 
     private void Update()
     {
-        float now = Time.unscaledTime; // UI should respect unscaled time
-        foreach (var kv in _slots)
+        if (_isCarrier) return;
+        float now = Time.unscaledTime;
+        foreach (var s in _slots.Values)
         {
-            var s = kv.Value;
-            if (s.cooldownEnd > now && s.cooldownDuration > 0f)
+            bool cooling = s.cooldownEnd > now && s.cooldownDuration > 0f;
+            if (cooling)
             {
-                float remaining = Mathf.Max(0f, s.cooldownEnd - now);
-                float pct = Mathf.Clamp01(remaining / s.cooldownDuration);
-                s.cooldownMask.fillAmount = pct;
-                s.timerLabel.text = remaining >= 1f ? Mathf.CeilToInt(remaining).ToString() : remaining.ToString("0.0");
+                float remaining = s.cooldownEnd - now;
+                s.sweep.fillAmount = Mathf.Clamp01(remaining / s.cooldownDuration);
+                s.timer.text = remaining >= 1f ? Mathf.CeilToInt(remaining).ToString() : remaining.ToString("0.0");
             }
             else
             {
-                s.cooldownMask.fillAmount = 0f;
-                s.timerLabel.text = string.Empty;
+                s.sweep.fillAmount = 0f;
+                s.timer.text = string.Empty;
+                if (s.wasCooling && s.cooldownDuration >= 0.75f) s.flashUntil = now + FlashTime; // "ready" ping
             }
+            s.wasCooling = cooling;
+
+            Color frame = cooling ? FrameCooldown : FrameReady;
+            s.frame.color = frame;
+            s.badgeEdge.color = frame;
+            s.icon.color = s.icon.sprite == _whiteSprite ? EmptyIcon : (cooling ? new Color(0.55f, 0.55f, 0.6f, 1f) : Color.white);
+
+            float f = s.flashUntil > now ? (s.flashUntil - now) / FlashTime : 0f;
+            s.flash.color = new Color(FlashColor.r, FlashColor.g, FlashColor.b, f * 0.65f);
+            s.root.localScale = Vector3.one * (1f + 0.08f * f);
         }
     }
 
-    // Public API
+    // ------------------------------------------------------------------ public API
+
     public void SetAbilityIcon(AbilityKey key, Sprite icon)
     {
+        if (_isCarrier) { if (Instance != null) Instance.SetAbilityIcon(key, icon); return; }
         if (!_slots.TryGetValue(key, out var s)) return;
-
-        if (icon == null)
-        {
-            s.icon.sprite = _uiSprite;
-            s.icon.color = missingIconColor;
-            // Add/ensure a small overlay text that says NO IMG
-            EnsureMissingText(s);
-            s.hasIcon = false;
-        }
-        else
-        {
-            s.icon.sprite = icon;
-            s.icon.color = Color.white;
-            RemoveMissingText(s);
-            s.hasIcon = true;
-        }
+        s.icon.sprite = icon != null ? icon : _whiteSprite;
+        s.icon.color = icon != null ? Color.white : EmptyIcon;
+        s.emptyLabel.gameObject.SetActive(icon == null);
     }
 
     public void SetSlotPresent(AbilityKey key, bool present)
     {
+        if (_isCarrier) { if (Instance != null) Instance.SetSlotPresent(key, present); return; }
         if (!_slots.TryGetValue(key, out var s)) return;
+        if (s.present == present && s.root.gameObject.activeSelf == present) return;
+        s.present = present;
         s.root.gameObject.SetActive(present);
+        LayoutBar();
     }
 
     public void StartCooldown(AbilityKey key, float durationSeconds)
     {
+        if (_isCarrier) { if (Instance != null) Instance.StartCooldown(key, durationSeconds); return; }
         if (!_slots.TryGetValue(key, out var s)) return;
-        // If this is CTRL (Dash), ensure the slot is visible when starting a cooldown
-        if (key == AbilityKey.Ctrl)
-        {
-            SetSlotPresent(AbilityKey.Ctrl, true);
-        }
+        if (key == AbilityKey.Ctrl) SetSlotPresent(AbilityKey.Ctrl, true); // dash slot appears on first use
         durationSeconds = Mathf.Max(0.01f, durationSeconds);
         s.cooldownDuration = durationSeconds;
         s.cooldownEnd = Time.unscaledTime + durationSeconds;
-        s.cooldownMask.fillAmount = 1f; // start full
+        s.sweep.fillAmount = 1f;
+        s.flashUntil = 0f;
     }
 
     public void StartCooldown(string keyName, float durationSeconds)
     {
-        // Accept synonyms: "Dash" maps to CTRL
-        if (string.Equals(keyName, "dash", StringComparison.OrdinalIgnoreCase))
-        {
-            StartCooldown(AbilityKey.Ctrl, durationSeconds);
-            return;
-        }
-        // Accept common key labels for Q/E mapping to internal One/Two
-        if (string.Equals(keyName, "q", StringComparison.OrdinalIgnoreCase))
-        {
-            StartCooldown(AbilityKey.One, durationSeconds);
-            return;
-        }
-        if (string.Equals(keyName, "e", StringComparison.OrdinalIgnoreCase))
-        {
-            StartCooldown(AbilityKey.Two, durationSeconds);
-            return;
-        }
-        if (string.Equals(keyName, "1", StringComparison.OrdinalIgnoreCase))
-        {
-            StartCooldown(AbilityKey.One, durationSeconds);
-            return;
-        }
-        if (string.Equals(keyName, "2", StringComparison.OrdinalIgnoreCase))
-        {
-            StartCooldown(AbilityKey.Two, durationSeconds);
-            return;
-        }
-        if (Enum.TryParse<AbilityKey>(keyName, true, out var k))
-        {
-            StartCooldown(k, durationSeconds);
-        }
+        if (string.Equals(keyName, "dash", StringComparison.OrdinalIgnoreCase)) { StartCooldown(AbilityKey.Ctrl, durationSeconds); return; }
+        if (string.Equals(keyName, "q", StringComparison.OrdinalIgnoreCase) || keyName == "1") { StartCooldown(AbilityKey.One, durationSeconds); return; }
+        if (string.Equals(keyName, "e", StringComparison.OrdinalIgnoreCase) || keyName == "2") { StartCooldown(AbilityKey.Two, durationSeconds); return; }
+        if (Enum.TryParse<AbilityKey>(keyName, true, out var k)) StartCooldown(k, durationSeconds);
     }
 
     public bool IsOnCooldown(AbilityKey key)
     {
-        if (!_slots.TryGetValue(key, out var s)) return false;
-        return s.cooldownEnd > Time.unscaledTime;
+        if (_isCarrier) return Instance != null && Instance.IsOnCooldown(key);
+        return _slots.TryGetValue(key, out var s) && s.cooldownEnd > Time.unscaledTime;
+    }
+
+    /// <summary>Clears every running cooldown (e.g. after respawning or switching champion).</summary>
+    public void ResetAllCooldowns()
+    {
+        if (_isCarrier) { if (Instance != null) Instance.ResetAllCooldowns(); return; }
+        foreach (var s in _slots.Values)
+        {
+            s.cooldownEnd = 0f;
+            s.cooldownDuration = 0f;
+            s.wasCooling = false;
+            s.flashUntil = 0f;
+        }
     }
 
     public void SetAbilityAvailable(AbilityKey key, bool available)
     {
+        if (_isCarrier) { if (Instance != null) Instance.SetAbilityAvailable(key, available); return; }
         if (!_slots.TryGetValue(key, out var s)) return;
         float a = available ? 1f : 0.4f;
         s.icon.canvasRenderer.SetAlpha(a);
-        s.border.canvasRenderer.SetAlpha(a);
-        s.keyLabel.canvasRenderer.SetAlpha(a);
+        s.frame.canvasRenderer.SetAlpha(a);
+        s.badgeText.canvasRenderer.SetAlpha(a);
     }
-    
-    /// <summary>
-    /// Force the HUD to be visible. Useful when spawning in gameplay after hiding for selection.
-    /// </summary>
+
+    /// <summary>Force the HUD to be visible. Useful when spawning in gameplay after hiding for selection.</summary>
     public void ForceShowHUD()
     {
-        if (_rootRT != null)
-        {
-            _rootRT.gameObject.SetActive(true);
-            Debug.Log("[CooldownUIManager] HUD force-shown");
-        }
+        if (_isCarrier) { if (Instance != null) Instance.ForceShowHUD(); return; }
+        if (_rootRT != null) _rootRT.gameObject.SetActive(true);
     }
-    
-    /// <summary>
-    /// Hide the HUD.
-    /// </summary>
+
+    /// <summary>Hide the HUD.</summary>
     public void HideHUD()
     {
-        if (_rootRT != null)
-        {
-            _rootRT.gameObject.SetActive(false);
-            Debug.Log("[CooldownUIManager] HUD hidden");
-        }
+        if (_isCarrier) { if (Instance != null) Instance.HideHUD(); return; }
+        if (_rootRT != null) _rootRT.gameObject.SetActive(false);
     }
 
-    private void EnsureMissingText(Slot s)
-    {
-        var t = s.root.Find("MissingText") as RectTransform;
-        if (t == null)
-        {
-            GameObject mtGO = new GameObject("MissingText", typeof(RectTransform));
-            RectTransform mtRT = mtGO.GetComponent<RectTransform>();
-            mtRT.SetParent(s.root, false);
-            mtRT.anchorMin = Vector2.zero;
-            mtRT.anchorMax = Vector2.one;
-            mtRT.offsetMin = Vector2.zero;
-            mtRT.offsetMax = Vector2.zero;
-            Text txt = mtGO.AddComponent<Text>();
-            txt.font = _defaultFont;
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.fontSize = Mathf.RoundToInt(slotSize * 0.22f);
-            txt.color = new Color(0.9f, 0.9f, 0.9f, 0.85f);
-            txt.text = missingIconText;
-        }
-    }
-
-    private void RemoveMissingText(Slot s)
-    {
-        var t = s.root.Find("MissingText");
-        if (t != null) Destroy(t.gameObject);
-    }
-
-    // Loadout application for per-character compatibility
+    /// <summary>Applies a champion loadout: slot presence + icons, and clears all running cooldowns.</summary>
     public void ApplyLoadout(List<AbilityEntry> abilities, AbilityEntry dash)
     {
-        // Reset to defaults: show main 4, hide optional
-        SetSlotPresent(AbilityKey.LeftClick, true);
-        SetSlotPresent(AbilityKey.RightClick, true);
-        SetSlotPresent(AbilityKey.One, true);
-        SetSlotPresent(AbilityKey.Two, true);
-        SetSlotPresent(AbilityKey.Ctrl, false); // CTRL is Dash and is optional by default
+        if (_isCarrier) { if (Instance != null) Instance.ApplyLoadout(abilities, dash); return; }
 
-        // Clear icons to placeholder initially
-        foreach (var key in new[] { AbilityKey.LeftClick, AbilityKey.RightClick, AbilityKey.One, AbilityKey.Two, AbilityKey.Ctrl })
+        ResetAllCooldowns();
+        foreach (var key in Order)
         {
             SetAbilityIcon(key, null);
+            SetSlotPresent(key, key != AbilityKey.Ctrl);
         }
 
         if (abilities != null)
         {
             foreach (var a in abilities)
             {
+                if (a == null) continue;
                 SetSlotPresent(a.key, a.present);
-                if (a.present)
-                {
-                    SetAbilityIcon(a.key, a.icon);
-                }
+                if (a.present) SetAbilityIcon(a.key, a.icon);
             }
         }
 
         if (dash != null)
         {
-            // Apply dash to CTRL slot (CTRL is Dash)
             SetSlotPresent(AbilityKey.Ctrl, dash.present);
-            if (dash.present)
-                SetAbilityIcon(AbilityKey.Ctrl, dash.icon);
+            if (dash.present) SetAbilityIcon(AbilityKey.Ctrl, dash.icon);
         }
     }
 }

@@ -112,6 +112,7 @@ public class LuxCarpetThrowable : MonoBehaviour
 
     void DestroySelf()
     {
+        if (!_landed && _owner != null) _owner.OnCarpetThrowExpired();
         Destroy(gameObject);
     }
 }

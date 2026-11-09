@@ -102,6 +102,7 @@ public class NetworkPlayerController : NetworkBehaviour
             
             // Create UI managers for local player only
             EnsureCooldownUIManager();
+            CooldownUIManager.ApplyLoadoutFrom(gameObject); // this champion's icons, fresh timers
             EnsureModifiersUIManager();
             EnsureCrosshair();
         }
@@ -113,11 +114,11 @@ public class NetworkPlayerController : NetworkBehaviour
     
     private void EnsureCooldownUIManager()
     {
-        var cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
+        var cooldownUi = CooldownUIManager.Instance;
         if (cooldownUi == null)
         {
             Debug.Log("[NetworkPlayerController] Creating CooldownUIManager for local player");
-            new GameObject("CooldownUIManager").AddComponent<CooldownUIManager>();
+            CooldownUIManager.EnsureInstance();
             
             // Force visibility update after a short delay to ensure SelectionCanvas is hidden
             StartCoroutine(ForceHUDVisibilityAfterDelay());
@@ -134,7 +135,7 @@ public class NetworkPlayerController : NetworkBehaviour
         // Wait for SelectionCanvas to be disabled
         yield return new WaitForSeconds(0.1f);
         
-        var cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
+        var cooldownUi = CooldownUIManager.Instance;
         if (cooldownUi != null)
         {
             Debug.Log("[NetworkPlayerController] Force-showing CooldownUIManager after spawn delay");

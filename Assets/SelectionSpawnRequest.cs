@@ -141,12 +141,7 @@ public class SelectionSpawnRequest : MonoBehaviour
         EnsureSingleAudioListener(chosenCam);
 
         // Apply ability icon loadout from the spawned character if present
-        var loadout = player.GetComponentInChildren<AbilityIconLoadout>(true);
-        cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
-        if (loadout != null && cooldownUi != null)
-        {
-            loadout.ApplyToHUD();
-        }
+        CooldownUIManager.ApplyLoadoutFrom(player); // icons + clears stale timers
 
         // Ensure a reactive crosshair exists in the gameplay scene
         if (FindFirstObjectByType<ReactiveCrosshair>(FindObjectsInactive.Include) == null)

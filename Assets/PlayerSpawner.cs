@@ -151,12 +151,7 @@ public class PlayerSpawner : MonoBehaviour
         EnsureSingleAudioListener(chosenCam);
 
         // Apply HUD icon loadout if available
-        var loadout = player.GetComponentInChildren<AbilityIconLoadout>(true);
-        cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
-        if (loadout != null && cooldownUi != null)
-        {
-            loadout.ApplyToHUD();
-        }
+        CooldownUIManager.ApplyLoadoutFrom(player); // icons + clears stale timers
 
         // Ensure a reactive crosshair exists when directly running gameplay scene
         if (FindFirstObjectByType<ReactiveCrosshair>(FindObjectsInactive.Include) == null)
