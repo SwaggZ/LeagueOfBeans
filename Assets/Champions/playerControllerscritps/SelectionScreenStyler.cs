@@ -336,7 +336,7 @@ public class SelectionScreenStyler : MonoBehaviour
             nameRT.anchorMin = new Vector2(0f, 0f); nameRT.anchorMax = new Vector2(1f, 0f);
             nameRT.pivot = new Vector2(0.5f, 0f); nameRT.sizeDelta = new Vector2(30f, 26f);
             var n = AddText(nameRT, abilityName, 18, new Color(UIStyle.Cream.r, UIStyle.Cream.g, UIStyle.Cream.b, 0.8f), FontStyles.Normal, TextAlignmentOptions.Center);
-            n.enableWordWrapping = false;
+            n.textWrappingMode = TextWrappingModes.NoWrap;
             n.overflowMode = TextOverflowModes.Ellipsis;
         }
         return cell.gameObject;

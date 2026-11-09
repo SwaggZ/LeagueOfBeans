@@ -11,6 +11,12 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private GameObject serverBrowserPanel;
 
+    private void Awake()
+    {
+        // Runtime restyle (art, layout, settings page); keeps the prefab's wiring intact.
+        if (GetComponent<MainMenuStyler>() == null) gameObject.AddComponent<MainMenuStyler>();
+    }
+
     public void ShowMain()
     {
         if (mainPanel != null) mainPanel.SetActive(true);
