@@ -27,6 +27,7 @@ public class MainMenuStyler : MonoBehaviour
     private int _slideIndex;
     private float _slideStart;
     private float _fadeStart = -1f;
+    private float _focusA = 0.5f, _focusB = 0.5f;
 
     // server browser
     private RectTransform _serverList;
@@ -356,6 +357,7 @@ public class MainMenuStyler : MonoBehaviour
         if (_art == null || _art.featured == null || _art.featured.Count == 0) return;
         var f = _art.featured[index];
         target.texture = f.splash != null ? f.splash.texture : null;
+        if (target == _slideA) _focusA = f.focusX; else _focusB = f.focusX;
         target.color = target == _slideA ? Color.white : target.color;
         if (target == _slideA || _fadeStart >= 0f)
             _featuredName.text = (f.championName ?? "").ToUpperInvariant();
@@ -371,7 +373,8 @@ public class MainMenuStyler : MonoBehaviour
         if (aspect > texAspect) h = texAspect / aspect; else w = aspect / texAspect;
         float zoom = Mathf.Lerp(1f, 0.9f, Mathf.Clamp01(t / (SlideSeconds + FadeSeconds)));
         w *= zoom; h *= zoom;
-        float x = (1f - w) * 0.5f;
+        float focus = img == _slideA ? _focusA : _focusB;
+        float x = Mathf.Clamp(focus - w * 0.5f, 0f, 1f - w);
         float y = (1f - h) * 0.72f; // bias toward the top (faces)
         img.uvRect = new Rect(x, y, w, h);
     }

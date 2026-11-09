@@ -41,11 +41,13 @@ public class NetworkPlayerController : NetworkBehaviour
         if (abilityController == null)
         {
             // Try to find character-specific controllers (only those that exist)
-            var lux = GetComponent<LuxController>();
-            var aphelios = GetComponent<ApheliosController>();
-            var jhin = GetComponent<JhinController>();
-            
-            abilityController = lux ?? aphelios ?? (MonoBehaviour)jhin;
+            // Explicit null checks: '??' does not respect Unity's overloaded null for missing components.
+            MonoBehaviour found = GetComponent<LuxController>();
+            if (found == null) found = GetComponent<ApheliosController>();
+            if (found == null) found = GetComponent<JhinController>();
+            if (found == null) found = GetComponent<JinxController>();
+            if (found == null) found = GetComponent<SwainController>();
+            abilityController = found;
         }
         
         if (playerCamera == null)

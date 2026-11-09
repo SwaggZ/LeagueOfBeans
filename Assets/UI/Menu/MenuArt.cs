@@ -13,6 +13,8 @@ public class MenuArt : ScriptableObject
     {
         public string championName;
         public Sprite splash;
+        [Tooltip("Horizontal point of the image to keep in frame (0 = left edge, 1 = right edge), e.g. the champion's face.")]
+        [Range(0f, 1f)] public float focusX = 0.5f;
     }
 
     public Sprite wordmark;

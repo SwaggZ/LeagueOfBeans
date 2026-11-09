@@ -4120,6 +4120,10 @@ MonoBehaviour:
     prefab: {fileID: 8418642580960513542, guid: 9d454b36a7092164bbc1a6a6ffe657ee, type: 3}
   - id: 6
     prefab: {fileID: 8418642580960513542, guid: 297dcd01ad963ab4083ad5116439bc64, type: 3}
+  - id: Jinx
+    prefab: {fileID: 5378333365661546599, guid: 83edc46573e116447bc19714f86c1ea8, type: 3}
+  - id: Swain
+    prefab: {fileID: 2400899917432570677, guid: e1455ef9894b8734c982790c71dd698d, type: 3}
   spawnPointKey: PlayerSpawn
   enemyScanRadius: 14
   enemyMask:

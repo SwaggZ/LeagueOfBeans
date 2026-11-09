@@ -202,6 +202,8 @@ public class CharacterSelection : MonoBehaviour
     public void Aphelios() => ApplySelectionById("Aphelios");
     public void Jhin() => ApplySelectionById("Jhin");
     public void Lux() => ApplySelectionById("Lux");
+    public void Jinx() => ApplySelectionById("Jinx");
+    public void Swain() => ApplySelectionById("Swain");
 
     private void ApplySelectionById(string id)
     {
