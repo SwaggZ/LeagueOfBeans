@@ -67,7 +67,7 @@ public class LuxCarpetThrowable : MonoBehaviour
 
         if (_rb != null)
         {
-            _rb.velocity = Vector3.zero;
+            _rb.linearVelocity = Vector3.zero;
             _rb.isKinematic = true;
         }
 
