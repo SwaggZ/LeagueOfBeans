@@ -24,8 +24,8 @@ public class FishNetNetworkController : MonoBehaviour
 
     private void Awake()
     {
-        if (networkManager == null) networkManager = FindObjectOfType<NetworkManager>(true);
-        if (sessionContext == null) sessionContext = FindObjectOfType<SessionContext>(true);
+        if (networkManager == null) networkManager = FindFirstObjectByType<NetworkManager>(FindObjectsInactive.Include);
+        if (sessionContext == null) sessionContext = FindFirstObjectByType<SessionContext>(FindObjectsInactive.Include);
         if (authenticator == null && networkManager != null)
             authenticator = networkManager.GetComponent<NetworkSessionAuthenticator>();
     }

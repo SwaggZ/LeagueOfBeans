@@ -236,11 +236,11 @@ public class SetupSelectionScreen
         Debug.Log("[SetupSelectionScreen] Created preview camera");
 
         // Get or create CharacterSelection component on NetworkManager
-        CharacterSelection charSelection = Object.FindObjectOfType<CharacterSelection>();
+        CharacterSelection charSelection = Object.FindFirstObjectByType<CharacterSelection>();
         if (charSelection == null)
         {
             // Try to find NetworkManager
-            NetworkManager nm = Object.FindObjectOfType<NetworkManager>();
+            NetworkManager nm = Object.FindFirstObjectByType<NetworkManager>();
             if (nm != null)
             {
                 charSelection = nm.GetComponent<CharacterSelection>();
@@ -285,7 +285,7 @@ public class SetupSelectionScreen
                 entry.id = characterNames[i]; // ID should match NetworkGameSession prefab IDs!
                 
                 // Find preview GameObject in scene
-                var previewGo = Object.FindObjectOfType<Transform>()?.root.Find(previews[i])?.gameObject;
+                var previewGo = Object.FindFirstObjectByType<Transform>()?.root.Find(previews[i])?.gameObject;
                 if (previewGo == null)
                     previewGo = GameObject.Find(previews[i]);
                 
@@ -349,7 +349,7 @@ public class SetupSelectionScreen
         button.colors = colors;
 
         // Add click handler to CharacterSelection
-        CharacterSelection charSelection = Object.FindObjectOfType<CharacterSelection>();
+        CharacterSelection charSelection = Object.FindFirstObjectByType<CharacterSelection>();
         if (charSelection != null)
         {
             int charIndex = index;

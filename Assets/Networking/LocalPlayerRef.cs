@@ -138,7 +138,7 @@ public static class LocalPlayerRef
         if (_localPlayer != null) return _localPlayer;
 
         // Prefer PlayerRegistration if present on the player prefab
-        var reg = Object.FindObjectOfType<PlayerRegistration>(true);
+        var reg = Object.FindFirstObjectByType<PlayerRegistration>(FindObjectsInactive.Include);
         if (reg != null)
         {
             Register(reg.gameObject, reg.isLocalPlayer);
@@ -146,7 +146,7 @@ public static class LocalPlayerRef
         }
 
         // Last-resort fallback: try CharacterControl root
-        var cc = Object.FindObjectOfType<CharacterControl>(true);
+        var cc = Object.FindFirstObjectByType<CharacterControl>(FindObjectsInactive.Include);
         if (cc != null)
         {
             Register(cc.gameObject, true);

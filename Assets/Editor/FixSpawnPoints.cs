@@ -45,7 +45,7 @@ public class FixSpawnPoints : EditorWindow
         }
         
         // Find all SpawnPointMarker components
-        SpawnPointMarker[] markers = GameObject.FindObjectsOfType<SpawnPointMarker>();
+        SpawnPointMarker[] markers = GameObject.FindObjectsByType<SpawnPointMarker>(FindObjectsSortMode.None);
         
         if (markers.Length == 0)
         {

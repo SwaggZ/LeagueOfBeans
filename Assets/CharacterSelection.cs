@@ -64,16 +64,22 @@ public class CharacterSelection : MonoBehaviour
     // Track if this is a respawn (vs initial spawn)
     private bool _isRespawnMode = false;
 
+    /// <summary>Raised whenever the highlighted champion changes (used by SelectionScreenStyler).</summary>
+    public event System.Action SelectionChanged;
+
     void Awake()
     {
         // Ensure cursor is free/visible in selection
         try { Cursor.visible = true; Cursor.lockState = CursorLockMode.None; } catch {}
+
+        // Runtime restyle of the selection canvas (gold/slate theme, ability preview row)
+        if (GetComponent<SelectionScreenStyler>() == null) gameObject.AddComponent<SelectionScreenStyler>().selection = this;
         
         // Auto-detect NetworkGameSession if not assigned
         if (networkSession == null)
         {
             // Try direct find first
-            networkSession = FindObjectOfType<NetworkGameSession>();
+            networkSession = FindFirstObjectByType<NetworkGameSession>();
             if (networkSession != null)
                 Debug.Log("[Selection] Auto-detected NetworkGameSession");
             else
@@ -98,15 +104,21 @@ public class CharacterSelection : MonoBehaviour
                 }
             }
 
-            // Prefer gameplay prefab name for id when available; otherwise use preview name
-            if (string.IsNullOrWhiteSpace(e.id))
+            // The gameplay prefab is the source of truth for the id: buttons look entries up by id
+            // and the server spawns by id, so a stale id would show one champion's preview while
+            // spawning another.
+            if (e.gameplayPrefab != null)
             {
-                if (e.gameplayPrefab != null)
+                if (!string.Equals(e.id, e.gameplayPrefab.name, System.StringComparison.Ordinal))
                 {
+                    if (!string.IsNullOrWhiteSpace(e.id))
+                        Debug.LogWarning($"[Selection] Entry {i} id '{e.id}' did not match its prefab '{e.gameplayPrefab.name}'; using prefab name.");
                     e.id = e.gameplayPrefab.name;
-                    Debug.Log($"[Selection] Auto-set id for entry {i} to '{e.id}' from gameplay prefab name");
                 }
-                else if (e.preview != null)
+            }
+            else if (string.IsNullOrWhiteSpace(e.id))
+            {
+                if (e.preview != null)
                 {
                     e.id = e.preview.name;
                     Debug.Log($"[Selection] Auto-set id for entry {i} to '{e.id}' from preview name");
@@ -190,6 +202,8 @@ public class CharacterSelection : MonoBehaviour
     public void Aphelios() => ApplySelectionById("Aphelios");
     public void Jhin() => ApplySelectionById("Jhin");
     public void Lux() => ApplySelectionById("Lux");
+    public void Jinx() => ApplySelectionById("Jinx");
+    public void Swain() => ApplySelectionById("Swain");
 
     private void ApplySelectionById(string id)
     {
@@ -232,7 +246,7 @@ public class CharacterSelection : MonoBehaviour
         if (e == null) return;
 
         if (label != null)
-            label.text = e.preview != null ? e.preview.name : (e.id ?? "<Character>");
+            label.text = !string.IsNullOrEmpty(e.id) ? e.id : (e.preview != null ? e.preview.name : "<Character>");
 
         if (lmbNameText) lmbNameText.text = e.lmbName;
         if (rmbNameText) rmbNameText.text = e.rmbName;
@@ -243,6 +257,8 @@ public class CharacterSelection : MonoBehaviour
         if (rmbDescText) rmbDescText.text = e.rmbDesc;
         if (oneDescText) oneDescText.text = e.oneDesc;
         if (twoDescText) twoDescText.text = e.twoDesc;
+
+        SelectionChanged?.Invoke();
     }
 
     public void StartGame()
@@ -267,23 +283,23 @@ public class CharacterSelection : MonoBehaviour
         if (networkSession == null)
         {
             Debug.Log("[Selection] networkSession is null, searching...");
-            networkSession = FindObjectOfType<NetworkGameSession>();
+            networkSession = FindFirstObjectByType<NetworkGameSession>();
             if (networkSession != null) Debug.Log("[Selection] Found NetworkGameSession via FindObjectOfType");
         }
         
         if (networkSession == null)
         {
-            Debug.Log("[Selection] Still null, trying FindObjectOfType(true)...");
-            networkSession = FindObjectOfType<NetworkGameSession>(true);
-            if (networkSession != null) Debug.Log("[Selection] Found NetworkGameSession via FindObjectOfType(true)");
+            Debug.Log("[Selection] Still null, trying FindFirstObjectByType(Include)...");
+            networkSession = FindFirstObjectByType<NetworkGameSession>(FindObjectsInactive.Include);
+            if (networkSession != null) Debug.Log("[Selection] Found NetworkGameSession via FindFirstObjectByType(Include)");
         }
         
         if (networkSession == null)
         {
             Debug.Log("[Selection] Still null, checking NetworkManager...");
-            var nm = FindObjectOfType<NetworkManager>();
+            var nm = FindFirstObjectByType<NetworkManager>();
             if (nm == null)
-                nm = FindObjectOfType<NetworkManager>(true);
+                nm = FindFirstObjectByType<NetworkManager>(FindObjectsInactive.Include);
             if (nm != null)
             {
                 Debug.Log($"[Selection] Found NetworkManager: {nm.name}");
@@ -299,7 +315,7 @@ public class CharacterSelection : MonoBehaviour
 
         if (networkSession != null)
         {
-            var nm = FindObjectOfType<NetworkManager>();
+            var nm = FindFirstObjectByType<NetworkManager>();
             Debug.Log($"[Selection] NetworkManager={nm?.name}, IsClientStarted={nm?.IsClientStarted}, IsServerStarted={nm?.IsServerStarted}");
             
             if (nm == null || !nm.IsClientStarted)
@@ -436,7 +452,10 @@ public class CharacterSelection : MonoBehaviour
     public void ShowSelectionUI()
     {
         Debug.Log("[Selection] Showing selection UI");
-        
+
+        // The in-game ability bar must never sit on top of champion select
+        if (CooldownUIManager.Instance != null) CooldownUIManager.Instance.HideHUD();
+
         if (_cachedCanvas != null)
         {
             _cachedCanvas.SetActive(true);

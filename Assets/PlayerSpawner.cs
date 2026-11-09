@@ -14,7 +14,7 @@ public class PlayerSpawner : MonoBehaviour
 
     private void Awake()
     {
-        var networkManager = FindObjectOfType<NetworkManager>(true);
+        var networkManager = FindFirstObjectByType<NetworkManager>(FindObjectsInactive.Include);
         if (networkManager != null && (networkManager.IsClientStarted || networkManager.IsServerStarted))
         {
             Debug.Log("[Spawner] FishNet active. Skipping legacy PlayerSpawner spawn.");
@@ -22,7 +22,7 @@ public class PlayerSpawner : MonoBehaviour
         }
 
         // If a SelectionSpawnRequest exists (new selection flow), skip default spawn to avoid duplicates.
-        var pendingSelectionSpawn = FindObjectOfType<SelectionSpawnRequest>(true);
+        var pendingSelectionSpawn = FindFirstObjectByType<SelectionSpawnRequest>(FindObjectsInactive.Include);
         if (pendingSelectionSpawn != null)
         {
             Debug.Log("[Spawner] SelectionSpawnRequest detected. Skipping default PlayerSpawner spawn.");
@@ -30,10 +30,10 @@ public class PlayerSpawner : MonoBehaviour
         }
 
         // If a player is already in the scene, do nothing (safety for additive loads).
-        var existingPlayer = FindObjectOfType<PlayerRegistration>(true);
+        var existingPlayer = FindFirstObjectByType<PlayerRegistration>(FindObjectsInactive.Include);
         if (existingPlayer == null)
         {
-            var existingControl = FindObjectOfType<CharacterControl>(true);
+            var existingControl = FindFirstObjectByType<CharacterControl>(FindObjectsInactive.Include);
             if (existingControl != null) existingPlayer = existingControl.GetComponent<PlayerRegistration>();
         }
         if (existingPlayer != null)
@@ -47,21 +47,21 @@ public class PlayerSpawner : MonoBehaviour
         Debug.Log($"[Spawner] Awake. PlayerPrefs.selectedCharacter={idx}, name='{selName}'. Prefab count={(characterPrefabs!=null?characterPrefabs.Length:0)}");
 
         // Ensure a cooldown HUD exists if we are running the gameplay scene directly
-        var cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        var cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         if (cooldownUi == null)
         {
             new GameObject("CooldownUIManager").AddComponent<CooldownUIManager>();
         }
-        var modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+        var modifiersUi = FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         if (modifiersUi == null)
         {
             new GameObject("ModifiersUIManager").AddComponent<ModifiersUIManager>();
         }
         // Ensure a ModifiersIconLibrary exists early so badges can fetch sprites
-        var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        var iconLibrary = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
         if (iconLibrary == null)
         {
-            var libInScene = FindObjectOfType<ModifiersIconLibrary>(true);
+            var libInScene = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
             if (libInScene == null)
             {
                 Debug.LogWarning("[Spawner] No ModifiersIconLibrary found. Creating an empty one; assign sprites in your persistent scene to avoid NO IMG placeholders.");
@@ -113,7 +113,7 @@ public class PlayerSpawner : MonoBehaviour
 
         Vector3 pos = spawnPoint != null ? spawnPoint.position : Vector3.zero;
         Quaternion rot = spawnPoint != null ? spawnPoint.rotation : Quaternion.identity;
-        var spawner = spawnService != null ? spawnService : FindObjectOfType<SpawnService>(true);
+        var spawner = spawnService != null ? spawnService : FindFirstObjectByType<SpawnService>(FindObjectsInactive.Include);
         GameObject player = spawner != null
             ? spawner.Spawn(prefab, pos, rot)
             : Instantiate(prefab, pos, rot);
@@ -151,15 +151,10 @@ public class PlayerSpawner : MonoBehaviour
         EnsureSingleAudioListener(chosenCam);
 
         // Apply HUD icon loadout if available
-        var loadout = player.GetComponentInChildren<AbilityIconLoadout>(true);
-        cooldownUi = FindObjectOfType<CooldownUIManager>(true);
-        if (loadout != null && cooldownUi != null)
-        {
-            loadout.ApplyToHUD();
-        }
+        CooldownUIManager.ApplyLoadoutFrom(player); // icons + clears stale timers
 
         // Ensure a reactive crosshair exists when directly running gameplay scene
-        if (FindObjectOfType<ReactiveCrosshair>(true) == null)
+        if (FindFirstObjectByType<ReactiveCrosshair>(FindObjectsInactive.Include) == null)
         {
             var crossGO = new GameObject("ReactiveCrosshairHost");
             var cross = crossGO.AddComponent<ReactiveCrosshair>();
@@ -177,7 +172,7 @@ public class PlayerSpawner : MonoBehaviour
         }
         activeListener.enabled = true;
 
-        var all = Object.FindObjectsOfType<AudioListener>(true);
+        var all = Object.FindObjectsByType<AudioListener>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var al in all)
         {
             if (al == null) continue;

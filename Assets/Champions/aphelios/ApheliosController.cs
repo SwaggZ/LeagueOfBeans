@@ -57,6 +57,9 @@ public class ApheliosController : MonoBehaviour
     public float orbsAbilityCooldown = 12f;
     public float flamethrowerAbilityCooldown = 10f;
     private bool _abilityOnCooldown = false;
+    [Tooltip("Minimum time between weapon switches (Q).")]
+    public float weaponSwitchCooldown = 0.2f;
+    private float _nextSwitchTime = 0f;
 
     [Header("Ability (RMB) - Sniper")] 
     public int sniperEmpoweredShots = 0; // when > 0, next sniper shots hit twice
@@ -123,12 +126,14 @@ public class ApheliosController : MonoBehaviour
 
     public void CycleWeapon()
     {
+        if (Time.time < _nextSwitchTime) return;
+        _nextSwitchTime = Time.time + weaponSwitchCooldown;
         currentWeapon = (WeaponType)(((int)currentWeapon + 1) % 4);
         ShowWeaponIndicator();
         UpdateLmbIcon();
         UpdateAbilityIcon();
         // small switch cooldown on HUD (Q)
-        if (CooldownUIManager.Instance != null) CooldownUIManager.Instance.StartCooldown(AbilityKey.One, 0.2f);
+        if (CooldownUIManager.Instance != null) CooldownUIManager.Instance.StartCooldown(AbilityKey.One, weaponSwitchCooldown);
     }
 
     private void ShowWeaponIndicator()

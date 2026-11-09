@@ -124,10 +124,10 @@ public class CharacterControl : MonoBehaviour
         }
 
         // Dash functionality
-        if (Input.GetButtonDown("Dash") && canDash && Time.time > dashTimer)
+        if (Input.GetButtonDown("Dash") && canDash && !isDashing && Time.time > dashTimer)
         {
             // Push cooldown to UI CTRL slot (CTRL is Dash)
-            var cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+            var cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
             if (dashCooldown > 0f && cooldownUi != null)
             {
                 cooldownUi.StartCooldown(AbilityKey.Ctrl, dashCooldown);

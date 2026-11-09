@@ -141,7 +141,7 @@ Network Flow:
         ↓
   CharacterSelection Ready → SELECT character → CLICK START
         ↓
-  ClientSubmitSelection() RPC → ClientSetReady() RPC
+  SelectionBroadcast → ReadyBroadcast (client → server)
         ↓
   Server: AllPlayersSelected + AllPlayersReady?
         ↓

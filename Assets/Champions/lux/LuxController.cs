@@ -57,6 +57,7 @@ public class LuxController : MonoBehaviour
     public float carpetCooldown = 14f;
     private bool _carpetOnCooldown = false;
     private LuxCarpet _activeCarpet;
+    private bool _carpetInFlight = false; // thrown, not landed yet
 
     private CooldownUIManager _cooldownUi;
 
@@ -68,7 +69,7 @@ public class LuxController : MonoBehaviour
             if (c != null) cam = c.gameObject;
         }
         if (firePoint == null) firePoint = transform;
-        _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
     }
 
     void Start()
@@ -225,6 +226,7 @@ public class LuxController : MonoBehaviour
             return;
         }
 
+        if (_carpetInFlight) return; // can't re-throw or detonate before it lands
         if (_carpetOnCooldown) return;
         if (cam == null) return;
 
@@ -239,6 +241,7 @@ public class LuxController : MonoBehaviour
         var throwable = go.GetComponent<LuxCarpetThrowable>();
         if (throwable == null) throwable = go.AddComponent<LuxCarpetThrowable>();
         throwable.Init(this, carpetDamage, carpetSlowAmount, carpetRadius, carpetDuration, carpetThrowForce, cam.transform.forward);
+        _carpetInFlight = true;
 
         // Switch to detonate icon
         var cooldownUi2 = ResolveCooldownUi();
@@ -248,7 +251,15 @@ public class LuxController : MonoBehaviour
 
     public void OnCarpetCreated(LuxCarpet carpet)
     {
+        _carpetInFlight = false;
         _activeCarpet = carpet;
+    }
+
+    // Throw never landed (timed out): treat it as used so the cooldown and icon recover.
+    public void OnCarpetThrowExpired()
+    {
+        _carpetInFlight = false;
+        OnCarpetDestroyed();
     }
 
     public void OnCarpetDestroyed()
@@ -271,7 +282,7 @@ public class LuxController : MonoBehaviour
     {
         if (_cooldownUi == null)
         {
-            _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+            _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         }
         return _cooldownUi;
     }

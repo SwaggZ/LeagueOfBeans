@@ -18,7 +18,6 @@ public class galioR : MonoBehaviour, IIncomingDamageModifier
     private bool isAiming = false; // Whether player is in aiming phase
     private bool isUltActive = false; // Block other abilities and reduce damage while true
     private bool isOnCooldown = false; // Whether ability is on cooldown
-    private float aimTimer = 0f; // Timer for aim duration
     private CharacterControl characterControl; // Reference to movement system
     private HashSet<GameObject> _impactHitTargets = new HashSet<GameObject>();
 
@@ -34,7 +33,7 @@ public class galioR : MonoBehaviour, IIncomingDamageModifier
     void Update()
     {
         // Check for ability activation on 'E'
-        if (Input.GetKeyDown(KeyCode.E) && !isOnCooldown)
+        if (Input.GetKeyDown(KeyCode.E) && !isOnCooldown && !isUltActive)
         {
             StartCoroutine(CastAbility());
         }

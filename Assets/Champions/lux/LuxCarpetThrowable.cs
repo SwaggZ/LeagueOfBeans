@@ -67,7 +67,7 @@ public class LuxCarpetThrowable : MonoBehaviour
 
         if (_rb != null)
         {
-            _rb.velocity = Vector3.zero;
+            _rb.linearVelocity = Vector3.zero;
             _rb.isKinematic = true;
         }
 
@@ -112,6 +112,7 @@ public class LuxCarpetThrowable : MonoBehaviour
 
     void DestroySelf()
     {
+        if (!_landed && _owner != null) _owner.OnCarpetThrowExpired();
         Destroy(gameObject);
     }
 }

@@ -88,7 +88,7 @@ public class JhinMine : MonoBehaviour
         // Stop movement (like Caitlyn's throwable)
         if (_rb != null)
         {
-            _rb.velocity = Vector3.zero;
+            _rb.linearVelocity = Vector3.zero;
             _rb.isKinematic = true;
         }
 

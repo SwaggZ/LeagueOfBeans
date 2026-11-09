@@ -3,7 +3,7 @@
 ## Current Status
 - ✅ **Code**: All networking code is configured and ready
 - ✅ **Setup Tools**: Comprehensive editor tools created
-- ✅ **RPC Bridge**: NetworkSessionBridge implements proper FishNet RPCs
+- ✅ **Client → Server messaging**: FishNet broadcasts (`SelectionBroadcast`, `ReadyBroadcast`, `RespawnBroadcast`) handled in NetworkGameSession
 - ❌ **Infrastructure**: Missing NetworkGameSession in proper location
 - ⚠️ **Next Action**: Run setup tools in correct order
 
@@ -12,7 +12,7 @@ The error `"[Selection] StartGame: Could not find NetworkGameSession!"` and play
 1. NetworkGameSession was a regular MonoBehaviour, not a NetworkBehaviour
 2. The "ServerRpc" methods were not actual FishNet RPCs - they just had misleading names
 3. When clients called these methods, they executed locally and immediately returned because `_isServer` was false
-4. **FIX**: Created NetworkSessionBridge - a proper NetworkBehaviour with actual [ServerRpc] attributes that forwards calls to NetworkGameSession
+4. **FIX**: Clients now send FishNet broadcasts, which the server handles in NetworkGameSession and forwards to the session logic (see `CHARACTER_SELECTION_FIX.md`)
 
 ## Complete Setup Process (Step by Step)
 
@@ -29,7 +29,6 @@ This creates the persistent NetworkManager with the NetworkGameSession component
 **What this does:**
 - Creates NetworkManager if it doesn't exist
 - Adds NetworkGameSession component (on child GameObject)
-- **Adds NetworkSessionBridge component (on child GameObject with NetworkObject)**
 - Populates character prefabs list (Ahri, Ashe, Galio, Caitlyn, Aphelios, Jhin, Lux)
 - NetworkManager and children automatically persist to other scenes via DontDestroyOnLoad
 

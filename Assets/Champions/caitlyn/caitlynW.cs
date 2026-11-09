@@ -59,8 +59,9 @@ public class caitlynW : MonoBehaviour
     void UpdateThrowLevel()
     {
         float elapsedTime = Time.time - chargeStartTime; // Calculate the charge duration
-        throwLevel = Mathf.Clamp(Mathf.FloorToInt(elapsedTime) + 1, 1, maxThrowLevel); // Update throw level
-        Debug.Log("Throw " + throwLevel);
+        int newLevel = Mathf.Clamp(Mathf.FloorToInt(elapsedTime) + 1, 1, maxThrowLevel);
+        if (newLevel != throwLevel) Debug.Log("Throw " + newLevel);
+        throwLevel = newLevel;
     }
 
     void Throw()

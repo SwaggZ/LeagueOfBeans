@@ -30,14 +30,14 @@ public class AbilityCooldownPusher : MonoBehaviour
 
     private void Awake()
     {
-        _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
     }
 
     void Update()
     {
         if (_cooldownUi == null)
         {
-            _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+            _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
             if (_cooldownUi == null) return;
         }
         if (abilities == null) return;

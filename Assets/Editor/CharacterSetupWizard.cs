@@ -235,7 +235,7 @@ public class {characterName}Controller : MonoBehaviour
             if (c != null) cam = c.gameObject;
         }}
         if (firePoint == null) firePoint = transform;
-        _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
     }}
 
     void Start()
@@ -263,7 +263,7 @@ public class {characterName}Controller : MonoBehaviour
 
     private CooldownUIManager ResolveCooldownUi()
     {{
-        if (_cooldownUi == null) _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+        if (_cooldownUi == null) _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         return _cooldownUi != null ? _cooldownUi : CooldownUIManager.Instance;
     }}
 
@@ -369,7 +369,7 @@ public class {characterName}Controller : MonoBehaviour
     void AddToCharacterSelection(string gameplayPrefabPath, string previewPrefabPath, string characterName)
     {
         // Find CharacterSelection in the scene
-        CharacterSelection selection = FindObjectOfType<CharacterSelection>(true);
+        CharacterSelection selection = FindFirstObjectByType<CharacterSelection>(FindObjectsInactive.Include);
         
         if (selection == null)
         {

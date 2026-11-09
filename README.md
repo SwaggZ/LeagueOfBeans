@@ -15,7 +15,7 @@ Open Source: This project is open source, allowing the community to contribute, 
 ### Multiplayer Character Selection Fix (February 2026)
 Fixed critical issue where players would get stuck in character selection screen during multiplayer games. 
 - **Problem:** Character selections from clients weren't reaching the server
-- **Solution:** Implemented proper FishNet RPC bridge (`NetworkSessionBridge`)
+- **Solution:** Clients send FishNet broadcasts that the server handles in `NetworkGameSession`
 - **Docs:** See `CHARACTER_SELECTION_FIX.md` for details and `QUICK_FIX_TEST.md` for testing
 
 ### Setup Instructions

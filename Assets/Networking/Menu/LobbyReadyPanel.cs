@@ -17,7 +17,7 @@ public class LobbyReadyPanel : MonoBehaviour
 
     private void Awake()
     {
-        if (networkSession == null) networkSession = FindObjectOfType<NetworkGameSession>(true);
+        if (networkSession == null) networkSession = FindFirstObjectByType<NetworkGameSession>(FindObjectsInactive.Include);
         if (readyToggleButton != null)
             readyToggleButton.onClick.AddListener(ToggleReady);
     }

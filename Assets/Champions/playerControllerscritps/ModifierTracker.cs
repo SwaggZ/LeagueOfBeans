@@ -28,7 +28,7 @@ public class ModifierTracker : MonoBehaviour
 
         if (sprite == null)
         {
-            var iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+            var iconLibrary = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
             if (iconLibrary != null)
             {
                 sprite = iconLibrary.Resolve(id, string.Empty);

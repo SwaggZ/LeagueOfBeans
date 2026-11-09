@@ -18,7 +18,7 @@ public class FoxFireContainer : MonoBehaviour
 
     private void Start()
     {
-        var reg = FindObjectOfType<PlayerRegistration>(true);
+        var reg = FindFirstObjectByType<PlayerRegistration>(FindObjectsInactive.Include);
         if (reg != null)
         {
             player = reg.transform;

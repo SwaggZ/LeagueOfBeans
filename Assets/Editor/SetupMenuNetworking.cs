@@ -80,7 +80,7 @@ public class SetupMenuNetworking
         Debug.Log("[SetupMenuNetworking] Setting up Menu scene networking...");
 
         // Step 1: Find or create NetworkManager
-        NetworkManager nm = Object.FindObjectOfType<NetworkManager>();
+        NetworkManager nm = Object.FindFirstObjectByType<NetworkManager>();
         if (nm == null)
         {
             GameObject nmGo = new GameObject("NetworkManager");
@@ -97,7 +97,7 @@ public class SetupMenuNetworking
 
         // Step 2: Add NetworkGameSession on a separate GameObject (NOT on NetworkManager)
         // NetworkBehaviour auto-adds NetworkObject, which is forbidden on NetworkManager
-        NetworkGameSession ngs = Object.FindObjectOfType<NetworkGameSession>();
+        NetworkGameSession ngs = Object.FindFirstObjectByType<NetworkGameSession>();
         if (ngs == null)
         {
             GameObject ngsGo = new GameObject("NetworkGameSession");
@@ -110,23 +110,8 @@ public class SetupMenuNetworking
             Debug.Log("[SetupMenuNetworking] NetworkGameSession already exists");
         }
         
-        // Step 2.5: Add NetworkSessionBridge (NetworkBehaviour that can use RPCs)
-        NetworkSessionBridge bridge = Object.FindObjectOfType<NetworkSessionBridge>();
-        if (bridge == null)
-        {
-            GameObject bridgeGo = new GameObject("NetworkSessionBridge");
-            bridgeGo.transform.SetParent(nm.transform);
-            bridge = bridgeGo.AddComponent<NetworkSessionBridge>();
-            // NetworkSessionBridge will auto-add NetworkObject component
-            Debug.Log("[SetupMenuNetworking] Created NetworkSessionBridge on separate GameObject");
-        }
-        else
-        {
-            Debug.Log("[SetupMenuNetworking] NetworkSessionBridge already exists");
-        }
-
         // Step 2.6: Add FishNetNetworkController (orchestrates host/join)
-        FishNetNetworkController controller = Object.FindObjectOfType<FishNetNetworkController>();
+        FishNetNetworkController controller = Object.FindFirstObjectByType<FishNetNetworkController>();
         if (controller == null)
         {
             GameObject controllerGo = new GameObject("FishNetNetworkController");
@@ -140,7 +125,7 @@ public class SetupMenuNetworking
         }
 
         // Step 2.7: Add SessionContext (stores server settings)
-        SessionContext sessionContext = Object.FindObjectOfType<SessionContext>();
+        SessionContext sessionContext = Object.FindFirstObjectByType<SessionContext>();
         if (sessionContext == null)
         {
             GameObject sessionGo = new GameObject("SessionContext");
@@ -207,7 +192,7 @@ public class SetupMenuNetworking
         EditorUtility.DisplayDialog("Success",
             $"✓ Menu scene networking configured\n" +
             $"✓ NetworkManager with all FishNet components\n" +
-            $"✓ NetworkGameSession, NetworkSessionBridge, FishNetNetworkController ready\n" +
+            $"✓ NetworkGameSession, FishNetNetworkController ready\n" +
             $"✓ SessionContext and NetworkSessionAuthenticator configured\n" +
             $"✓ {ngs.characterPrefabs.Count} characters registered\n\n" +
             $"NetworkManager will persist to SampleScene via DontDestroyOnLoad",
@@ -268,7 +253,7 @@ public class SetupSampleSceneNetworking
         // Instead, the one from Menu persists here.
         // However, for direct testing of the scene in editor, you might need a local one.
 
-        NetworkManager nm = Object.FindObjectOfType<NetworkManager>();
+        NetworkManager nm = Object.FindFirstObjectByType<NetworkManager>();
         if (nm == null)
         {
             EditorUtility.DisplayDialog("Info",
@@ -290,7 +275,7 @@ public class SetupSampleSceneNetworking
         }
 
         // Check for spawn points
-        var spawnMarkers = Object.FindObjectsOfType<SpawnPointMarker>();
+        var spawnMarkers = Object.FindObjectsByType<SpawnPointMarker>(FindObjectsSortMode.None);
         if (spawnMarkers.Length == 0)
         {
             EditorUtility.DisplayDialog("Warning",

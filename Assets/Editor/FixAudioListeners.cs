@@ -46,7 +46,7 @@ public class FixAudioListeners : EditorWindow
         }
         
         // Find all Audio Listeners
-        AudioListener[] listeners = GameObject.FindObjectsOfType<AudioListener>();
+        AudioListener[] listeners = GameObject.FindObjectsByType<AudioListener>(FindObjectsSortMode.None);
         
         if (listeners.Length <= 1)
         {

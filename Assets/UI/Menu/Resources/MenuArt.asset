@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63ffcfca5ad9b3a42bc80f8cbed77ec5, type: 3}
+  m_Name: MenuArt
+  m_EditorClassIdentifier: Assembly-CSharp::MenuArt
+  wordmark: {fileID: 21300000, guid: 8a4dc4dc46b8c6e4c86a9c872f670c52, type: 3}
+  emblem: {fileID: 21300000, guid: 99007b59afa302148bc9def6942f1e57, type: 3}
+  featured:
+  - championName: Ahri
+    splash: {fileID: 21300000, guid: d8c8a53dd3f10214caa5700de872fde5, type: 3}
+    focusX: 0.5
+  - championName: Jinx
+    splash: {fileID: 21300000, guid: d2988cc75dfe01c4ab4b69f8b1f5923c, type: 3}
+    focusX: 0.5
+  - championName: Jhin
+    splash: {fileID: 21300000, guid: d3b42b6e25689fa4f94f06b45558ebac, type: 3}
+    focusX: 0.5
+  - championName: Aphelios
+    splash: {fileID: 21300000, guid: c3e4b5e94dbef2142b4b60cf3aee7d51, type: 3}
+    focusX: 0.5
+  - championName: Lux
+    splash: {fileID: 21300000, guid: 468620b0fd944204b88bf914f1d5bc90, type: 3}
+    focusX: 0.5
+  - championName: Galio
+    splash: {fileID: 21300000, guid: 6a3bac6500be85f4cb6d6c60c3b8ebf0, type: 3}
+    focusX: 0.5
+  - championName: Ashe
+    splash: {fileID: 21300000, guid: 5e18ee4872e69f7419f1277c73483f25, type: 3}
+    focusX: 0.5
+  - championName: Caitlyn
+    splash: {fileID: 21300000, guid: 3e4c6dfbfa479ee44839cf7d282bccf0, type: 3}
+    focusX: 0.5

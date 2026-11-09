@@ -53,7 +53,7 @@ public class ThrowableCollisionHandler : MonoBehaviour
         // Stop the throwable's movement
         if (rb != null)
         {
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.isKinematic = true;
         }
 

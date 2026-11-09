@@ -85,9 +85,9 @@ public class JhinController : MonoBehaviour
         if (firePoint == null) firePoint = transform;
 
         currentAmmo = maxAmmo;
-        _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
-        _modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
-        _iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+        _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
+        _modifiersUi = FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
+        _iconLibrary = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
         UpdateAmmoUI();
         UpdateAbilityIcons();
     }
@@ -374,7 +374,7 @@ public class JhinController : MonoBehaviour
     {
         if (_cooldownUi == null)
         {
-            _cooldownUi = FindObjectOfType<CooldownUIManager>(true);
+            _cooldownUi = FindFirstObjectByType<CooldownUIManager>(FindObjectsInactive.Include);
         }
         return _cooldownUi;
     }
@@ -383,7 +383,7 @@ public class JhinController : MonoBehaviour
     {
         if (_modifiersUi == null)
         {
-            _modifiersUi = FindObjectOfType<ModifiersUIManager>(true);
+            _modifiersUi = FindFirstObjectByType<ModifiersUIManager>(FindObjectsInactive.Include);
         }
         return _modifiersUi;
     }
@@ -392,7 +392,7 @@ public class JhinController : MonoBehaviour
     {
         if (_iconLibrary == null)
         {
-            _iconLibrary = FindObjectOfType<ModifiersIconLibrary>(true);
+            _iconLibrary = FindFirstObjectByType<ModifiersIconLibrary>(FindObjectsInactive.Include);
         }
         return _iconLibrary;
     }

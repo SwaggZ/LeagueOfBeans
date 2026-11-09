@@ -17,7 +17,7 @@ public class FixNetworkManagerSetup
         var activeScene = SceneManager.GetActiveScene();
         Debug.Log($"[FixNetworkManagerSetup] Checking {activeScene.name} for NetworkManager issues...");
 
-        var nm = Object.FindObjectOfType<NetworkManager>();
+        var nm = Object.FindFirstObjectByType<NetworkManager>();
         if (nm == null)
         {
             EditorUtility.DisplayDialog("Info", "No NetworkManager found in this scene.", "OK");

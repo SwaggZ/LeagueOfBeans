@@ -167,7 +167,7 @@ public class FixAllNetworkingIssues : EditorWindow
 
     private int UpdateCharacterSelection(Scene scene)
     {
-        CharacterSelection charSelection = GameObject.FindObjectOfType<CharacterSelection>();
+        CharacterSelection charSelection = GameObject.FindFirstObjectByType<CharacterSelection>();
         
         if (charSelection == null)
         {
@@ -216,7 +216,7 @@ public class FixAllNetworkingIssues : EditorWindow
 
     private int FixSpawnPoints(Scene scene)
     {
-        SpawnPointMarker[] markers = GameObject.FindObjectsOfType<SpawnPointMarker>();
+        SpawnPointMarker[] markers = GameObject.FindObjectsByType<SpawnPointMarker>(FindObjectsSortMode.None);
         
         if (markers.Length == 0)
         {
@@ -249,7 +249,7 @@ public class FixAllNetworkingIssues : EditorWindow
 
     private int FixAudioListeners(Scene scene)
     {
-        AudioListener[] listeners = GameObject.FindObjectsOfType<AudioListener>();
+        AudioListener[] listeners = GameObject.FindObjectsByType<AudioListener>(FindObjectsSortMode.None);
         
         if (listeners.Length <= 1)
         {
